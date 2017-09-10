@@ -36,12 +36,13 @@ public class JwksResource {
      * @return public key set.
      */
     @ApiOperation(value = "Get public keys",
+        response = Response.class,
         notes = "Provides the JWKS of public keys used for JWS and JWE for clients.")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getPublicKeySet() {
+    public String getPublicKeySet() {
 
-        return Response.ok(jwksProvider.getKeySet().toJson(OutputControlLevel.PUBLIC_ONLY)).build();
+        return jwksProvider.getKeySet().toJson(OutputControlLevel.PUBLIC_ONLY);
     }
 
     public void setJwksProvider(final JwksProvider jwksProvider) {
