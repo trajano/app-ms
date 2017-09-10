@@ -10,16 +10,6 @@
   <name>Microservice Common</name>
   <dependencies>
     <dependency>
-      <groupId>com.coreos</groupId>
-      <artifactId>jetcd-core</artifactId>
-      <version>0.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-client</artifactId>
-      <version>3.8.5</version>
-    </dependency>
-    <dependency>
       <groupId>org.bitbucket.b_c</groupId>
       <artifactId>jose4j</artifactId>
       <version>0.6.0</version>
@@ -28,11 +18,32 @@
       <groupId>org.wso2.msf4j</groupId>
       <artifactId>msf4j-core</artifactId>
       <version>2.1.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.wso2.eclipse.osgi</groupId>
+          <artifactId>org.eclipse.osgi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.wso2.eclipse.osgi</groupId>
+          <artifactId>org.eclipse.osgi.services</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.wso2.msf4j</groupId>
       <artifactId>msf4j-spring</artifactId>
       <version>2.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.wso2.msf4j</groupId>
+      <artifactId>msf4j-swagger</artifactId>
+      <version>2.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

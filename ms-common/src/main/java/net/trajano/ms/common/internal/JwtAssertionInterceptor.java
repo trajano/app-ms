@@ -1,4 +1,4 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.internal;
 
 import java.net.URI;
 
@@ -19,6 +19,8 @@ import org.wso2.msf4j.Request;
 import org.wso2.msf4j.Response;
 import org.wso2.msf4j.ServiceMethodInfo;
 
+import net.trajano.ms.common.JwtClaimsProcessor;
+
 /**
  * This performs assertion check on the header data. It ignores the /jwks URL
  * which should be publically accessible.
@@ -31,11 +33,11 @@ public class JwtAssertionInterceptor implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
-    @Autowired
+    @Autowired(required = false)
     @Qualifier("authz.audience")
     private URI audience;
 
-    @Autowired
+    @Autowired(required = false)
     private JwtClaimsProcessor claimsProcessor;
 
     @Autowired
@@ -43,15 +45,26 @@ public class JwtAssertionInterceptor implements
 
     private HttpsJwks signatureJwks;
 
-    @Autowired
+    @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
 
     @PostConstruct
     private void init() {
 
-        LOG.debug("signatureJwksUri={0}", signatureJwksUri);
-        signatureJwks = new HttpsJwks(signatureJwksUri.toASCIIString());
+        if (signatureJwksUri == null) {
+            LOG.debug("authz.signature.jwks.uri not specified, no signature verification will be performed");
+        } else {
+            LOG.debug("signatureJwksUri={0}", signatureJwksUri);
+            signatureJwks = new HttpsJwks(signatureJwksUri.toASCIIString());
+        }
+        if (claimsProcessor == null) {
+            LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation");
+
+        }
+        if (audience == null) {
+            LOG.warn("`authz.audience` was not specified, will accept any audience");
+        }
     }
 
     @Override
@@ -77,14 +90,24 @@ public class JwtAssertionInterceptor implements
             return false;
         }
         LOG.debug("assertion={0}", assertion);
-        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-            .setDecryptionKeyResolver(jwksProvider.getDecryptionKeyResolver())
-            .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(signatureJwks)).build();
+        final JwtConsumerBuilder builder = new JwtConsumerBuilder()
+            .setDecryptionKeyResolver(jwksProvider.getDecryptionKeyResolver());
+        if (signatureJwks != null) {
+            builder.setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(signatureJwks));
+        }
+        if (audience != null) {
+            builder.setExpectedAudience(audience.toASCIIString());
+        }
+        final JwtConsumer jwtConsumer = builder.build();
         final JwtClaims claims = jwtConsumer.processToClaims(assertion);
 
-        final boolean validateClaims = claimsProcessor.validateClaims(claims);
-        LOG.debug("{1}.validateClaims result={0}", validateClaims, claimsProcessor);
-        return validateClaims;
+        if (claimsProcessor == null) {
+            return true;
+        } else {
+            final boolean validateClaims = claimsProcessor.validateClaims(claims);
+            LOG.debug("{1}.validateClaims result={0}", validateClaims, claimsProcessor);
+            return validateClaims;
+        }
     }
 
 }

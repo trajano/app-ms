@@ -95,5 +95,8 @@
       </plugin>
     </plugins>
   </build>
+  <properties>
+    <microservice.mainClass>net.trajano.ms.example.SampleMain</microservice.mainClass>
+  </properties>
 </project>
 

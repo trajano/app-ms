@@ -8,6 +8,9 @@
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>sample-ms</artifactId>
+  <properties>
+    <microservice.mainClass>net.trajano.ms.example.SampleMain</microservice.mainClass>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

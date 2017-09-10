@@ -28,7 +28,7 @@ public class TokenGenerator {
      * @throws NoSuchAlgorithmException
      */
     @PostConstruct
-    private void initialize() throws NoSuchAlgorithmException {
+    public void init() throws NoSuchAlgorithmException {
 
         random = SecureRandom.getInstanceStrong();
     }
