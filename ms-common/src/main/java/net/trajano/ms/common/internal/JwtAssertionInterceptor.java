@@ -22,8 +22,8 @@ import org.wso2.msf4j.ServiceMethodInfo;
 import net.trajano.ms.common.JwtClaimsProcessor;
 
 /**
- * This performs assertion check on the header data. It ignores the /jwks URL
- * which should be publically accessible.
+ * This performs assertion check on the header data. It ignores the /jwks and
+ * /swagger URLs which should be publically accessible.
  *
  * @author Archimedes Trajano
  */
@@ -39,6 +39,10 @@ public class JwtAssertionInterceptor implements
 
     @Autowired(required = false)
     private JwtClaimsProcessor claimsProcessor;
+
+    @Autowired(required = false)
+    @Qualifier("authz.issuer")
+    private URI issuer;
 
     @Autowired
     private JwksProvider jwksProvider;
@@ -65,6 +69,9 @@ public class JwtAssertionInterceptor implements
         if (audience == null) {
             LOG.warn("`authz.audience` was not specified, will accept any audience");
         }
+        if (issuer == null) {
+            LOG.warn("`authz.issuer` was not specified, will accept any issuer");
+        }
     }
 
     @Override
@@ -82,9 +89,12 @@ public class JwtAssertionInterceptor implements
         LOG.debug("uri={0}", request.getUri());
         if ("/jwks".equals(request.getUri())) {
             return true;
+        } else if (request.getUri().startsWith("/swagger")) {
+            return true;
         }
         final String assertion = request.getHeader("X-JWT-Assertion");
         if (assertion == null) {
+            LOG.warn("Missing assertion on request for {0}", request.getUri());
             responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
             responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
             return false;
@@ -97,6 +107,9 @@ public class JwtAssertionInterceptor implements
         }
         if (audience != null) {
             builder.setExpectedAudience(audience.toASCIIString());
+        }
+        if (issuer != null) {
+            builder.setExpectedIssuer(issuer.toASCIIString());
         }
         final JwtConsumer jwtConsumer = builder.build();
         final JwtClaims claims = jwtConsumer.processToClaims(assertion);
