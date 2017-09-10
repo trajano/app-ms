@@ -36,6 +36,9 @@ public class JwtAssertionInterceptor implements
     private URI audience;
 
     @Autowired
+    private JwtClaimsProcessor claimsProcessor;
+
+    @Autowired
     private JwksProvider jwksProvider;
 
     private HttpsJwks signatureJwks;
@@ -79,7 +82,9 @@ public class JwtAssertionInterceptor implements
             .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(signatureJwks)).build();
         final JwtClaims claims = jwtConsumer.processToClaims(assertion);
 
-        return true;
+        final boolean validateClaims = claimsProcessor.validateClaims(claims);
+        LOG.debug("{1}.validateClaims result={0}", validateClaims, claimsProcessor);
+        return validateClaims;
     }
 
 }
