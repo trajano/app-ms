@@ -89,7 +89,7 @@ public class JwtAssertionInterceptor implements
         LOG.debug("uri={0}", request.getUri());
         if ("/jwks".equals(request.getUri())) {
             return true;
-        } else if (request.getUri().startsWith("/swagger")) {
+        } else if ("/swagger".equals(request.getUri())) {
             return true;
         }
         final String assertion = request.getHeader("X-JWT-Assertion");

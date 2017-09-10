@@ -6,19 +6,21 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import net.trajano.ms.common.CommonMs;
+
 @Configuration
 public class CacheProvider {
 
     @Bean
     public CacheManager cacheManager() {
 
-        final ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager("jws_cache");
+        final ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(CommonMs.JWKS_CACHE);
         return concurrentMapCacheManager;
     }
 
-    @Bean(name = "jws_cache")
+    @Bean(name = CommonMs.JWKS_CACHE)
     public Cache jwsCache(final CacheManager cacheManager) {
 
-        return cacheManager.getCache("jws_cache");
+        return cacheManager.getCache(CommonMs.JWKS_CACHE);
     }
 }

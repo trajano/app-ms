@@ -35,7 +35,8 @@ public class JwksResource {
      *
      * @return public key set.
      */
-    @ApiOperation("Provides the JWKS of public keys used for JWS and JWE for clients.")
+    @ApiOperation(value = "Get public keys",
+        notes = "Provides the JWKS of public keys used for JWS and JWE for clients.")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPublicKeySet() {

@@ -1,5 +1,7 @@
 package net.trajano.ms.common.internal;
 
+import static net.trajano.ms.common.CommonMs.JWKS_CACHE;
+
 import javax.annotation.PostConstruct;
 
 import org.jose4j.jwk.JsonWebKeySet;
@@ -35,7 +37,7 @@ public class JwksProvider {
      * This is a cache of JWKs. If this is not provided a default one is used.
      */
     @Autowired(required = false)
-    @Qualifier("jwks_cache")
+    @Qualifier(JWKS_CACHE)
     private Cache jwksCache;
 
     @Autowired
@@ -69,9 +71,9 @@ public class JwksProvider {
     public void checkCache() throws JoseException {
 
         if (jwksCache == null) {
-            LOG.warn("A org.springframework.cache.Cache named 'jwks_cache' was not provided an in-memory cache will be used");
-            final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager("jwks_cache");
-            jwksCache = cm.getCache("jwks_cache");
+            LOG.warn("A org.springframework.cache.Cache named {0} was not provided an in-memory cache will be used", JWKS_CACHE);
+            final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
+            jwksCache = cm.getCache(JWKS_CACHE);
         }
         LOG.debug("cache=" + jwksCache);
         buildJwks();
