@@ -54,12 +54,12 @@ public class JwtAssertionInterceptor implements
     private URI signatureJwksUri;
 
     @PostConstruct
-    private void init() {
+    public void init() {
 
         if (signatureJwksUri == null) {
             LOG.debug("authz.signature.jwks.uri not specified, no signature verification will be performed");
         } else {
-            LOG.debug("signatureJwksUri={0}", signatureJwksUri);
+            LOG.debug("signatureJwksUri={}", signatureJwksUri);
             signatureJwks = new HttpsJwks(signatureJwksUri.toASCIIString());
         }
         if (claimsProcessor == null) {
@@ -86,7 +86,7 @@ public class JwtAssertionInterceptor implements
         final Response responder,
         final ServiceMethodInfo serviceMethodInfo) throws Exception {
 
-        LOG.debug("uri={0}", request.getUri());
+        LOG.debug("uri={}", request.getUri());
         if ("/jwks".equals(request.getUri())) {
             return true;
         } else if ("/swagger".equals(request.getUri())) {
@@ -94,16 +94,20 @@ public class JwtAssertionInterceptor implements
         }
         final String assertion = request.getHeader("X-JWT-Assertion");
         if (assertion == null) {
-            LOG.warn("Missing assertion on request for {0}", request.getUri());
+            LOG.warn("Missing assertion on request for {}", request.getUri());
             responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
             responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+            responder.setEntity("missing assertion");
+            responder.send();
             return false;
         }
-        LOG.debug("assertion={0}", assertion);
+        LOG.debug("assertion={}", assertion);
         final JwtConsumerBuilder builder = new JwtConsumerBuilder()
             .setDecryptionKeyResolver(jwksProvider.getDecryptionKeyResolver());
         if (signatureJwks != null) {
             builder.setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(signatureJwks));
+        } else {
+            builder.setSkipSignatureVerification();
         }
         if (audience != null) {
             builder.setExpectedAudience(audience.toASCIIString());
@@ -118,9 +122,28 @@ public class JwtAssertionInterceptor implements
             return true;
         } else {
             final boolean validateClaims = claimsProcessor.validateClaims(claims);
-            LOG.debug("{1}.validateClaims result={0}", validateClaims, claimsProcessor);
-            return validateClaims;
+            LOG.debug("{}.validateClaims result={}", claimsProcessor, validateClaims);
+            if (!validateClaims) {
+                LOG.warn("Missing assertion on request for {}", request.getUri());
+                responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+                responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+                responder.setEntity("claims validation failed");
+                responder.send();
+                return false;
+            } else {
+                return true;
+            }
         }
+    }
+
+    public void setClaimsProcessor(final JwtClaimsProcessor claimsProcessor) {
+
+        this.claimsProcessor = claimsProcessor;
+    }
+
+    public void setJwksProvider(final JwksProvider jwksProvider) {
+
+        this.jwksProvider = jwksProvider;
     }
 
 }

@@ -2,8 +2,11 @@ package net.trajano.ms.common.internal;
 
 import static net.trajano.ms.common.CommonMs.JWKS_CACHE;
 
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 
+import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jwk.RsaJwkGenerator;
@@ -36,11 +39,8 @@ public class JwksProvider {
     /**
      * This is a cache of JWKs. If this is not provided a default one is used.
      */
-    @Autowired(required = false)
-    @Qualifier(JWKS_CACHE)
     private Cache jwksCache;
 
-    @Autowired
     private TokenGenerator tokenGenerator;
 
     /**
@@ -67,16 +67,15 @@ public class JwksProvider {
 
     }
 
-    @PostConstruct
-    public void checkCache() throws JoseException {
+    /**
+     * Gets a single signing key.
+     *
+     * @return
+     */
+    public RsaJsonWebKey getASigningKey() {
 
-        if (jwksCache == null) {
-            LOG.warn("A org.springframework.cache.Cache named {0} was not provided an in-memory cache will be used", JWKS_CACHE);
-            final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
-            jwksCache = cm.getCache(JWKS_CACHE);
-        }
-        LOG.debug("cache=" + jwksCache);
-        buildJwks();
+        final List<JsonWebKey> keys = getKeySet().getJsonWebKeys();
+        return (RsaJsonWebKey) keys.get(tokenGenerator.random().nextInt(keys.size()));
     }
 
     public DecryptionKeyResolver getDecryptionKeyResolver() {
@@ -102,6 +101,26 @@ public class JwksProvider {
         return keySet;
     }
 
+    @PostConstruct
+    public void init() throws JoseException {
+
+        if (jwksCache == null) {
+            LOG.warn("A org.springframework.cache.Cache named {0} was not provided an in-memory cache will be used", JWKS_CACHE);
+            final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
+            jwksCache = cm.getCache(JWKS_CACHE);
+        }
+        LOG.debug("cache=" + jwksCache);
+        buildJwks();
+    }
+
+    @Autowired(required = false)
+    @Qualifier(JWKS_CACHE)
+    public void setJwksCache(final Cache jwksCache) {
+
+        this.jwksCache = jwksCache;
+    }
+
+    @Autowired
     public void setTokenGenerator(final TokenGenerator tokenGenerator) {
 
         this.tokenGenerator = tokenGenerator;

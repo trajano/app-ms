@@ -3,18 +3,17 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.trajano.ms.app</groupId>
-    <artifactId>ms-base</artifactId>
+    <artifactId>app-ms</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <relativePath>../ms-base</relativePath>
   </parent>
-  <artifactId>sample-ms</artifactId>
-  <properties>
-    <microservice.mainClass>net.trajano.ms.example.SampleMain</microservice.mainClass>
-  </properties>
+  <artifactId>sample-gw</artifactId>
+  <name>Sample Gateway</name>
   <dependencies>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>ms-common</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>3.4.2</version>
     </dependency>
   </dependencies>
+  <build/>
 </project>
