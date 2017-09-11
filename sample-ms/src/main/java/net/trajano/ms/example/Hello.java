@@ -34,7 +34,10 @@ public class Hello {
     @ApiOperation(value = "displays hello world")
     @GET
     @Path("/o")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({
+        MediaType.APPLICATION_JSON,
+        MediaType.APPLICATION_XML
+    })
     public MyType helloWorld2() {
 
         final MyType myType = new MyType();

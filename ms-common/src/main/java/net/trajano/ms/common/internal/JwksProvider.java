@@ -112,6 +112,12 @@ public class JwksProvider {
         return (RSAKey) keys.get(tokenGenerator.random().nextInt(keys.size()));
     }
 
+    public RSAKey getDecryptionKey(final String keyID) {
+
+        return (RSAKey) getKeySet().getKeyByKeyId(keyID);
+
+    }
+
     /**
      * Builds the keys from the cache.
      *

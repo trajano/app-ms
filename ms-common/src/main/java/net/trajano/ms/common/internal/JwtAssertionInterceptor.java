@@ -21,8 +21,11 @@ import org.wso2.msf4j.ServiceMethodInfo;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.nimbusds.jose.JOSEObject;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -62,8 +65,6 @@ public class JwtAssertionInterceptor implements
      * Maximum number of keys to cache.
      */
     private final long MAX_NUMBER_OF_KEYS = 20;
-
-    private JWKSet signatureJwks;
 
     @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
@@ -142,20 +143,30 @@ public class JwtAssertionInterceptor implements
         }
         LOG.debug("assertion={}", assertion);
 
-        final JWSObject jws = JWSObject.parse(assertion);
+        JOSEObject joseObject = JOSEObject.parse(assertion);
+        if (joseObject instanceof JWEObject) {
+            final JWEObject jwe = (JWEObject) joseObject;
+            jwe.decrypt(new RSADecrypter(jwksProvider.getDecryptionKey(
+                jwe.getHeader().getKeyID())));
+            joseObject = JOSEObject.parse(jwe.getPayload().toString());
+        }
 
-        if (signatureJwksUri != null) {
-            final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID()));
-            if (!jws.verify(verifier)) {
-                LOG.warn("JWT verification failed for {}", request.getUri());
-                responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
-                responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
-                responder.setEntity("verification failed");
-                responder.send();
-                return false;
+        if (joseObject instanceof JWSObject) {
+            final JWSObject jws = (JWSObject) joseObject;
+
+            if (signatureJwksUri != null) {
+                final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID()));
+                if (!jws.verify(verifier)) {
+                    LOG.warn("JWT verification failed for {}", request.getUri());
+                    responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+                    responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+                    responder.setEntity("verification failed");
+                    responder.send();
+                    return false;
+                }
             }
         }
-        final JWTClaimsSet claims = JWTClaimsSet.parse(jws.getPayload().toString());
+        final JWTClaimsSet claims = JWTClaimsSet.parse(joseObject.getPayload().toString());
         if (audience != null) {
 
             if (!claims.getAudience().contains(audience.toASCIIString())) {
