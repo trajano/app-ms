@@ -1,14 +1,14 @@
 package net.trajano.ms.common.internal;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
 
-import org.jose4j.jwk.HttpsJwks;
-import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
-import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +18,15 @@ import org.wso2.msf4j.Interceptor;
 import org.wso2.msf4j.Request;
 import org.wso2.msf4j.Response;
 import org.wso2.msf4j.ServiceMethodInfo;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.JwtClaimsProcessor;
 
@@ -47,20 +56,50 @@ public class JwtAssertionInterceptor implements
     @Autowired
     private JwksProvider jwksProvider;
 
-    private HttpsJwks signatureJwks;
+    private Cache<String, RSAKey> keyCache;
+
+    /**
+     * Maximum number of keys to cache.
+     */
+    private final long MAX_NUMBER_OF_KEYS = 20;
+
+    private JWKSet signatureJwks;
 
     @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
 
+    /**
+     * Obtains the key from cache and if not the JWKs.
+     *
+     * @param keyId
+     *            key ID
+     * @return RSAKey with public key.
+     * @throws ExecutionException
+     */
+    private RSAKey getSigningKey(final String keyId) throws ExecutionException {
+
+        final RSAKey key = keyCache.get(keyId, () -> {
+
+            final JWKSet signatureJwks = JWKSet.load(signatureJwksUri.toURL());
+            signatureJwks.getKeys().forEach(t -> keyCache.put(t.getKeyID(), (RSAKey) t));
+            return keyCache.getIfPresent(keyId);
+        });
+        if (key == null) {
+            LOG.error("kid={} was not found in the key cache or {}", keyId, signatureJwksUri);
+        }
+        return key;
+    }
+
     @PostConstruct
-    public void init() {
+    public void init() throws MalformedURLException,
+        IOException,
+        ParseException {
+
+        keyCache = CacheBuilder.newBuilder().maximumSize(MAX_NUMBER_OF_KEYS).build();
 
         if (signatureJwksUri == null) {
-            LOG.debug("authz.signature.jwks.uri not specified, no signature verification will be performed");
-        } else {
-            LOG.debug("signatureJwksUri={}", signatureJwksUri);
-            signatureJwks = new HttpsJwks(signatureJwksUri.toASCIIString());
+            LOG.warn("authz.signature.jwks.uri not specified, no signature verification will be performed");
         }
         if (claimsProcessor == null) {
             LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation");
@@ -102,21 +141,50 @@ public class JwtAssertionInterceptor implements
             return false;
         }
         LOG.debug("assertion={}", assertion);
-        final JwtConsumerBuilder builder = new JwtConsumerBuilder()
-            .setDecryptionKeyResolver(jwksProvider.getDecryptionKeyResolver());
-        if (signatureJwks != null) {
-            builder.setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(signatureJwks));
-        } else {
-            builder.setSkipSignatureVerification();
+
+        final JWSObject jws = JWSObject.parse(assertion);
+
+        if (signatureJwksUri != null) {
+            final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID()));
+            if (!jws.verify(verifier)) {
+                LOG.warn("JWT verification failed for {}", request.getUri());
+                responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+                responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+                responder.setEntity("verification failed");
+                responder.send();
+                return false;
+            }
         }
+        final JWTClaimsSet claims = JWTClaimsSet.parse(jws.getPayload().toString());
         if (audience != null) {
-            builder.setExpectedAudience(audience.toASCIIString());
+
+            if (!claims.getAudience().contains(audience.toASCIIString())) {
+                LOG.warn("Audience {} did not match {} for {}", claims.getAudience(), audience, request.getUri());
+                responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+                responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+                responder.setEntity("audience verification failed");
+                responder.send();
+                return false;
+            }
         }
         if (issuer != null) {
-            builder.setExpectedIssuer(issuer.toASCIIString());
+            if (!claims.getIssuer().equals(issuer.toASCIIString())) {
+                LOG.warn("Issuer {} did not match {} for {}", claims.getIssuer(), issuer, request.getUri());
+                responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+                responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+                responder.setEntity("issuer verification failed");
+                responder.send();
+                return false;
+            }
         }
-        final JwtConsumer jwtConsumer = builder.build();
-        final JwtClaims claims = jwtConsumer.processToClaims(assertion);
+        if (claims.getExpirationTime() != null && claims.getExpirationTime().after(new Date())) {
+            LOG.warn("Claims expired for {}", request.getUri());
+            responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
+            responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
+            responder.setEntity("Claims expired");
+            responder.send();
+            return false;
+        }
 
         if (claimsProcessor == null) {
             return true;
@@ -124,7 +192,7 @@ public class JwtAssertionInterceptor implements
             final boolean validateClaims = claimsProcessor.validateClaims(claims);
             LOG.debug("{}.validateClaims result={}", claimsProcessor, validateClaims);
             if (!validateClaims) {
-                LOG.warn("Missing assertion on request for {}", request.getUri());
+                LOG.warn("Validation of claims failed on request for {}", request.getUri());
                 responder.setHeader(javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE, "JWT");
                 responder.setStatus(javax.ws.rs.core.Response.Status.UNAUTHORIZED.getStatusCode());
                 responder.setEntity("claims validation failed");

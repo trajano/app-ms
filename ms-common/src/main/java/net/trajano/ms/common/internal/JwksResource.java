@@ -6,7 +6,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.jose4j.jwk.JsonWebKey.OutputControlLevel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +41,7 @@ public class JwksResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String getPublicKeySet() {
 
-        return jwksProvider.getKeySet().toJson(OutputControlLevel.PUBLIC_ONLY);
+        return jwksProvider.getKeySet().toPublicJWKSet().toString();
     }
 
     public void setJwksProvider(final JwksProvider jwksProvider) {

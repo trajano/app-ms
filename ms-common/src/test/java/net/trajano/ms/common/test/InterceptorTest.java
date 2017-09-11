@@ -4,14 +4,18 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.jose4j.jwk.RsaJsonWebKey;
-import org.jose4j.jws.AlgorithmIdentifiers;
-import org.jose4j.jws.JsonWebSignature;
-import org.jose4j.jwt.JwtClaims;
+import java.text.ParseException;
+
 import org.junit.Test;
 import org.wso2.msf4j.Request;
 import org.wso2.msf4j.Response;
 import org.wso2.msf4j.ServiceMethodInfo;
+
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.JwtClaimsProcessor;
 import net.trajano.ms.common.TokenGenerator;
@@ -35,9 +39,13 @@ public class InterceptorTest {
         }
 
         @Override
-        public boolean validateClaims(final JwtClaims claims) {
+        public boolean validateClaims(final JWTClaimsSet claims) {
 
-            return claimValue.equals(claims.getClaimsMap().get(claimName));
+            try {
+                return claimValue.equals(claims.getStringClaim(claimName));
+            } catch (final ParseException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -55,15 +63,10 @@ public class InterceptorTest {
         interceptor.setJwksProvider(jwksProvider);
         interceptor.init();
 
-        final JwtClaims jwtClaims = new JwtClaims();
-        jwtClaims.setClaim("typ", "https://example.com/register");
-        final JsonWebSignature jws = new JsonWebSignature();
-        jws.setPayload(jwtClaims.toJson());
-        final RsaJsonWebKey aSigningKey = jwksProvider.getASigningKey();
-        jws.setKey(aSigningKey.getPrivateKey());
-        jws.setKeyIdHeaderValue(aSigningKey.getKeyId());
-        jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_USING_SHA512);
-        final String jwt = jws.getCompactSerialization();
+        final JWTClaimsSet jwtClaims = JWTClaimsSet.parse("{\"typ\":\"https://example.com/register\"}");
+        final JWSObject jws = new JWSObject(new JWSHeader(JWSAlgorithm.RS512), new Payload(jwtClaims.toString()));
+        jws.sign(jwksProvider.getASigner());
+        final String jwt = jws.serialize();
         System.out.println(jwt);
         final Request request = mock(Request.class);
         when(request.getHeader("X-JWT-Assertion")).thenReturn(jwt);

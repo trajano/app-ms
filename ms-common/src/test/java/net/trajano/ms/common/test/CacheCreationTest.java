@@ -3,9 +3,10 @@ package net.trajano.ms.common.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.jose4j.jwk.JsonWebKeySet;
 import org.junit.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+
+import com.nimbusds.jose.jwk.JWKSet;
 
 import net.trajano.ms.common.TokenGenerator;
 import net.trajano.ms.common.internal.JwksProvider;
@@ -39,9 +40,9 @@ public class CacheCreationTest {
         tokenGenerator.init();
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.init();
-        final JsonWebKeySet keySet = jwksProvider.getKeySet();
+        final JWKSet keySet = jwksProvider.getKeySet();
         assertNotNull(keySet);
-        assertEquals(JwksProvider.MIN_NUMBER_OF_KEYS, keySet.getJsonWebKeys().size());
+        assertEquals(JwksProvider.MIN_NUMBER_OF_KEYS, keySet.getKeys().size());
     }
 
     @Test

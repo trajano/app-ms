@@ -1,6 +1,6 @@
 package net.trajano.ms.common;
 
-import org.jose4j.jwt.JwtClaims;
+import com.nimbusds.jwt.JWTClaimsSet;
 
 public interface JwtClaimsProcessor {
 
@@ -11,5 +11,5 @@ public interface JwtClaimsProcessor {
      * @param claims
      * @return <code>true</code> if the claims are valid for the application.
      */
-    boolean validateClaims(JwtClaims claims);
+    boolean validateClaims(JWTClaimsSet claims);
 }
