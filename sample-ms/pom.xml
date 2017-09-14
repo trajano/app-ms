@@ -8,7 +8,6 @@
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>sample-ms</artifactId>
-  <packaging>bundle</packaging>
   <description>Sample Microservice</description>
   <properties>
     <microservice.mainClass>net.trajano.ms.example.SampleMain</microservice.mainClass>
