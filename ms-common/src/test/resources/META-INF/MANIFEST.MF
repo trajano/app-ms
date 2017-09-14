@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-Description: Trajano is an IT Consulting/Contracting firm speci
+ alising in end-to-end enterprise architecture.
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-SymbolicName: sample-ms
+Built-By: trajano
+Bnd-LastModified: 1505367502333
+Bundle-ManifestVersion: 2
+Bundle-Copyright: WSO2 Inc
+Bundle-Vendor: WSO2 Inc
+Tool: Bnd-3.3.0.201609221906
+Main-Class: net.trajano.ms.example.SampleMain
+Bundle-Name: sample-ms
+Bundle-Version: 0.0.1.SNAPSHOT
+SCM-Revision: a40ef1676c26b248f3bc32c6eabafd262d4a8436
+Build-Jdk: 1.8.0_144
+Created-By: Apache Maven Bundle Plugin
+

@@ -129,6 +129,8 @@ public class JwtAssertionInterceptor implements
         LOG.debug("uri={}", request.getUri());
         if ("/jwks".equals(request.getUri())) {
             return true;
+        } else if ("/build-info".equals(request.getUri())) {
+            return true;
         } else if ("/swagger".equals(request.getUri())) {
             return true;
         }
