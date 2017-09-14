@@ -1,16 +1,19 @@
 package net.trajano.ms.common.internal;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 import java.util.jar.Manifest;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,23 +29,39 @@ import io.swagger.annotations.ApiOperation;
 @Path("/build-info")
 public class BuildInfoResource {
 
+    private String json;
+
+    private String rawContent;
+
     @ApiOperation(value = "Build Info",
         notes = "Reads the MANIFEST.MF and write out the contents.")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public InputStream getManifest() throws IOException {
+    public String getManifest() {
 
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");
+        return rawContent;
     }
 
     @ApiOperation(value = "Build Info",
         notes = "Reads the MANIFEST.MF and write out the contents.")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<Object, Object> getManifestAttributes() throws IOException {
+    public String getManifestAsJson() {
+
+        return json;
+    }
+
+    /**
+     * Preloads the manifest so it does not need to be evaluated anymore.
+     */
+    @PostConstruct
+    public void init() throws IOException {
 
         final Manifest mf = new Manifest(Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/MANIFEST.MF"));
-        return mf.getMainAttributes();
+        json = new Gson().toJson(mf.getMainAttributes());
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        mf.write(baos);
+        rawContent = new String(baos.toByteArray(), StandardCharsets.UTF_8);
     }
 
 }
