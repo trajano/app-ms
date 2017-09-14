@@ -12,7 +12,7 @@
 .vscode/
 artifacts.jar
 bin
-dendency-reduced-pom.xml
+dependency-reduced-pom.xml
 deploy-keys.tar
 derby.log
 logs.zip

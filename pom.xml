@@ -14,6 +14,7 @@
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
+    <module>ms-gateway</module>
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
@@ -27,6 +28,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>ms-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>ms-gateway</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

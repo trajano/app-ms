@@ -8,6 +8,8 @@
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>sample-ms</artifactId>
+  <packaging>bundle</packaging>
+  <description>Sample Microservice</description>
   <properties>
     <microservice.mainClass>net.trajano.ms.example.SampleMain</microservice.mainClass>
   </properties>
@@ -15,6 +17,12 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>ms-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
