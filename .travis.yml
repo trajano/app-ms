@@ -1,0 +1,48 @@
+branches:
+  only:
+  - master
+  - "/^app-ms-[\\d\\.]+$/"
+language: java
+jdk:
+- oraclejdk8
+sudo: false
+cache:
+  directories:
+  - "$HOME/.m2/repository"
+  - "$HOME/.sonar/cache"
+addons:
+  apt:
+    packages:
+    - graphviz
+    - ca-certificates
+  ssh_known_hosts:
+  - github.com
+  - site.trajano.net:6022
+  sonarqube:
+    token:
+      secure: N2uRP7Ujbqou4TmMgSJcl/6fjWCSEzWuoiiyT085hZ5ANVFPqFlSfYKg/IPIsqZJXdf60GD+Cm9lIusjZih2RZ3dnVBnTXABeeBPJp5c7LuZHxdleSZ39WYT9p2Vya13kJCJvI12VrqOmsU9Bw1D9PNgOtoC+94JIhTQOcxy6UEn7GWg+zh0oNzl/t749psLc+23eY/DCohWyMK2xYM9raGpjL6SM/Bi1ip9lPIdza77J/emAxmgL3aN57xlzxL1y1dFru3rRXqVAtOmg/A6GtgF1XlpDkiAESZ/8Bwup7BT4BmdqkatViLLCWJIKlPZRjCnlAn+X2EvwoC1lgKkVlcr5kLcompspxtRvgHFJf+82CBqpntBO8NSP0nnxdtBdmzxUrtX2UUoazrYJxOiBtJpCcps72bmoLoV69VqPeBsmHeDai8vK+IKzHWy+vFYavPGnOKnARXunbb93dKwtjuVo5eloz58fyOQ6tYkcI5xyVfjQtA6ftN9vdBbpgiuF23PqzO6UXeZbLXsBqdcaqfnp7KymLubjfYbspMtbjbi+46aT43Q8enm6GrRPyi4/d7Ap9lzTPfj3b1CkZhZYcm64iRzqawQYkftgCBlUPeFSDWQR+vn1+iJzG4USQrsmRUnpg7jbZb8h9en5u2lsUgtWohrrsFr6cbxPqXuGHE=
+env:
+  global:
+    secure: jupgSX5kMgak19srE5NGPNGvQg4Rlm/+xqL3uPWf3hGz1EaqUmjx0C2LObl5A7SOp1qSgk+tYLY4RqkxTXcx+7CuO7F5wAHYmTOB0JwCn+FhSR2L7A2h5X8lbWhi0S0BrkTboYQ2VubWjfGjiTI0H4lpUWSkewZvLYG7FmBf+2PoZ7K/I0UUgtOwZhLCzO3qdjfynqBz8A2hCYJ9imFBMLSUfkFzla7g1cEBFriPM0/wdho89AUJrbiaZdMoToUJ9FH7x/I4YLEIaiSzn61gNCExIy8dYZhwT+sGWbJQQHas7ej6p6TGwAljIM0P8B3FfX/PQqUlsPnbLccH1RR7BxcZTThbR+Nye8FLBQFWKUCRdavyvdbYOJ6N0iXCussD2hDKbe9J1yG8XuYtDKSjXJ1AVEDlJnUKGlyb+ggKXOQy8zBJ7rDVNhRrRUNh4CS0ACUYQS4C5C3z/fiXlvqFhTHhVvd5Pjfy4bn0YOn+ieKslj6RzqLUtyMSAT+tvS8bmyFTy13rb1m3c7sNefh2pf6X8/m6hd1L/KvAX4x8BAeHcxgnL+MonSSctpDMKUAKz1Sv/cm5l3lUYjmCr9mIDkbQig6u0kys3Dz6IXleAxHXfPivvihL95eLkjA+4KNUugojWaksucpTMYA0pFMwtml4iNGtpSh7hRMoyYfdLLc=
+before_install:
+- openssl aes-256-cbc -K $encrypted_67e199aa2595_key -iv $encrypted_67e199aa2595_iv
+  -in deploy-keys.tar.enc -out deploy-keys.tar -d
+install:
+- tar xf deploy-keys.tar -C $HOME && chmod go-rwx -R $HOME/.m2 $HOME/.ssh
+- mvn dependency:go-offline
+before_script:
+- mvn clean
+script:
+- mvn verify site sonar:sonar
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: mvn -e deploy site-deploy
+  on:
+    branch: master
+- provider: script
+  skip_cleanup: true
+  script: printf 'scm.tag=%1s\nscm.url=scm:git:https://git@github.com/%2s.git' "${TRAVIS_TAG}"
+    "${TRAVIS_REPO_SLUG}" > release.properties && mvn release:perform
+  on:
+    tags: true
