@@ -1,5 +1,7 @@
 package net.trajano.ms.common.test;
 
+import static org.junit.Assert.assertFalse;
+
 import java.util.jar.Manifest;
 
 import org.junit.Assert;
@@ -13,7 +15,7 @@ public class ManiftestTest {
     public void testManifest() throws Exception {
 
         final Manifest mf = new Manifest(Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/MANIFEST.MF"));
-        Assert.assertTrue(mf.getMainAttributes().size() > 0);
+        assertFalse(mf.getMainAttributes().isEmpty());
     }
 
     @Test
