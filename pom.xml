@@ -11,7 +11,6 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Microservice Application</name>
-  <properties><repo.id>app-ms</repo.id></properties>
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
@@ -19,6 +18,9 @@
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
+  <properties>
+    <repo.id>app-ms</repo.id>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>

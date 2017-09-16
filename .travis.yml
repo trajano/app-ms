@@ -29,7 +29,6 @@ before_install:
   -in deploy-keys.tar.enc -out deploy-keys.tar -d
 install:
 - tar xf deploy-keys.tar -C $HOME && chmod go-rwx -R $HOME/.m2 $HOME/.ssh
-- mvn dependency:go-offline
 before_script:
 - mvn clean
 script:
