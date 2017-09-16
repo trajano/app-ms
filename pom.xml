@@ -11,6 +11,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Microservice Application</name>
+  <url>http://site.trajano.net/${repo.id}</url>
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
@@ -18,6 +19,27 @@
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
+  <scm>
+    <connection>scm:git:https://github.com/trajano/${repo.id}.git</connection>
+    <developerConnection>scm:git:https://github.com/trajano/${repo.id}.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/trajano/${repo.id}</url>
+  </scm>
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/trajano/${repo.id}/issues</url>
+  </issueManagement>
+  <ciManagement>
+    <system>Travis</system>
+    <url>https://travis-ci.org/trajano/${repo.id}</url>
+  </ciManagement>
+  <distributionManagement>
+    <site>
+      <id>trajano-site</id>
+      <name>Trajano Maven Sites</name>
+      <url>sftp://site.trajano.net:6022/s/${repo.id}/</url>
+    </site>
+  </distributionManagement>
   <properties>
     <repo.id>app-ms</repo.id>
   </properties>
