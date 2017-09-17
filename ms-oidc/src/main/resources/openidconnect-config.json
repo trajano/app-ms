@@ -1,0 +1,12 @@
+{
+	"issuers": [
+		{
+			"id": "google",
+			"uri": "https://accounts.google.com",
+			"display": "page",
+			"prompt": "consent",
+			"client_id": "clientid",
+			"client_secret": "clientSecret"
+		}
+	]
+}

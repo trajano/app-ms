@@ -5,10 +5,10 @@ This is a microservice that handles OpenID Connect authentication.  The purpose 
 
 Endpoints:
 
-* `/auth-uri` URI to the authentication endpoint 
-* `/auth` starts the authentication process 
-* `/jwks` JWKS URI for public keys if JWE is requested
-* `/cb` Callback endpoint
+* `/oidc/auth-uri` URI to the authentication endpoint 
+* `/oidc/auth` starts the authentication process 
+* `/oidc/jwks` JWKS URI for public keys if JWE is requested
+* `/oidc/cb` Callback endpoint
 
 ### /auth endpoint
 

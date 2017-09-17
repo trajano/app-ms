@@ -10,6 +10,11 @@
   <artifactId>ms-oidc</artifactId>
   <name>OpenID Connect</name>
   <description>This microservice handles the authentication process via OpenID Connect.</description>
-  <dependencies/>
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>ms-common</artifactId>
+    </dependency>
+  </dependencies>
   <build/>
 </project>

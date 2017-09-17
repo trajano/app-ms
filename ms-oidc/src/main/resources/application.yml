@@ -1,7 +1,8 @@
-issuers:
-- issuer: https://accounts.google.com
-  display: page
-  prompt: consent
-  client_id: asdf
-  client_secret: def
-  
+#issuers:
+#- https://accounts.google.com
+#  "https://accounts.google.com":
+#    display: page
+#    prompt: consent
+#    client_id: clientid
+#    client_secret: clientSecret
+token_endpoint: http://token-ms/token
