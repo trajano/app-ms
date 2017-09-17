@@ -14,7 +14,7 @@ import io.swagger.annotations.Api;
 @Path("/v1")
 public class ApiV1 extends Router {
 
-    @Path("/hello")
+    @Path("/{path:.*}")
     public Response hello() {
 
         // routeTo

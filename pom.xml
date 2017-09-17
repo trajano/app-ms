@@ -67,4 +67,5 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <description>This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.</description>
 </project>
