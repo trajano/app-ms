@@ -11,11 +11,13 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Microservice Application</name>
+  <description>This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.</description>
   <url>http://site.trajano.net/${repo.id}</url>
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
     <module>ms-gateway</module>
+    <module>ms-oidc</module>
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
@@ -67,5 +69,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <description>This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.</description>
 </project>

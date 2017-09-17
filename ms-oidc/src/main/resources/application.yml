@@ -1,0 +1,7 @@
+issuers:
+- issuer: https://accounts.google.com
+  display: page
+  prompt: consent
+  client_id: asdf
+  client_secret: def
+  
