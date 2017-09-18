@@ -11,11 +11,8 @@ import javax.ws.rs.core.Response.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.wso2.msf4j.client.MSF4JClient;
-import org.wso2.msf4j.client.exception.RestServiceException;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.oidc.IssuerConfig;
-import net.trajano.ms.oidc.IssuersConfig;
 
 @Api
 @Component
@@ -23,7 +20,7 @@ import net.trajano.ms.oidc.IssuersConfig;
 public class OpenIdConnectResource {
 
     @Autowired
-    private IssuersConfig issuersConfig;
+    private ServiceConfiguration serviceConfiguration;
 
     @Path("/auth-uri")
     @GET
@@ -35,15 +32,11 @@ public class OpenIdConnectResource {
             return Response.ok("Missing issuer_id").status(Status.BAD_REQUEST).build();
         }
 
-        final IssuerConfig issuerConfig = issuersConfig.getIssuer(issuerId);
+        final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);
         if (issuerConfig == null) {
             return Response.ok("Invalid issuer_id").status(Status.BAD_REQUEST).build();
         }
-        try {
-            System.out.println(new MSF4JClient.Builder<WellKnownAPI>().serviceEndpoint(issuerConfig.getUri().toASCIIString()).build().api().openIdConfiguration());
-        } catch (final RestServiceException e) {
-            e.printStackTrace();
-        }
+        System.out.println(new MSF4JClient.Builder<WellKnownAPI>().apiClass(WellKnownAPI.class).serviceEndpoint(issuerConfig.getUri().toASCIIString()).build().api().openIdConfiguration());
         //        final HttpGet getConfig = new HttpGet(issuerConfig.getUri().resolve(".well-known/openid-config"));
 
         //
@@ -51,6 +44,6 @@ public class OpenIdConnectResource {
         //        issuerConfig.getUri()
         //        HttpClients.createDefault().execute(request)
         //ClientBuilder.newBuilder();
-        return Response.ok("Hello world" + issuersConfig.getIssuer(issuerId)).build();
+        return Response.ok("Hello world" + issuerConfig.buildAuthenticationRequestUri(state)).build();
     }
 }

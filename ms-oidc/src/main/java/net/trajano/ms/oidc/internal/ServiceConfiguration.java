@@ -3,13 +3,13 @@ package net.trajano.ms.oidc.internal;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
@@ -17,15 +17,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import net.trajano.ms.oidc.IssuersConfig;
-
 @Configuration
-public class OpenIdConnectConfig {
+public class ServiceConfiguration {
 
     @Autowired
     private ApplicationContext applicationContext;
 
-    private IssuersConfig issuers;
+    private Map<String, IssuerConfig> issuers;
 
     @Value("${issuersJson:openidconnect-config.json}")
     private String issuersJson;
@@ -33,10 +31,9 @@ public class OpenIdConnectConfig {
     @Value("${token_endpoint:}")
     private URI tokenEndpoint;
 
-    @Bean
-    public IssuersConfig getIssuers() {
+    public IssuerConfig getIssuerConfig(final String issuerId) {
 
-        return issuers;
+        return issuers.get(issuerId);
     }
 
     @PostConstruct
@@ -50,13 +47,9 @@ public class OpenIdConnectConfig {
         }
 
         final Gson gson = new Gson();
-        issuers = gson.fromJson(new InputStreamReader(resource.getInputStream()), IssuersConfig.class);
-    }
+        final IssuersConfig issuersConfig = gson.fromJson(new InputStreamReader(resource.getInputStream()), IssuersConfig.class);
+        issuers = issuersConfig.load();
 
-    @Override
-    public String toString() {
-
-        return "OpenIdConnectConfig [issuers=" + applicationContext + ", tokenEndpoint=" + tokenEndpoint + "]";
     }
 
 }
