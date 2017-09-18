@@ -39,8 +39,8 @@ public class IssuersConfig {
     }
 
     /**
-     * Performs the load of the issuer data and returns a map from ID to the issuer
-     * config.
+     * Performs the load of the issuer data and returns a map from ID to the
+     * issuer config.
      */
     public Map<String, IssuerConfig> load() {
 

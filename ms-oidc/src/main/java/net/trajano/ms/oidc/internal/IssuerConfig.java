@@ -2,6 +2,7 @@ package net.trajano.ms.oidc.internal;
 
 import java.net.URI;
 
+import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -29,7 +30,7 @@ public class IssuerConfig {
         System.out.println(openIdConfiguration.getResponseTypesSupported());
         openIdConfiguration.getAuthorizationEndpoint();
         // TODO Auto-generated method stub
-        //        UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint());
+        UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint());
         return null;
     }
 
