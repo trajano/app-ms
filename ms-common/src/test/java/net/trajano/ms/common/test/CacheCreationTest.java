@@ -8,8 +8,8 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import com.nimbusds.jose.jwk.JWKSet;
 
+import net.trajano.ms.common.JwksProvider;
 import net.trajano.ms.common.TokenGenerator;
-import net.trajano.ms.common.internal.JwksProvider;
 import net.trajano.ms.common.internal.JwksResource;
 
 public class CacheCreationTest {

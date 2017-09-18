@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import net.trajano.ms.common.JwksProvider;
 
 /**
  * This endpoint is exposed by every microservice to provide JWKS that is used

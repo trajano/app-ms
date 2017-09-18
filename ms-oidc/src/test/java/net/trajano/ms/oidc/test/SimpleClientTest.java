@@ -27,7 +27,7 @@ public class SimpleClientTest {
         Assert.assertNotNull(openIdConfiguration.getAuthorizationEndpoint());
         issuerConfig.setOpenIdConfiguration(openIdConfiguration);
         //            new MSF4JClient.Builder<WellKnownAPI>().apiClass(WellKnownAPI.class).serviceEndpoint(issuerConfig.getUri().toASCIIString()).build().api().openIdConfiguration());
-        issuerConfig.buildAuthenticationRequestUri(URI.create("https://localhost/cb"), "abcde");
+        issuerConfig.buildAuthenticationRequestUri(URI.create("https://localhost/cb"), "abcde", "nonce");
     }
 
 }

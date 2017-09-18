@@ -1,4 +1,4 @@
-package net.trajano.ms.common.internal;
+package net.trajano.ms.common;
 
 import static net.trajano.ms.common.CommonMs.JWKS_CACHE;
 
@@ -29,8 +29,6 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
-
-import net.trajano.ms.common.TokenGenerator;
 
 @Component
 public class JwksProvider {

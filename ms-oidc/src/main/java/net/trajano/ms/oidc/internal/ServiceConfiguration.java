@@ -14,6 +14,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +36,9 @@ public class ServiceConfiguration {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired(required = false)
+    private CacheManager cacheManager;
 
     @Autowired
     private ClientBuilder cb;
@@ -59,7 +65,7 @@ public class ServiceConfiguration {
     }
 
     @PostConstruct
-    public void loadConfiguration() throws JsonSyntaxException,
+    public void init() throws JsonSyntaxException,
         JsonIOException,
         IOException {
 
@@ -80,12 +86,22 @@ public class ServiceConfiguration {
         issuers = issuersConfig.getIssuers().stream()
             .collect(Collectors.toMap(IssuerConfig::getId, Function.identity()));
 
+        if (cacheManager == null) {
+            cacheManager = new ConcurrentMapCacheManager();
+        }
+
     }
 
     @Bean
     public JwtAssertionRequiredFunction noAssertionRequired() {
 
         return new AssertionNotRequiredFunction();
+    }
+
+    @Bean(name = "nonce")
+    public Cache nonceCache() {
+
+        return cacheManager.getCache("nonce");
     }
 
 }

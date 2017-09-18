@@ -32,6 +32,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.DefaultAssertionRequiredFunction;
+import net.trajano.ms.common.JwksProvider;
 import net.trajano.ms.common.JwtAssertionRequiredFunction;
 import net.trajano.ms.common.JwtClaimsProcessor;
 
