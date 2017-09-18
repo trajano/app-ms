@@ -87,6 +87,11 @@ public class IssuerConfig {
         return clientSecret;
     }
 
+    public String getDisplay() {
+
+        return display;
+    }
+
     public String getId() {
 
         return id;
@@ -102,9 +107,24 @@ public class IssuerConfig {
         return jwkset;
     }
 
+    public JWKSet getJwkset() {
+
+        return jwkset;
+    }
+
     public OpenIdConfiguration getOpenIdConfiguration() {
 
         return openIdConfiguration;
+    }
+
+    public String getPrompt() {
+
+        return prompt;
+    }
+
+    public String getScope() {
+
+        return scope;
     }
 
     public URI getUri() {
@@ -122,14 +142,34 @@ public class IssuerConfig {
         this.clientSecret = clientSecret;
     }
 
+    public void setDisplay(final String display) {
+
+        this.display = display;
+    }
+
     public void setId(final String id) {
 
         this.id = id;
     }
 
+    public void setJwkset(final JWKSet jwkset) {
+
+        this.jwkset = jwkset;
+    }
+
     public void setOpenIdConfiguration(final OpenIdConfiguration openIdConfiguration) {
 
         this.openIdConfiguration = openIdConfiguration;
+    }
+
+    public void setPrompt(final String prompt) {
+
+        this.prompt = prompt;
+    }
+
+    public void setScope(final String scope) {
+
+        this.scope = scope;
     }
 
     public void setUri(final URI uri) {

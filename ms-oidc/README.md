@@ -17,7 +17,7 @@ Endpoints:
 
 The issuer must be registered internally and requires a `.well-known/openid-configuration` endpoint
 
-### /cb endpoint
+### /cb/{issuer_id} endpoint
 
 The callback endpoint will call the token endpoint of the IP and will provide an OAuth 2.0 token specific for the application that the rest of the clients will be using.
 

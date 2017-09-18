@@ -19,6 +19,8 @@ public class SimpleClientTest {
 
         final IssuerConfig issuerConfig = new IssuerConfig();
         issuerConfig.setUri(URI.create("https://accounts.google.com"));
+        issuerConfig.setScope("openid");
+        issuerConfig.setClientId("asdf");
         final JaxRsClientProvider jaxRsClientProvider = new JaxRsClientProvider();
         //        final OpenIdConfiguration openIdConfiguration = new MSF4JClient.Builder<WellKnownAPI>().apiClass(WellKnownAPI.class).serviceEndpoint(issuerConfig.getUri().toASCIIString()).build().api().openIdConfiguration();
         final OpenIdConfiguration openIdConfiguration = jaxRsClientProvider.clientBuilder().build()
