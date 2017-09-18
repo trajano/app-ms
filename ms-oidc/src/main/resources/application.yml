@@ -6,3 +6,4 @@
 #    client_id: clientid
 #    client_secret: clientSecret
 token_endpoint: http://token-ms/token
+redirect_uri: http://localhost:8080/oidc/cb

@@ -1,15 +1,14 @@
 package net.trajano.ms.common;
 
+import java.util.function.Function;
+
 import com.nimbusds.jwt.JWTClaimsSet;
 
-public interface JwtClaimsProcessor {
+/**
+ * Performs validation on the claims. This is used to perform the
+ * authorizations.
+ */
+public interface JwtClaimsProcessor extends
+    Function<JWTClaimsSet, Boolean> {
 
-    /**
-     * Performs validation on the claims. This is used to perform the
-     * authorizations.
-     *
-     * @param claims
-     * @return <code>true</code> if the claims are valid for the application.
-     */
-    boolean validateClaims(JWTClaimsSet claims);
 }

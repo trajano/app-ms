@@ -12,26 +12,51 @@ import net.trajano.ms.oidc.OpenIdConfiguration;
 @XmlRootElement
 public class IssuerConfig {
 
-    @XmlElement(name = "client_id")
+    @XmlElement(name = "client_id",
+        required = true)
     private String clientId;
 
-    @XmlElement(name = "client_secret")
+    @XmlElement(name = "client_secret",
+        required = true)
     private String clientSecret;
 
+    private String display;
+
+    @XmlElement(required = true)
     private String id;
 
     @XmlTransient
     private OpenIdConfiguration openIdConfiguration;
 
+    private String prompt;
+
+    @XmlElement(name = "scope",
+        required = true)
+    private String scope;
+
+    @XmlElement(required = true)
     private URI uri;
 
-    public URI buildAuthenticationRequestUri(final String state) {
+    public URI buildAuthenticationRequestUri(final URI redirectUri,
+        final String state) {
 
-        System.out.println(openIdConfiguration.getResponseTypesSupported());
         openIdConfiguration.getAuthorizationEndpoint();
-        // TODO Auto-generated method stub
-        UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint());
-        return null;
+        final UriBuilder b = UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint());
+        b.queryParam("response_type", "code");
+        b.queryParam("scope", scope);
+        b.queryParam("client_id", clientId);
+        b.queryParam("redirect_uri", redirectUri);
+        if (state != null) {
+            b.queryParam("state", state);
+        }
+        if (display != null) {
+            b.queryParam("display", display);
+        }
+        if (prompt != null) {
+            b.queryParam("prompt", prompt);
+        }
+        return b
+            .build();
     }
 
     public String getClientId() {

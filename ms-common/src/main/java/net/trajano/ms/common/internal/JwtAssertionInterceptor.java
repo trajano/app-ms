@@ -31,6 +31,8 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
+import net.trajano.ms.common.DefaultAssertionRequiredFunction;
+import net.trajano.ms.common.JwtAssertionRequiredFunction;
 import net.trajano.ms.common.JwtClaimsProcessor;
 
 /**
@@ -44,6 +46,9 @@ public class JwtAssertionInterceptor implements
     Interceptor {
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
+
+    @Autowired(required = false)
+    private JwtAssertionRequiredFunction assertionRequiredFunction;
 
     @Autowired(required = false)
     @Qualifier("authz.audience")
@@ -112,6 +117,11 @@ public class JwtAssertionInterceptor implements
         if (issuer == null) {
             LOG.warn("`authz.issuer` was not specified, will accept any issuer");
         }
+
+        if (assertionRequiredFunction == null) {
+            LOG.debug("assertionRequiredFunction  was not specified, will use the default");
+            assertionRequiredFunction = new DefaultAssertionRequiredFunction();
+        }
     }
 
     @Override
@@ -126,12 +136,7 @@ public class JwtAssertionInterceptor implements
         final Response responder,
         final ServiceMethodInfo serviceMethodInfo) throws Exception {
 
-        LOG.debug("uri={}", request.getUri());
-        if ("/jwks".equals(request.getUri())) {
-            return true;
-        } else if ("/build-info".equals(request.getUri())) {
-            return true;
-        } else if ("/swagger".equals(request.getUri())) {
+        if (!assertionRequiredFunction.apply(request.getUri())) {
             return true;
         }
         final String assertion = request.getHeader("X-JWT-Assertion");
@@ -202,7 +207,7 @@ public class JwtAssertionInterceptor implements
         if (claimsProcessor == null) {
             return true;
         } else {
-            final boolean validateClaims = claimsProcessor.validateClaims(claims);
+            final boolean validateClaims = claimsProcessor.apply(claims);
             LOG.debug("{}.validateClaims result={}", claimsProcessor, validateClaims);
             if (!validateClaims) {
                 LOG.warn("Validation of claims failed on request for {}", request.getUri());

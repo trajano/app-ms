@@ -39,7 +39,7 @@ public class InterceptorTest {
         }
 
         @Override
-        public boolean validateClaims(final JWTClaimsSet claims) {
+        public Boolean apply(final JWTClaimsSet claims) {
 
             try {
                 return claimValue.equals(claims.getStringClaim(claimName));
