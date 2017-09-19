@@ -16,6 +16,7 @@
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
+    <module>ms-engine</module>
     <module>ms-gateway</module>
     <module>ms-oidc</module>
     <module>sample-gw</module>
