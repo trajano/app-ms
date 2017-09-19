@@ -6,13 +6,10 @@ import java.util.Collections;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
-import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.TracingConfig;
-import org.glassfish.jersey.server.TracingUtils;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
@@ -46,13 +43,9 @@ public class VertxContainer implements
         final URI requestUri = URI.create(event.absoluteURI());
 
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(), new MapPropertiesDelegate());
-        TracingUtils.initTracingSupport(TracingConfig.ALL, TracingLogger.Level.VERBOSE, request);
-        //request.setEntityStream(new VertxInputStream(event));
-        System.out.println(request);
 
         request.setWriter(new VertxWebResponseWriter(event.response()));
         appHandler.handle(request);
-        System.out.println(request.getUriInfo().getMatchedResources());
     }
 
 }

@@ -25,7 +25,9 @@ public class VertxWebResponseWriter implements
     @Override
     public void commit() {
 
-        response.end();
+        if (!response.ended()) {
+            response.end();
+        }
 
     }
 
