@@ -13,7 +13,7 @@ public class Main {
         Vertx.clusteredVertx(options, event -> {
             final Vertx vertx = event.result();
             final HttpServer http = vertx.createHttpServer();
-            new VertxContainer(http, new MyApp());
+            new VertxContainer(http, MyApp.class);
         });
 
     }

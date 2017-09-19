@@ -40,7 +40,7 @@ public class VertxWebResponseWriter implements
     @Override
     public void failure(final Throwable error) {
 
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
 
     }
 
@@ -48,7 +48,7 @@ public class VertxWebResponseWriter implements
     public void setSuspendTimeout(final long timeOut,
         final TimeUnit timeUnit) throws IllegalStateException {
 
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
 
     }
 
@@ -57,7 +57,7 @@ public class VertxWebResponseWriter implements
         final TimeUnit timeUnit,
         final TimeoutHandler timeoutHandler) {
 
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
