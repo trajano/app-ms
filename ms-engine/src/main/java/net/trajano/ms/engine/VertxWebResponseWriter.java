@@ -67,6 +67,10 @@ public class VertxWebResponseWriter implements
         final StatusType status = responseContext.getStatusInfo();
         response.setStatusCode(status.getStatusCode());
         response.setStatusMessage(status.getReasonPhrase());
+        responseContext.getStringHeaders().forEach((header,
+            values) -> {
+            response.putHeader(header, values);
+        });
         return new VertxOutputStream(response);
     }
 
