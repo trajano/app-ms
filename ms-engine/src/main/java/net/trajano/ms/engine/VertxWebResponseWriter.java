@@ -19,6 +19,7 @@ public class VertxWebResponseWriter implements
     public VertxWebResponseWriter(final HttpServerResponse response) {
 
         this.response = response;
+        response.setChunked(true);
     }
 
     @Override
