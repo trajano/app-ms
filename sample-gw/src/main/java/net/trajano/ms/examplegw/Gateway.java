@@ -30,11 +30,11 @@ public class Gateway extends AbstractVerticle {
             response.end("Hello World!");
         });
 
-        router.route().handler(event -> {
+        router.routeWithRegex("/v1/.*").handler(event -> {
             final HttpServerRequest req = event.request();
-
-            System.out.println("Proxying request: " + req.uri());
-            final HttpClientRequest c_req = client.request(req.method(), 8080, "localhost", req.uri(), c_res -> {
+            final String uri = req.uri().substring("/v1".length());
+            System.out.println("Proxying request: " + uri);
+            final HttpClientRequest c_req = client.request(req.method(), 8080, "localhost", uri, c_res -> {
                 System.out.println("Proxying response: " + c_res.statusCode());
                 req.response().setChunked(true);
                 req.response().setStatusCode(c_res.statusCode());
