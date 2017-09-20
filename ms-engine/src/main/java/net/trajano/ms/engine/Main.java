@@ -3,6 +3,7 @@ package net.trajano.ms.engine;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
+import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.sample.MyApp;
 
 public class Main {
@@ -17,8 +18,11 @@ public class Main {
         //        });
 
         final Vertx vertx = Vertx.vertx();
+        final Router router = Router.router(vertx);
         final HttpServer http = vertx.createHttpServer();
-        new VertxContainer(http, MyApp.class);
+
+        VertxContainer.container(router, MyApp.class);
+        http.requestHandler(req -> router.accept(req)).listen(8280);
 
     }
 }

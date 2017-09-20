@@ -16,20 +16,27 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 
 public class VertxContainer implements
-    Handler<HttpServerRequest> {
+    Handler<RoutingContext> {
+
+    public static void container(final Router router,
+        final Class<? extends Application> applicationClass) {
+
+        new VertxContainer(router, applicationClass);
+
+    }
 
     private volatile ApplicationHandler appHandler;
 
     private final URI baseUri;
 
-    public VertxContainer(final HttpServer http,
+    public VertxContainer(final Router router,
         final Class<? extends Application> applicationClass) {
 
-        http.requestHandler(this).listen(8280);
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, applicationClass.getPackage().getName()));
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
@@ -39,11 +46,13 @@ public class VertxContainer implements
             baseUri = URI.create("/");
         }
         appHandler = new ApplicationHandler(resourceConfig);
+        router.route(baseUri.getPath() + "*").handler(this);
     }
 
     @Override
-    public void handle(final HttpServerRequest event) {
+    public void handle(final RoutingContext context) {
 
+        final HttpServerRequest event = context.request();
         final URI requestUri = URI.create(event.absoluteURI());
 
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(event), new MapPropertiesDelegate());
