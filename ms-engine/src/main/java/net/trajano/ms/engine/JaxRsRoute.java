@@ -17,6 +17,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -53,9 +54,7 @@ public class JaxRsRoute implements
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.register(JacksonJaxbJsonProvider.class);
         resourceConfig.register(ApiListingResource.class);
-
-        //        new SwaggerContextService().getSwagger().
-        //resourceConfig.register(SwaggerSerializers.class);
+        resourceConfig.register(SwaggerSerializers.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
         resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
@@ -74,7 +73,7 @@ public class JaxRsRoute implements
         beanConfig.setBasePath(baseUri.getPath());
         beanConfig.scanAndRead();
         beanConfig.getSwagger();
-        System.out.println(beanConfig.getSwagger());
+
         appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
     }

@@ -14,13 +14,16 @@ import org.glassfish.jersey.server.ResourceConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.util.Json;
+import io.swagger.models.Swagger;
 
 @Path("/")
 public class ApiListingResource {
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({
+        MediaType.APPLICATION_JSON,
+        "application/yaml"
+    })
     public Response getSwagger(@Context final Application config,
         @Context final UriInfo uriInfo) throws JsonProcessingException {
 
@@ -30,7 +33,8 @@ public class ApiListingResource {
         beanConfig.setScan(true);
         beanConfig.setBasePath(uriInfo.getBaseUri().getPath());
         beanConfig.scanAndRead();
-        return Response.ok().entity(Json.mapper().writeValueAsString(beanConfig.getSwagger())).type(MediaType.APPLICATION_JSON_TYPE).build();
+        Swagger swagger = beanConfig.getSwagger();
+        return Response.ok().entity(swagger).build();
 
     }
 }
