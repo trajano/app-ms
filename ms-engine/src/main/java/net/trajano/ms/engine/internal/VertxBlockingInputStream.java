@@ -6,8 +6,6 @@ import java.lang.reflect.Proxy;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.jboss.weld.exceptions.UnsupportedOperationException;
-
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.ReadStream;
 
