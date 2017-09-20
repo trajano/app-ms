@@ -132,6 +132,7 @@ public class JaxRsRoute implements
                 });
         } else {
             final VertxBlockingInputStream is = new VertxBlockingInputStream(event);
+            System.out.println("Here " + is);
             event
                 .handler(buffer -> {
                     is.populate(buffer);
