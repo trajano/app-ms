@@ -1,7 +1,8 @@
 package net.trajano.ms.engine;
 
+import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
+
 import java.net.URI;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.Application;
 
@@ -10,6 +11,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 
@@ -46,33 +48,45 @@ public class VertxContainer implements
         });
         request.setWriter(new VertxWebResponseWriter(event.response()));
 
-        //        event
-        //            .bodyHandler(buffer -> {
-        //                request.setEntityStream(new VertxBufferInputStream(buffer));
-        //                appHandler.handle(request);
-        //            });
-        //
-        final VertxInputStream input = new VertxInputStream(event);
-        request.setEntityStream(input);
-
-        final AtomicBoolean handling = new AtomicBoolean(false);
-
+        final Buffer body = Buffer.buffer();
         event
-            .endHandler(aVoid -> {
-                System.out.println("END");
-                input.end();
-                if (!handling.getAndSet(true)) {
-                    appHandler.handle(request);
+            .handler(buffer -> {
+                if (!event.response().headWritten()) {
+                    body.appendBuffer(buffer);
+                    if (body.length() > 10 * 1024 * 1024) {
+                        event.response()
+                            .setStatusCode(REQUEST_ENTITY_TOO_LARGE.getStatusCode())
+                            .setStatusMessage(REQUEST_ENTITY_TOO_LARGE.getReasonPhrase())
+                            .end();
+                    }
                 }
             })
-            .handler(buffer -> {
-                System.out.println("BUF");
-                input.populate(buffer);
-                if (!handling.getAndSet(true)) {
-                    appHandler.handle(request);
-                }
+            .endHandler(aVoid -> {
+                request.setEntityStream(new VertxBufferInputStream(body));
+                appHandler.handle(request);
             });
-
+        //
+        //        final VertxInputStream input = new VertxInputStream(event);
+        //        request.setEntityStream(input);
+        //
+        //        final AtomicBoolean handling = new AtomicBoolean(false);
+        //
+        //        event
+        //            .endHandler(aVoid -> {
+        //                System.out.println("END");
+        //                input.end();
+        //                if (!handling.getAndSet(true)) {
+        //                    appHandler.handle(request);
+        //                }
+        //            })
+        //            .handler(buffer -> {
+        //                System.out.println("BUF");
+        //                input.populate(buffer);
+        //                if (!handling.getAndSet(true)) {
+        //                    appHandler.handle(request);
+        //                }
+        //            });
+        //
     }
 
 }
