@@ -1,6 +1,7 @@
 package net.trajano.ms.engine;
 
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.Application;
 
@@ -45,10 +46,31 @@ public class VertxContainer implements
         });
         request.setWriter(new VertxWebResponseWriter(event.response()));
 
+        //        event
+        //            .bodyHandler(buffer -> {
+        //                request.setEntityStream(new VertxBufferInputStream(buffer));
+        //                appHandler.handle(request);
+        //            });
+        //
+        final VertxInputStream input = new VertxInputStream(event);
+        request.setEntityStream(input);
+
+        final AtomicBoolean handling = new AtomicBoolean(false);
+
         event
-            .bodyHandler(buffer -> {
-                request.setEntityStream(new VertxBufferInputStream(buffer));
-                appHandler.handle(request);
+            .endHandler(aVoid -> {
+                System.out.println("END");
+                input.end();
+                if (!handling.getAndSet(true)) {
+                    appHandler.handle(request);
+                }
+            })
+            .handler(buffer -> {
+                System.out.println("BUF");
+                input.populate(buffer);
+                if (!handling.getAndSet(true)) {
+                    appHandler.handle(request);
+                }
             });
 
     }

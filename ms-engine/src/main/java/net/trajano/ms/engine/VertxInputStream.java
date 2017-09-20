@@ -116,10 +116,12 @@ public class VertxInputStream extends InputStream {
     public void close() throws IOException {
 
         System.out.println("CLOSE");
+        readStream.pause();
     }
 
     public void end() {
 
+        System.out.println("ENDED");
         ended = true;
 
     }
@@ -142,13 +144,6 @@ public class VertxInputStream extends InputStream {
     @Override
     public int read() throws IOException {
 
-        if (!ended && available() == 0) {
-            System.out.println("block");
-        }
-        if (ended && buffer == null) {
-            return -1;
-        }
-
         if (ended && streamBufferPos == buffer.length()) {
             return -1;
         }
@@ -157,9 +152,10 @@ public class VertxInputStream extends InputStream {
             System.out.println("BAD!");
             return -1;
         }
-
+        System.out.println("p=" + streamBufferPos);
         final byte b = buffer.getByte(streamBufferPos++);
         if (streamBufferPos == buffer.length()) {
+            System.out.println("resuming!");
             readStream.resume();
         }
         return b;
