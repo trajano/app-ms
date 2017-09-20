@@ -2,6 +2,8 @@ package net.trajano.ms.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -89,7 +91,9 @@ class Foo implements
 
 public class VertxInputStream extends InputStream {
 
-    private Buffer buffer;
+    private final BlockingQueue<Buffer> bufferQueue = new LinkedBlockingQueue<>();
+
+    private Buffer currentBuffer;
 
     private boolean ended = false;
 
@@ -101,15 +105,6 @@ public class VertxInputStream extends InputStream {
         final ReadStream<Buffer> readStream) {
 
         this.readStream = readStream;
-    }
-
-    @Override
-    public int available() throws IOException {
-
-        if (buffer == null) {
-            return 0;
-        }
-        return buffer.length() - streamBufferPos;
     }
 
     @Override
@@ -134,29 +129,30 @@ public class VertxInputStream extends InputStream {
      */
     public void populate(final Buffer buffer) {
 
-        System.out.println("Populate " + buffer);
-        readStream.pause();
-        this.buffer = buffer;
-        streamBufferPos = 0;
+        System.out.println("Populate " + buffer.length());
+        bufferQueue.add(buffer);
 
     }
 
     @Override
     public int read() throws IOException {
 
-        if (ended && streamBufferPos == buffer.length()) {
+        if (ended && bufferQueue.isEmpty()) {
             return -1;
         }
 
-        if (buffer == null) {
-            System.out.println("BAD!");
-            return -1;
+        if (currentBuffer == null) {
+            try {
+                currentBuffer = bufferQueue.take();
+            } catch (final InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            streamBufferPos = 0;
         }
-        System.out.println("p=" + streamBufferPos);
-        final byte b = buffer.getByte(streamBufferPos++);
-        if (streamBufferPos == buffer.length()) {
-            System.out.println("resuming!");
-            readStream.resume();
+        System.out.println("p=" + streamBufferPos + " + " + (currentBuffer == null));
+        final byte b = currentBuffer.getByte(streamBufferPos++);
+        if (streamBufferPos == currentBuffer.length()) {
+            currentBuffer = null;
         }
         return b;
     }
