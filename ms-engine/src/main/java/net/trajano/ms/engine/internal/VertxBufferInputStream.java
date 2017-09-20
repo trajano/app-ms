@@ -1,4 +1,4 @@
-package net.trajano.ms.engine;
+package net.trajano.ms.engine.internal;
 
 import java.io.IOException;
 import java.io.InputStream;

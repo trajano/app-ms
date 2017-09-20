@@ -19,14 +19,23 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.VertxBufferInputStream;
+import net.trajano.ms.engine.internal.VertxSecurityContext;
+import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
-public class VertxContainer implements
+public class JaxRsRoute implements
     Handler<RoutingContext> {
 
-    public static void container(final Router router,
+    /**
+     * Constructs a new route for the given router to a JAX-RS application.
+     *
+     * @param router
+     * @param applicationClass
+     */
+    public static void route(final Router router,
         final Class<? extends Application> applicationClass) {
 
-        new VertxContainer(router, applicationClass);
+        new JaxRsRoute(router, applicationClass);
 
     }
 
@@ -34,7 +43,7 @@ public class VertxContainer implements
 
     private final URI baseUri;
 
-    public VertxContainer(final Router router,
+    private JaxRsRoute(final Router router,
         final Class<? extends Application> applicationClass) {
 
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);

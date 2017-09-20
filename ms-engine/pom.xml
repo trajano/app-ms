@@ -53,16 +53,12 @@
       <version>2.1</version>
     </dependency>
     <dependency>
-      <groupId>org.glassfish.jersey.containers</groupId>
-      <artifactId>jersey-container-jdk-http</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
-      <artifactId>jersey-cdi2-se</artifactId>
+      <artifactId>jersey-hk2</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
