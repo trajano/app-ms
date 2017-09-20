@@ -1,7 +1,10 @@
 package net.trajano.ms.engine.sample;
 
 import javax.annotation.PostConstruct;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -22,6 +25,14 @@ public class Hello {
     public String helloHello() {
 
         return "HelloHello";
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String helloHelloPost(@FormParam("me") final String me) {
+
+        return "HelloHello " + me;
     }
 
     @PostConstruct

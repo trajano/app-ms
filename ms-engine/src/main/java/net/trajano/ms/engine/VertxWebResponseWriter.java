@@ -3,6 +3,7 @@ package net.trajano.ms.engine;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.StatusType;
 
 import org.glassfish.jersey.server.ContainerException;
@@ -43,7 +44,8 @@ public class VertxWebResponseWriter implements
     @Override
     public void failure(final Throwable error) {
 
-        throw new UnsupportedOperationException();
+        response.setStatusCode(500).setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase()).close();
+        throw new RuntimeException(error);
 
     }
 

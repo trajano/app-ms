@@ -1,4 +1,4 @@
-package net.trajano.ms.engine.sample;
+package ne.trajano.ms.engine.test;
 
 import java.net.URI;
 

@@ -1,15 +1,12 @@
 package net.trajano.ms.engine;
 
 import java.net.URI;
-import java.util.Collections;
 
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
@@ -24,16 +21,15 @@ public class VertxContainer implements
         final Class<? extends Application> applicationClass) {
 
         http.requestHandler(this).listen(8280);
-        //                final ResourceConfig config = ResourceConfig.forApplication(application);
-        final ResourceConfig config = ResourceConfig.forApplicationClass(applicationClass);
-        config.addProperties(Collections.singletonMap(ServerProperties.TRACING, "ALL"));
-        appHandler = new ApplicationHandler(config);
-        //        config.setClassLoader(this.getClass().getClassLoader());
-        //final ResourceConfig application2 = new ResourceConfig();
-        //        appHandler = new ApplicationHandler(A);
-        //        appHandler = new ApplicationHandler(applicationClass);
-        System.out.println(appHandler.getConfiguration().getSingletons());
-        System.out.println(appHandler.getConfiguration().getClasses());
+        //        final ResourceConfig config = ResourceConfig.forApplicationClass(applicationClass);
+        //        config.register(Hk2)
+        //        final ResourceConfig config = ResourceConfig.forApplicationClass(applicationClass);
+        //        config.addProperties(Collections.singletonMap(ServerProperties.TRACING, "ALL"));
+        //        appHandler = new ApplicationHandler(config);
+        //        //        config.setClassLoader(this.getClass().getClassLoader());
+        //        //final ResourceConfig application2 = new ResourceConfig();
+        //        //        appHandler = new ApplicationHandler(A);
+        appHandler = new ApplicationHandler(applicationClass);
     }
 
     @Override
@@ -44,8 +40,17 @@ public class VertxContainer implements
 
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(), new MapPropertiesDelegate());
 
+        event.headers().entries().forEach(entry -> {
+            request.getHeaders().add(entry.getKey(), entry.getValue());
+        });
         request.setWriter(new VertxWebResponseWriter(event.response()));
-        appHandler.handle(request);
+
+        event
+            .bodyHandler(buffer -> {
+                request.setEntityStream(new VertxBufferInputStream(buffer));
+                appHandler.handle(request);
+            });
+
     }
 
 }
