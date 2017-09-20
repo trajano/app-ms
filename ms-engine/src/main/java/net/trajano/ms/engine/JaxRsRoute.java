@@ -1,7 +1,6 @@
 package net.trajano.ms.engine;
 
 import static java.util.Collections.singletonMap;
-import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
 
 import java.net.URI;
 
@@ -109,17 +108,6 @@ public class JaxRsRoute implements
         if (contentLength == 0) {
             final Buffer body = Buffer.buffer();
             event
-                .handler(buffer -> {
-                    if (!event.response().headWritten()) {
-                        body.appendBuffer(buffer);
-                        if (body.length() > 10 * 1024 * 1024) {
-                            event.response()
-                                .setStatusCode(REQUEST_ENTITY_TOO_LARGE.getStatusCode())
-                                .setStatusMessage(REQUEST_ENTITY_TOO_LARGE.getReasonPhrase())
-                                .end();
-                        }
-                    }
-                })
                 .endHandler(aVoid -> {
                     request.setEntityStream(new VertxBufferInputStream(body));
                     appHandler.handle(request);
@@ -132,7 +120,6 @@ public class JaxRsRoute implements
                 });
         } else {
             final VertxBlockingInputStream is = new VertxBlockingInputStream(event);
-            System.out.println("Here " + is);
             event
                 .handler(buffer -> {
                     is.populate(buffer);
@@ -141,8 +128,8 @@ public class JaxRsRoute implements
             vertx.executeBlocking(future -> {
                 request.setEntityStream(is);
                 appHandler.handle(request);
+                future.complete();
             }, false, result -> {
-
             });
         }
     }
