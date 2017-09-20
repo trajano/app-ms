@@ -2,7 +2,6 @@ package net.trajano.ms.engine.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Proxy;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,21 +10,7 @@ import io.vertx.core.streams.ReadStream;
 
 public class VertxBlockingInputStream extends InputStream {
 
-    private static final Buffer END_BUFFER;
-    static {
-        try {
-            END_BUFFER = (Buffer) Proxy.newProxyInstance(VertxBlockingInputStream.class.getClassLoader(), new Class<?>[] {
-                Buffer.class
-            }, (proxy,
-                method,
-                args) -> {
-
-                throw new UnsupportedOperationException();
-            });
-        } catch (final IllegalArgumentException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private static final Buffer END_BUFFER = Symbol.newSymbol(Buffer.class);
 
     private int availableBytes = 0;
 
@@ -93,7 +78,7 @@ public class VertxBlockingInputStream extends InputStream {
     /**
      * Gets a count of how much bytes have been read from this input stream.
      *
-     * @return
+     * @return total bytes read
      */
     public long totalBytesRead() {
 
