@@ -52,6 +52,12 @@
       <groupId>io.swagger</groupId>
       <artifactId>swagger-jaxrs</artifactId>
       <version>1.5.16</version>
+      <exclusions>
+      	<exclusion>
+      		<groupId>javax.ws.rs</groupId>
+      		<artifactId>jsr311-api</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -60,10 +66,6 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web-client</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.ws.rs</groupId>
@@ -76,9 +78,14 @@
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
-      <artifactId>jersey-hk2</artifactId>
+      <artifactId>jersey-cdi2-se</artifactId>
       <scope>runtime</scope>
-    </dependency>
+    </dependency><dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.3</version>
+      <scope>runtime</scope>
+</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

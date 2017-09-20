@@ -11,18 +11,17 @@ public class Main {
     public static void main(final String[] args) {
 
         final VertxOptions options = new VertxOptions();
-        //        Vertx.clusteredVertx(options, event -> {
-        //            final Vertx vertx = event.result();
-        //            final HttpServer http = vertx.createHttpServer();
-        //            new VertxContainer(http, MyApp.class);
-        //        });
+        Vertx.clusteredVertx(options, event -> {
+            final Vertx vertx = event.result();
 
-        final Vertx vertx = Vertx.vertx();
-        final Router router = Router.router(vertx);
-        final HttpServer http = vertx.createHttpServer();
+            final Router router = Router.router(vertx);
+            final HttpServer http = vertx.createHttpServer();
 
-        JaxRsRoute.route(router, MyApp.class);
-        http.requestHandler(req -> router.accept(req)).listen(8280);
+            JaxRsRoute.route(router, MyApp.class);
+            http.requestHandler(req -> router.accept(req)).listen(8280);
+        });
+
+        //final Vertx vertx = Vertx.vertx();
 
     }
 }
