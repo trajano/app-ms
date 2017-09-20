@@ -16,11 +16,13 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
+import io.swagger.jaxrs.config.BeanConfig;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.ApiListingResource;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
@@ -50,13 +52,29 @@ public class JaxRsRoute implements
 
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.register(JacksonJaxbJsonProvider.class);
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, applicationClass.getPackage().getName()));
+        resourceConfig.register(ApiListingResource.class);
+
+        //        new SwaggerContextService().getSwagger().
+        //resourceConfig.register(SwaggerSerializers.class);
+
+        final String resourcePackage = applicationClass.getPackage().getName();
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
+        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
+
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
             baseUri = URI.create(annotation.value() + "/").normalize();
         } else {
             baseUri = URI.create("/");
         }
+
+        final BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage(resourcePackage);
+        beanConfig.setScan(true);
+        beanConfig.setBasePath(baseUri.getPath());
+        beanConfig.scanAndRead();
+        beanConfig.getSwagger();
+        System.out.println(beanConfig.getSwagger());
         appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
     }
