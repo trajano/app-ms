@@ -1,14 +1,18 @@
 package net.trajano.ms.engine;
 
+import static java.util.Collections.singletonMap;
 import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
 
 import java.net.URI;
 
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -20,28 +24,29 @@ public class VertxContainer implements
 
     private volatile ApplicationHandler appHandler;
 
+    private final URI baseUri;
+
     public VertxContainer(final HttpServer http,
         final Class<? extends Application> applicationClass) {
 
         http.requestHandler(this).listen(8280);
-        //        final ResourceConfig config = ResourceConfig.forApplicationClass(applicationClass);
-        //        config.register(Hk2)
-        //        final ResourceConfig config = ResourceConfig.forApplicationClass(applicationClass);
-        //        config.addProperties(Collections.singletonMap(ServerProperties.TRACING, "ALL"));
-        //        appHandler = new ApplicationHandler(config);
-        //        //        config.setClassLoader(this.getClass().getClassLoader());
-        //        //final ResourceConfig application2 = new ResourceConfig();
-        //        //        appHandler = new ApplicationHandler(A);
-        appHandler = new ApplicationHandler(applicationClass);
+        final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, applicationClass.getPackage().getName()));
+        final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
+        if (annotation != null) {
+            baseUri = URI.create(annotation.value() + "/").normalize();
+        } else {
+            baseUri = URI.create("/");
+        }
+        appHandler = new ApplicationHandler(resourceConfig);
     }
 
     @Override
     public void handle(final HttpServerRequest event) {
 
-        final URI baseUri = URI.create(event.absoluteURI().substring(0, event.absoluteURI().length() - event.uri().length())).resolve("/");
         final URI requestUri = URI.create(event.absoluteURI());
 
-        final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(), new MapPropertiesDelegate());
+        final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(event), new MapPropertiesDelegate());
 
         event.headers().entries().forEach(entry -> {
             request.getHeaders().add(entry.getKey(), entry.getValue());
@@ -65,28 +70,6 @@ public class VertxContainer implements
                 request.setEntityStream(new VertxBufferInputStream(body));
                 appHandler.handle(request);
             });
-        //
-        //        final VertxInputStream input = new VertxInputStream(event);
-        //        request.setEntityStream(input);
-        //
-        //        final AtomicBoolean handling = new AtomicBoolean(false);
-        //
-        //        event
-        //            .endHandler(aVoid -> {
-        //                System.out.println("END");
-        //                input.end();
-        //                if (!handling.getAndSet(true)) {
-        //                    appHandler.handle(request);
-        //                }
-        //            })
-        //            .handler(buffer -> {
-        //                System.out.println("BUF");
-        //                input.populate(buffer);
-        //                if (!handling.getAndSet(true)) {
-        //                    appHandler.handle(request);
-        //                }
-        //            });
-        //
     }
 
 }
