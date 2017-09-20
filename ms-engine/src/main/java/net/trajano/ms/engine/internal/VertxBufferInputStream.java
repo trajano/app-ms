@@ -27,4 +27,15 @@ public class VertxBufferInputStream extends InputStream {
         return buffer.getByte(pos++);
     }
 
+    @Override
+    public int read(final byte[] b,
+        final int off,
+        final int len) throws IOException {
+
+        final int size = Math.min(b.length, buffer.length() - pos);
+        buffer.getBytes(pos, pos + size, b, off);
+        pos += size;
+        return size;
+    }
+
 }

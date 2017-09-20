@@ -17,7 +17,7 @@ public class Main {
             final Router router = Router.router(vertx);
             final HttpServer http = vertx.createHttpServer();
 
-            JaxRsRoute.route(router, MyApp.class);
+            JaxRsRoute.route(vertx, router, MyApp.class);
             http.requestHandler(req -> router.accept(req)).listen(8280);
         });
 

@@ -19,11 +19,13 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.ApiListingResource;
+import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
@@ -37,10 +39,11 @@ public class JaxRsRoute implements
      * @param router
      * @param applicationClass
      */
-    public static void route(final Router router,
+    public static void route(final Vertx vertx,
+        final Router router,
         final Class<? extends Application> applicationClass) {
 
-        new JaxRsRoute(router, applicationClass);
+        new JaxRsRoute(vertx, router, applicationClass);
 
     }
 
@@ -48,9 +51,13 @@ public class JaxRsRoute implements
 
     private final URI baseUri;
 
-    private JaxRsRoute(final Router router,
+    private final Vertx vertx;
+
+    private JaxRsRoute(final Vertx vertx,
+        final Router router,
         final Class<? extends Application> applicationClass) {
 
+        this.vertx = vertx;
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.register(JacksonJaxbJsonProvider.class);
         resourceConfig.register(ApiListingResource.class);
@@ -91,23 +98,52 @@ public class JaxRsRoute implements
         });
         request.setWriter(new VertxWebResponseWriter(event.response()));
 
-        final Buffer body = Buffer.buffer();
-        event
-            .handler(buffer -> {
-                if (!event.response().headWritten()) {
-                    body.appendBuffer(buffer);
-                    if (body.length() > 10 * 1024 * 1024) {
-                        event.response()
-                            .setStatusCode(REQUEST_ENTITY_TOO_LARGE.getStatusCode())
-                            .setStatusMessage(REQUEST_ENTITY_TOO_LARGE.getReasonPhrase())
-                            .end();
+        final String contentLengthString = event.getHeader("Content-Length");
+        final int contentLength;
+        if (contentLengthString != null) {
+            contentLength = Integer.parseInt(contentLengthString);
+        } else {
+            contentLength = 0;
+        }
+
+        if (contentLength == 0) {
+            final Buffer body = Buffer.buffer();
+            event
+                .handler(buffer -> {
+                    if (!event.response().headWritten()) {
+                        body.appendBuffer(buffer);
+                        if (body.length() > 10 * 1024 * 1024) {
+                            event.response()
+                                .setStatusCode(REQUEST_ENTITY_TOO_LARGE.getStatusCode())
+                                .setStatusMessage(REQUEST_ENTITY_TOO_LARGE.getReasonPhrase())
+                                .end();
+                        }
                     }
-                }
-            })
-            .endHandler(aVoid -> {
-                request.setEntityStream(new VertxBufferInputStream(body));
+                })
+                .endHandler(aVoid -> {
+                    request.setEntityStream(new VertxBufferInputStream(body));
+                    appHandler.handle(request);
+                });
+        } else if (contentLength < 1024) {
+            event
+                .bodyHandler(body -> {
+                    request.setEntityStream(new VertxBufferInputStream(body));
+                    appHandler.handle(request);
+                });
+        } else {
+            final VertxBlockingInputStream is = new VertxBlockingInputStream(event);
+            event
+                .handler(buffer -> {
+                    is.populate(buffer);
+                })
+                .endHandler(aVoid -> is.end());
+            vertx.executeBlocking(future -> {
+                request.setEntityStream(is);
                 appHandler.handle(request);
+            }, false, result -> {
+
             });
+        }
     }
 
 }
