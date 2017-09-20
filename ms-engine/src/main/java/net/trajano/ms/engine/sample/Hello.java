@@ -22,6 +22,14 @@ public class Hello {
     @GET
     @Path("/json")
     @Produces(MediaType.APPLICATION_JSON)
+    public Blah hello2B() {
+
+        return new Blah();
+    }
+
+    @GET
+    @Path("/xml")
+    @Produces(MediaType.APPLICATION_XML)
     public Blah helloB() {
 
         return new Blah();
