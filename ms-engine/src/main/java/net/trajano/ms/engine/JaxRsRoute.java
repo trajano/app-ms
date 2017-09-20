@@ -14,6 +14,8 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -47,6 +49,7 @@ public class JaxRsRoute implements
         final Class<? extends Application> applicationClass) {
 
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
+        resourceConfig.register(JacksonJaxbJsonProvider.class);
         resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, applicationClass.getPackage().getName()));
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {

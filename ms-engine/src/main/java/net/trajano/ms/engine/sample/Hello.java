@@ -20,6 +20,14 @@ public class Hello {
     }
 
     @GET
+    @Path("/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Blah helloB() {
+
+        return new Blah();
+    }
+
+    @GET
     @Path("/hello")
     @Produces(MediaType.TEXT_PLAIN)
     public String helloHello() {
