@@ -94,9 +94,7 @@ public class JaxRsRoute implements
 
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(event), new MapPropertiesDelegate());
 
-        event.headers().entries().forEach(entry -> {
-            request.getHeaders().add(entry.getKey(), entry.getValue());
-        });
+        event.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
         request.setWriter(new VertxWebResponseWriter(event.response()));
 
         final String contentLengthString = event.getHeader("Content-Length");
@@ -123,9 +121,7 @@ public class JaxRsRoute implements
         } else {
             try (final VertxBlockingInputStream is = new VertxBlockingInputStream(event)) {
                 event
-                    .handler(buffer -> {
-                        is.populate(buffer);
-                    })
+                    .handler(buffer -> is.populate(buffer))
                     .endHandler(aVoid -> is.end());
                 vertx.executeBlocking(future -> {
                     request.setEntityStream(is);
