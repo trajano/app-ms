@@ -22,9 +22,11 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
 import io.swagger.util.Yaml;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -33,7 +35,7 @@ import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
-public class JaxRsRoute implements
+public class JaxRsRoute extends AbstractVerticle implements
     Handler<RoutingContext> {
 
     /**
@@ -47,14 +49,20 @@ public class JaxRsRoute implements
         final Class<? extends Application> applicationClass) {
 
         new JaxRsRoute(vertx, router, applicationClass);
+        final MessageConsumer<RoutingContext> restApiConsumer = vertx.eventBus().consumer("rest.api.processor");
+        restApiConsumer.handler(context -> {
+
+        });
 
     }
 
     private volatile ApplicationHandler appHandler;
 
-    private final URI baseUri;
+    private URI baseUri;
 
-    private final Vertx vertx;
+    public JaxRsRoute() {
+
+    }
 
     private JaxRsRoute(final Vertx vertx,
         final Router router,
@@ -142,6 +150,47 @@ public class JaxRsRoute implements
                 throw new UncheckedIOException(e);
             }
         }
+    }
+
+    @Override
+    public void start() throws Exception {
+
+        @SuppressWarnings("unchecked")
+        final Class<? extends Application> applicationClass = (Class<? extends Application>) Class.forName(config().getString("application_class"));
+
+        final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
+        resourceConfig.register(JacksonJaxbJsonProvider.class);
+
+        final String resourcePackage = applicationClass.getPackage().getName();
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
+        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
+
+        final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
+        if (annotation != null) {
+            baseUri = URI.create(annotation.value() + "/").normalize();
+        } else {
+            baseUri = URI.create("/");
+        }
+
+        final BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage(resourcePackage);
+        beanConfig.setScan(true);
+        beanConfig.setBasePath(baseUri.getPath());
+        beanConfig.scanAndRead();
+
+        try {
+            final Swagger swagger = beanConfig.getSwagger();
+            final String json = Json.mapper().writeValueAsString(swagger);
+            final String yaml = Yaml.mapper().writeValueAsString(swagger);
+            router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
+            router.get(baseUri.getPath()).produces("application/yaml").handler(context -> context.response().putHeader("Content-Type", "application/yaml").end(yaml));
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        appHandler = new ApplicationHandler(resourceConfig);
+        router.route(baseUri.getPath() + "*").handler(this);
+
     }
 
 }
