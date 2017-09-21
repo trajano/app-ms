@@ -28,6 +28,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.VertxBinder;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
@@ -62,6 +63,7 @@ public class JaxRsRoute implements
 
         this.vertx = vertx;
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
+        resourceConfig.register(new VertxBinder(vertx));
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();

@@ -8,9 +8,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
+import io.vertx.core.Vertx;
 
 @Api
 @Path("/hello")
@@ -21,9 +23,10 @@ public class Hello {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
+    public String hello(@Context final io.vertx.core.Context vertxContext,
+        @Context final Vertx vertx) {
 
-        return "Hello" + scoped.get();
+        return "Hello" + scoped.get() + " " + vertx + " " + vertxContext;
     }
 
     @GET
