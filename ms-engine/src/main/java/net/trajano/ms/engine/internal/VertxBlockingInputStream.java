@@ -5,12 +5,17 @@ import java.io.InputStream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.ReadStream;
 
 public class VertxBlockingInputStream extends InputStream {
 
     private static final Buffer END_BUFFER = Symbol.newSymbol(Buffer.class);
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxBlockingInputStream.class);
 
     private int availableBytes = 0;
 
@@ -60,7 +65,8 @@ public class VertxBlockingInputStream extends InputStream {
                 currentBuffer = queue.take();
                 pos = 0;
             } catch (final InterruptedException e) {
-                throw new RuntimeException(e);
+                LOG.error("Interrupted while waiting for next buffer", e);
+                Thread.currentThread().interrupt();
             }
         }
         if (currentBuffer == END_BUFFER) {

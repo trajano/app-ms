@@ -2,6 +2,8 @@ package net.trajano.ms.engine;
 
 import static java.util.Collections.singletonMap;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 
 import javax.ws.rs.ApplicationPath;
@@ -119,18 +121,21 @@ public class JaxRsRoute implements
                     appHandler.handle(request);
                 });
         } else {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream(event);
-            event
-                .handler(buffer -> {
-                    is.populate(buffer);
-                })
-                .endHandler(aVoid -> is.end());
-            vertx.executeBlocking(future -> {
-                request.setEntityStream(is);
-                appHandler.handle(request);
-                future.complete();
-            }, false, result -> {
-            });
+            try (final VertxBlockingInputStream is = new VertxBlockingInputStream(event)) {
+                event
+                    .handler(buffer -> {
+                        is.populate(buffer);
+                    })
+                    .endHandler(aVoid -> is.end());
+                vertx.executeBlocking(future -> {
+                    request.setEntityStream(is);
+                    appHandler.handle(request);
+                    future.complete();
+                }, false, result -> {
+                });
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
