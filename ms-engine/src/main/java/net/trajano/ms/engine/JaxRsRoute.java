@@ -15,17 +15,19 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.listing.SwaggerSerializers;
+import io.swagger.models.Swagger;
+import io.swagger.util.Json;
+import io.swagger.util.Yaml;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.ApiListingResource;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
@@ -61,8 +63,6 @@ public class JaxRsRoute implements
         this.vertx = vertx;
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.register(JacksonJaxbJsonProvider.class);
-        resourceConfig.register(ApiListingResource.class);
-        resourceConfig.register(SwaggerSerializers.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
         resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
@@ -80,7 +80,16 @@ public class JaxRsRoute implements
         beanConfig.setScan(true);
         beanConfig.setBasePath(baseUri.getPath());
         beanConfig.scanAndRead();
-        beanConfig.getSwagger();
+
+        try {
+            final Swagger swagger = beanConfig.getSwagger();
+            final String json = Json.mapper().writeValueAsString(swagger);
+            final String yaml = Yaml.mapper().writeValueAsString(swagger);
+            router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
+            router.get(baseUri.getPath()).produces("application/yaml").handler(context -> context.response().putHeader("Content-Type", "application/yaml").end(yaml));
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
