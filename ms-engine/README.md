@@ -5,8 +5,8 @@ This uses:
 * VertX
 * Jersey for REST server
 * Jackson for JSON/JAXB processing
-* Weld CDI
-* slf4j logging
-* logback loggin
+* Weld CDI runtime
+* slf4j logging-api
+* logback logging runtime
 
 
