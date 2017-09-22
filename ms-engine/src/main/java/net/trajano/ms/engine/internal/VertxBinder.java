@@ -16,6 +16,11 @@ public class VertxBinder extends AbstractBinder {
             .proxy(true)
             .proxyForSameScope(false)
             .in(RequestScoped.class);
+        //        bindFactory(RoutingContextFactory.class)
+        //            .to(HttpServerRequest.class)
+        //            .proxy(true)
+        //            .proxyForSameScope(false)
+        //            .in(RequestScoped.class);
         //        bind(vertx.getOrCreateContext()).to(Context.class);
         //        bind(vertx).to(Vertx.class);
 

@@ -19,7 +19,6 @@ public class RoutingContextFactory implements
     @Override
     public RoutingContext get() {
 
-        System.out.println("HERE!");
         return (RoutingContext) request.getProperty(RoutingContext.class.getName());
     }
 }

@@ -60,6 +60,7 @@ public class JaxRsRoute implements
 
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
         resourceConfig.register(new VertxBinder());
+
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
