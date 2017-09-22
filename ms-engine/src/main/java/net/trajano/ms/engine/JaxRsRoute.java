@@ -24,7 +24,6 @@ import io.swagger.util.Json;
 import io.swagger.util.Yaml;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -47,23 +46,20 @@ public class JaxRsRoute implements
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        new JaxRsRoute(vertx, router, applicationClass);
+        new JaxRsRoute(router, applicationClass);
 
     }
 
-    private volatile ApplicationHandler appHandler;
+    private final ApplicationHandler appHandler;
 
     private final URI baseUri;
 
-    private final Vertx vertx;
-
-    private JaxRsRoute(final Vertx vertx,
+    private JaxRsRoute(
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        this.vertx = vertx;
         final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
-        resourceConfig.register(new VertxBinder(vertx));
+        resourceConfig.register(new VertxBinder());
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
@@ -97,18 +93,33 @@ public class JaxRsRoute implements
         router.route(baseUri.getPath() + "*").handler(this);
     }
 
+    //    private final Type ContextTYPE = new GenericType<Ref<Context>>() {
+    //    }.getType();
+
     @Override
-    public void handle(final RoutingContext context) {
+    public void handle(final RoutingContext routingContext) {
 
-        final HttpServerRequest event = context.request();
-        final URI requestUri = URI.create(event.absoluteURI());
+        final HttpServerRequest serverRequest = routingContext.request();
+        final URI requestUri = URI.create(serverRequest.absoluteURI());
 
-        final ContainerRequest request = new ContainerRequest(baseUri, requestUri, event.method().name(), new VertxSecurityContext(event), new MapPropertiesDelegate());
+        final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
+        request.setProperty(RoutingContext.class.getName(), routingContext);
+        //        request.setRequestScopedInitializer(im -> im.register(new VertxRequestBinder(context, vertx)));
+        //        request.setRequestScopedInitializer(im -> System.out.println(im.get));
+        request.setRequestScopedInitializer(im -> System.out.println("IM=>" + im.getInstance(ContainerRequest.class)));
+        //        request.setRequestScopedInitializer(im -> {
+        //
+        //            im.getInstance(BeanManager.class).getBeans(Object.class).forEach(x -> System.out.println(x.getBeanClass()));
+        //            //                    im.inject(vertx.getOrCreateContext());
+        //            //                    im.inject(context);
+        //            //                    im.inject(event);
+        //
+        //        });
 
-        event.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
-        request.setWriter(new VertxWebResponseWriter(event.response()));
+        serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
+        request.setWriter(new VertxWebResponseWriter(serverRequest.response()));
 
-        final String contentLengthString = event.getHeader("Content-Length");
+        final String contentLengthString = serverRequest.getHeader("Content-Length");
         final int contentLength;
         if (contentLengthString != null) {
             contentLength = Integer.parseInt(contentLengthString);
@@ -117,28 +128,29 @@ public class JaxRsRoute implements
         }
 
         if (contentLength == 0) {
-            final Buffer body = Buffer.buffer();
-            event
+            serverRequest
                 .endHandler(aVoid -> {
-                    request.setEntityStream(new VertxBufferInputStream(body));
                     appHandler.handle(request);
+                    request.close();
                 });
         } else if (contentLength < 1024) {
-            event
+            serverRequest
                 .bodyHandler(body -> {
                     request.setEntityStream(new VertxBufferInputStream(body));
                     appHandler.handle(request);
+                    request.close();
                 });
         } else {
-            try (final VertxBlockingInputStream is = new VertxBlockingInputStream(event)) {
-                event
+            try (final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest)) {
+                serverRequest
                     .handler(buffer -> is.populate(buffer))
                     .endHandler(aVoid -> is.end());
-                vertx.executeBlocking(future -> {
+                routingContext.vertx().executeBlocking(future -> {
                     request.setEntityStream(is);
                     appHandler.handle(request);
                     future.complete();
                 }, false, result -> {
+                    request.close();
                 });
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);

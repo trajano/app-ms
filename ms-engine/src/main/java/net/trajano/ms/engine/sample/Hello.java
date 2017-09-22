@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 
 @Api
 @Path("/hello")
@@ -24,9 +25,11 @@ public class Hello {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String hello(@Context final io.vertx.core.Context vertxContext,
-        @Context final Vertx vertx) {
+        @Context final Vertx vertx,
+        @Context final RoutingContext routingContext) {
 
-        return "Hello" + scoped.get() + " " + vertx + " " + vertxContext;
+        return "Hello" + scoped.get()
+            + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
     @GET
