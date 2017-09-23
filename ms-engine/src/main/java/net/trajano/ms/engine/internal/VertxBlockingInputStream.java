@@ -69,16 +69,19 @@ public class VertxBlockingInputStream extends InputStream {
                 Thread.currentThread().interrupt();
             }
         }
-        if (currentBuffer == END_BUFFER) {
+        if (currentBuffer == null) {
+            throw new IOException("Obtained a null buffer from the queue");
+        } else if (currentBuffer == END_BUFFER) {
             return -1;
+        } else {
+            final byte b = currentBuffer.getByte(pos++);
+            --availableBytes;
+            ++bytesRead;
+            if (pos == currentBuffer.length()) {
+                currentBuffer = null;
+            }
+            return b;
         }
-        final byte b = currentBuffer.getByte(pos++);
-        --availableBytes;
-        ++bytesRead;
-        if (pos == currentBuffer.length()) {
-            currentBuffer = null;
-        }
-        return b;
     }
 
     /**

@@ -22,6 +22,7 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
 import io.swagger.util.Yaml;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -33,7 +34,7 @@ import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
-public class JaxRsRoute implements
+public class JaxRsRoute extends AbstractVerticle implements
     Handler<RoutingContext> {
 
     /**
