@@ -1,19 +1,14 @@
 package net.trajano.ms.engine;
 
-import static java.util.Collections.singletonMap;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
+import org.jboss.resteasy.core.SynchronousDispatcher;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.HttpResponse;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -27,11 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.VertxBinder;
-import net.trajano.ms.engine.internal.VertxBlockingInputStream;
-import net.trajano.ms.engine.internal.VertxBufferInputStream;
-import net.trajano.ms.engine.internal.VertxSecurityContext;
-import net.trajano.ms.engine.internal.VertxWebResponseWriter;
+import net.trajano.ms.engine.resteasy.VertxHttpRequest;
 
 public class JaxRsRoute implements
     Handler<RoutingContext> {
@@ -50,22 +41,18 @@ public class JaxRsRoute implements
 
     }
 
-    private final ApplicationHandler appHandler;
-
     private final URI baseUri;
+
+    final ResteasyProviderFactory providerFactory;
 
     private JaxRsRoute(
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
-        resourceConfig.register(new VertxBinder());
-
-        resourceConfig.register(JacksonJaxbJsonProvider.class);
+        providerFactory = ResteasyProviderFactory.getInstance();
+        providerFactory.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
-        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
@@ -90,73 +77,24 @@ public class JaxRsRoute implements
             throw new RuntimeException(e);
         }
 
-        appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
     }
-
-    //    private final Type ContextTYPE = new GenericType<Ref<Context>>() {
-    //    }.getType();
 
     @Override
     public void handle(final RoutingContext routingContext) {
 
         final HttpServerRequest serverRequest = routingContext.request();
-        final URI requestUri = URI.create(serverRequest.absoluteURI());
 
-        final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
-        request.setProperty(RoutingContext.class.getName(), routingContext);
-        //        request.setRequestScopedInitializer(im -> im.register(new VertxRequestBinder(context, vertx)));
-        //        request.setRequestScopedInitializer(im -> System.out.println(im.get));
-        request.setRequestScopedInitializer(im -> System.out.println("IM=>" + im.getInstance(ContainerRequest.class)));
-        //        request.setRequestScopedInitializer(im -> {
-        //
-        //            im.getInstance(BeanManager.class).getBeans(Object.class).forEach(x -> System.out.println(x.getBeanClass()));
-        //            //                    im.inject(vertx.getOrCreateContext());
-        //            //                    im.inject(context);
-        //            //                    im.inject(event);
-        //
-        //        });
-
-        serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
-        request.setWriter(new VertxWebResponseWriter(serverRequest.response()));
-
-        final String contentLengthString = serverRequest.getHeader("Content-Length");
-        final int contentLength;
-        if (contentLengthString != null) {
-            contentLength = Integer.parseInt(contentLengthString);
-        } else {
-            contentLength = 0;
-        }
-
-        if (contentLength == 0) {
-            serverRequest
-                .endHandler(aVoid -> {
-                    appHandler.handle(request);
-                    request.close();
-                });
-        } else if (contentLength < 1024) {
-            serverRequest
-                .bodyHandler(body -> {
-                    request.setEntityStream(new VertxBufferInputStream(body));
-                    appHandler.handle(request);
-                    request.close();
-                });
-        } else {
-            try (final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest)) {
-                serverRequest
-                    .handler(buffer -> is.populate(buffer))
-                    .endHandler(aVoid -> is.end());
-                routingContext.vertx().executeBlocking(future -> {
-                    request.setEntityStream(is);
-                    appHandler.handle(request);
-                    future.complete();
-                }, false, result -> {
-                    request.close();
-                });
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
+        final SynchronousDispatcher dispatcher = new SynchronousDispatcher(providerFactory);
+        final HttpRequest request = new VertxHttpRequest(baseUri, serverRequest);
+        final HttpResponse response = new VertxHttpResponse(serverRequest.response());
+        System.out.println("HERE" + dispatcher.getRegistry().getSize());
+        routingContext.vertx().executeBlocking(f -> {
+            dispatcher.invoke(request, response);
+            f.succeeded();
+        }, res -> {
+            System.out.println("res");
+        });
     }
 
 }
