@@ -19,7 +19,7 @@ public class JaxRsVerticle extends AbstractVerticle {
         final Router router = Router.router(vertx);
         final HttpServer http = vertx.createHttpServer();
 
-        final Integer port = config().getJsonObject("http").getInteger("port", 8280);
+        final Integer port = 8280;// config().getJsonObject("http").getInteger("port", 8280);
 
         JaxRsRoute.route(vertx, router, MyApp.class);
         http.requestHandler(req -> router.accept(req)).listen(port);

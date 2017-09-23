@@ -1,10 +1,12 @@
 package net.trajano.ms.engine.sample;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.JaxRsRoute;
+import net.trajano.ms.engine.JaxRsVerticle;
 
 public class Main extends AbstractVerticle {
 
@@ -18,7 +20,8 @@ public class Main extends AbstractVerticle {
         //        });
 
         final Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(new Main());
+        final DeploymentOptions options = new DeploymentOptions();
+        vertx.deployVerticle(JaxRsVerticle.class.getName(), options);
 
     }
 
