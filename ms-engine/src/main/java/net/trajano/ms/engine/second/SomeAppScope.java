@@ -1,4 +1,4 @@
-package net.trajano.ms.engine.sample;
+package net.trajano.ms.engine.second;
 
 import java.util.concurrent.ThreadLocalRandom;
 
