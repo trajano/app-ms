@@ -5,6 +5,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.sample.MyApp;
+import net.trajano.ms.engine.second.MyApp2;
 
 /**
  * This vericle provdes the HTTP server and {@link Router} that is going to be
@@ -25,6 +26,7 @@ public class JaxRsVerticle extends AbstractVerticle {
         final Integer port = 8280;// config().getJsonObject("http").getInteger("port", 8280);
 
         JaxRsRoute.route(vertx, router, MyApp.class);
+        JaxRsRoute.route(vertx, router, MyApp2.class);
         http.requestHandler(req -> router.accept(req)).listen(port);
 
     }

@@ -46,7 +46,7 @@ public class JaxRsRoute implements
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        new JaxRsRoute(router, applicationClass);
+        new JaxRsRoute(vertx, router, applicationClass);
 
     }
 
@@ -55,6 +55,7 @@ public class JaxRsRoute implements
     private final URI baseUri;
 
     private JaxRsRoute(
+        final Vertx vertx,
         final Router router,
         final Class<? extends Application> applicationClass) {
 
@@ -64,7 +65,7 @@ public class JaxRsRoute implements
         //        final Map<String, Object> properties = new HashMap<>();
         //        properties.put("contextConfig", new ClassPathXmlApplicationContext());
         //resourceConfig.setProperties(properties);
-        resourceConfig.register(new VertxBinder());
+        resourceConfig.register(new VertxBinder(vertx));
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
