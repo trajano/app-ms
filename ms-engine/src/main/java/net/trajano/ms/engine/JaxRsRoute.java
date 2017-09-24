@@ -59,20 +59,14 @@ public class JaxRsRoute implements
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        final ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.register(new VertxBinder(vertx));
-        resourceConfig.register(JacksonJaxbJsonProvider.class);
-
-        final String resourcePackage = applicationClass.getPackage().getName();
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
-        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
-
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
             baseUri = URI.create(annotation.value() + "/").normalize();
         } else {
             baseUri = URI.create("/");
         }
+
+        final String resourcePackage = applicationClass.getPackage().getName();
 
         final BeanConfig beanConfig = new BeanConfig();
         beanConfig.setResourcePackage(resourcePackage);
@@ -90,6 +84,12 @@ public class JaxRsRoute implements
             throw new RuntimeException(e);
         }
 
+        final ResourceConfig resourceConfig = new ResourceConfig();
+        resourceConfig.register(new VertxBinder(vertx));
+        resourceConfig.register(JacksonJaxbJsonProvider.class);
+
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
+        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
         appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
     }
