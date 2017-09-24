@@ -60,11 +60,6 @@ public class JaxRsRoute implements
         final Class<? extends Application> applicationClass) {
 
         final ResourceConfig resourceConfig = new ResourceConfig();
-        //        //        System.out.println(resourceConfig.getProperties());
-        //        //
-        //        final Map<String, Object> properties = new HashMap<>();
-        //        properties.put("contextConfig", new ClassPathXmlApplicationContext());
-        //resourceConfig.setProperties(properties);
         resourceConfig.register(new VertxBinder(vertx));
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
@@ -95,19 +90,7 @@ public class JaxRsRoute implements
             throw new RuntimeException(e);
         }
 
-        //        appHandler = new ApplicationHandler(resourceConfig);
         appHandler = new ApplicationHandler(resourceConfig);
-        System.out.println(appHandler.getConfiguration());
-        //
-        //        try {
-        //            appHandler = new ApplicationHandler(applicationClass.newInstance());
-        //        } catch (final InstantiationException e) {
-        //            // TODO Auto-generated catch block
-        //            e.printStackTrace();
-        //        } catch (final IllegalAccessException e) {
-        //            // TODO Auto-generated catch block
-        //            e.printStackTrace();
-        //        }
         router.route(baseUri.getPath() + "*").handler(this);
     }
 
@@ -120,19 +103,8 @@ public class JaxRsRoute implements
         final HttpServerRequest serverRequest = routingContext.request();
         final URI requestUri = URI.create(serverRequest.absoluteURI());
 
+        routingContext.vertx().getOrCreateContext().put(RoutingContext.class.getName(), routingContext);
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
-        request.setProperty(RoutingContext.class.getName(), routingContext);
-        //        request.setRequestScopedInitializer(im -> im.register(new VertxRequestBinder(context, vertx)));
-        //        request.setRequestScopedInitializer(im -> System.out.println(im.get));
-        request.setRequestScopedInitializer(im -> System.out.println("IM=>" + im.getInstance(ContainerRequest.class)));
-        //        request.setRequestScopedInitializer(im -> {
-        //
-        //            im.getInstance(BeanManager.class).getBeans(Object.class).forEach(x -> System.out.println(x.getBeanClass()));
-        //            //                    im.inject(vertx.getOrCreateContext());
-        //            //                    im.inject(context);
-        //            //                    im.inject(event);
-        //
-        //        });
 
         serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
         request.setWriter(new VertxWebResponseWriter(serverRequest.response()));
