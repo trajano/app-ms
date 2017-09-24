@@ -1,5 +1,6 @@
 package net.trajano.ms.engine;
 
+import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -15,6 +16,8 @@ public class JaxRsVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
+
+        final ConfigRetriever retriever = ConfigRetriever.create(vertx);
 
         final Router router = Router.router(vertx);
         final HttpServer http = vertx.createHttpServer();
