@@ -2,9 +2,9 @@ package net.trajano.ms.engine.sample;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.enterprise.context.ApplicationScoped;
+import org.springframework.stereotype.Component;
 
-@ApplicationScoped
+@Component
 public class SomeAppScope implements
     ISomeAppScope {
 

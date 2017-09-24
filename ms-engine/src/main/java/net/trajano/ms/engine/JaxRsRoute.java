@@ -58,9 +58,13 @@ public class JaxRsRoute implements
         final Router router,
         final Class<? extends Application> applicationClass) {
 
-        final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(applicationClass);
+        final ResourceConfig resourceConfig = new ResourceConfig();
+        //        //        System.out.println(resourceConfig.getProperties());
+        //        //
+        //        final Map<String, Object> properties = new HashMap<>();
+        //        properties.put("contextConfig", new ClassPathXmlApplicationContext());
+        //resourceConfig.setProperties(properties);
         resourceConfig.register(new VertxBinder());
-
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         final String resourcePackage = applicationClass.getPackage().getName();
@@ -90,7 +94,19 @@ public class JaxRsRoute implements
             throw new RuntimeException(e);
         }
 
+        //        appHandler = new ApplicationHandler(resourceConfig);
         appHandler = new ApplicationHandler(resourceConfig);
+        System.out.println(appHandler.getConfiguration());
+        //
+        //        try {
+        //            appHandler = new ApplicationHandler(applicationClass.newInstance());
+        //        } catch (final InstantiationException e) {
+        //            // TODO Auto-generated catch block
+        //            e.printStackTrace();
+        //        } catch (final IllegalAccessException e) {
+        //            // TODO Auto-generated catch block
+        //            e.printStackTrace();
+        //        }
         router.route(baseUri.getPath() + "*").handler(this);
     }
 

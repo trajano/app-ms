@@ -1,7 +1,6 @@
 package net.trajano.ms.engine.sample;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -12,24 +11,27 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 
 @Api
 @Path("/hello")
 public class Hello {
-
-    @Inject
-    private ISomeAppScope scoped;
+    //
+    //    @Inject
+    //    private ISomeAppScope scoped;
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String hello(@Context final io.vertx.core.Context vertxContext,
-        @Context final Vertx vertx,
-        @Context final RoutingContext routingContext) {
+    public String hello(@Context final RoutingContext routingContext) {
 
-        return "Hello" + scoped.get()
-            + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
+        return "Hello" + routingContext;
+        /*
+         * @Context final Vertx vertx,
+         * @Context final RoutingContext routingContext
+         */
+        //+ scoped.get()
+        //@Context final io.vertx.core.Context vertxContext,
+        //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
     @GET
