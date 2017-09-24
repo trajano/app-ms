@@ -85,6 +85,11 @@
       <artifactId>jersey-server</artifactId>
     </dependency>
     <dependency>
+    <groupId>io.netty</groupId>
+    <artifactId>netty-tcnative-boringssl-static</artifactId>
+  <scope>runtime</scope>
+</dependency>
+    <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
       <artifactId>jersey-spring4</artifactId>
     </dependency>
