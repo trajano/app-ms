@@ -1,6 +1,5 @@
 package net.trajano.ms.engine.sample;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -66,9 +65,4 @@ public class SingleHello2 {
         return "HelloHello " + me;
     }
 
-    @PostConstruct
-    public void init() {
-
-        System.out.println("INIT");
-    }
 }

@@ -1,6 +1,5 @@
 package net.trajano.ms.engine.second;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -66,9 +65,4 @@ public class Hello {
         return "HelloHello " + me;
     }
 
-    @PostConstruct
-    public void init() {
-
-        System.out.println("INIT");
-    }
 }
