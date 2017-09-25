@@ -10,3 +10,5 @@ This uses:
 * logback logging runtime
 
 
+### Cluster
+The purpose of the cluster was to enable pushing the load across multiple nodes, but for this scenario it didn't make much sense unless there is some real processing that can be done.

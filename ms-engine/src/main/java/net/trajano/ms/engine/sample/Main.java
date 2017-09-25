@@ -3,6 +3,7 @@ package net.trajano.ms.engine.sample;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.JaxRsRoute;
@@ -12,6 +13,10 @@ public class Main extends AbstractVerticle {
 
     public static void main(final String[] args) {
 
+        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
+        final VertxOptions vertOptions = new VertxOptions();
+        vertOptions.setMaxEventLoopExecuteTime(3000000000L);
+        vertOptions.setWarningExceptionTime(1);
         //        final VertxOptions options = new VertxOptions();
         //        Vertx.clusteredVertx(options, event -> {
         //            final Vertx vertx = event.result();
@@ -19,7 +24,7 @@ public class Main extends AbstractVerticle {
         //
         //        });
 
-        final Vertx vertx = Vertx.vertx();
+        final Vertx vertx = Vertx.vertx(vertOptions);
         final DeploymentOptions options = new DeploymentOptions();
         vertx.deployVerticle(JaxRsVerticle.class.getName(), options);
 
