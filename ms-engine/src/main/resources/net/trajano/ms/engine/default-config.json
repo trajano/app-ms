@@ -6,7 +6,8 @@
 			"alpn": true,
 			"keyFile": "xyz",
 			"certFile": "xyz"
-		}
+		},
+		"minimum_post_size_to_buffer": 1024
 	},
 	"applications": [
 		"classname"
