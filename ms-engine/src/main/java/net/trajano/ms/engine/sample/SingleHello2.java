@@ -32,13 +32,6 @@ public class SingleHello2 {
     public String hello(@Context final RoutingContext routingContext) {
 
         return "Hello" + routingContext + scoped + " " + requestScope + "  " + this;
-        /*
-         * @Context final Vertx vertx,
-         * @Context final RoutingContext routingContext
-         */
-        //+ scoped.get()
-        //@Context final io.vertx.core.Context vertxContext,
-        //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
     @GET

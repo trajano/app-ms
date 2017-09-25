@@ -11,12 +11,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 
 @Api
 @Path("/hello")
 public class Hello {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
 
     @Inject
     private SomeRequestScope requestScope;
@@ -73,6 +78,6 @@ public class Hello {
     @PostConstruct
     public void init() {
 
-        System.out.println("INIT");
+        LOG.info("INIT");
     }
 }

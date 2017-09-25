@@ -2,8 +2,6 @@ package net.trajano.ms.engine.sample;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -18,9 +16,4 @@ public class SomeRequestScope {
         return i;
     }
 
-    @PostConstruct
-    public void init() {
-
-        System.out.println("request" + this);
-    }
 }

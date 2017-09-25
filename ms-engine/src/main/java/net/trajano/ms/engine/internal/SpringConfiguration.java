@@ -12,15 +12,6 @@ import org.springframework.web.context.request.RequestScope;
 @Configuration
 public class SpringConfiguration {
 
-    //    @Bean
-    //    public CustomScopeConfigurer customScopeConfigurer() {
-    //
-    //        final CustomScopeConfigurer customScopeConfigurer = new CustomScopeConfigurer();
-    //        customScopeConfigurer.setScopes(Collections.singletonMap("request", org.springframework.web.context.request.RequestScope.class));
-    //        return customScopeConfigurer;
-    //
-    //    }
-
     @Bean
     public static CustomScopeConfigurer customScopeConfigurer(final RequestScope requestScope) {
 
@@ -36,9 +27,4 @@ public class SpringConfiguration {
         return new RequestScope();
     }
 
-    @PostConstruct
-    public void init() {
-
-        System.out.println("FFF");
-    }
 }
