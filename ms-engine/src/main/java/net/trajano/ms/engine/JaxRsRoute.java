@@ -3,7 +3,6 @@ package net.trajano.ms.engine;
 import static java.util.Collections.singletonMap;
 
 import java.net.URI;
-import java.util.concurrent.Future;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -11,9 +10,10 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,6 +39,8 @@ import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
 public class JaxRsRoute extends AbstractVerticle implements
     Handler<RoutingContext> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JaxRsRoute.class);
 
     /**
      * Constructs a new route for the given router to a JAX-RS application.
@@ -122,45 +124,24 @@ public class JaxRsRoute extends AbstractVerticle implements
         final VertxWebResponseWriter responseWriter = new VertxWebResponseWriter(serverRequest.response());
         request.setWriter(responseWriter);
 
-        final String contentLengthString = serverRequest.getHeader("Content-Length");
-        final int contentLength;
-        if (contentLengthString != null) {
-            contentLength = Integer.parseInt(contentLengthString);
-        } else {
-            contentLength = 0;
+        //        final OutputStream outputStream = new VertxOutputStream(serverRequest.response());
+        if (!serverRequest.isEnded()) {
+            final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
+            serverRequest
+                .handler(buffer -> is.populate(buffer))
+                .endHandler(aVoid -> is.end());
+            request.setEntityStream(is);
         }
         routingContext.vertx().executeBlocking(future -> {
-            Future<ContainerResponse> apply;
-            if (serverRequest.isEnded() || contentLength == 0) {
-                apply = appHandler.apply(request);
-                //            } else if (contentLength < 1024) {
-                //                serverRequest
-                //                    .bodyHandler(body -> {
-                //                        request.setEntityStream(new VertxBufferInputStream(body));
-                //                        appHandler.apply(request);
-                //                    });
+            appHandler.handle(request);
+            future.complete();
+        }, false, res -> {
+            if (res.succeeded()) {
+                LOG.debug("Succeeded {}", request);
             } else {
-                final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
-                serverRequest
-                    .handler(buffer -> is.populate(buffer))
-                    .endHandler(aVoid -> is.end());
-                request.setEntityStream(is);
-                apply = appHandler.apply(request);
-
+                LOG.error("Problem with handler", res.cause());
             }
+        });
 
-            future.complete(apply);
-        },
-            true,
-            res -> {
-                if (res.succeeded()) {
-                    request.close();
-                    //                    ((VertxWebResponseWriter) res.result()).commit();
-                    System.out.println("DONE" + serverRequest.response().ended());
-                } else {
-                    res.cause().printStackTrace(System.err);
-                }
-            });
     }
-
 }

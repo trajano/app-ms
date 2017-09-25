@@ -48,6 +48,7 @@ public class VertxBlockingInputStream extends InputStream {
 
     public void end() {
 
+        System.out.println("ENDED");
         queue.add(END_BUFFER);
     }
 

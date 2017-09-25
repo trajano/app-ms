@@ -3,6 +3,7 @@ package net.trajano.ms.engine.internal;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.StatusType;
 
@@ -69,6 +70,11 @@ public class VertxWebResponseWriter implements
     public OutputStream writeResponseStatusAndHeaders(final long contentLength,
         final ContainerResponse responseContext) throws ContainerException {
 
+        if (contentLength >= 0) {
+            response.putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+        } else {
+            response.setChunked(true);
+        }
         final StatusType status = responseContext.getStatusInfo();
         response.setStatusCode(status.getStatusCode());
         response.setStatusMessage(status.getReasonPhrase());
