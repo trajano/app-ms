@@ -33,6 +33,9 @@ public class VertxBufferInputStream extends InputStream {
         final int len) throws IOException {
 
         final int size = Math.min(b.length, buffer.length() - pos);
+        if (size == 0) {
+            return -1;
+        }
         buffer.getBytes(pos, pos + size, b, off);
         pos += size;
         return size;

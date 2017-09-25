@@ -24,6 +24,7 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
 import io.swagger.util.Yaml;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -37,7 +38,7 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
-public class JaxRsRoute implements
+public class JaxRsRoute extends AbstractVerticle implements
     Handler<RoutingContext> {
 
     /**
@@ -62,6 +63,8 @@ public class JaxRsRoute implements
         final Vertx vertx,
         final Router router,
         final Class<? extends Application> applicationClass) {
+
+        this.vertx = vertx;
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
@@ -141,20 +144,22 @@ public class JaxRsRoute implements
                     request.close();
                 });
         } else {
-            try (final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest)) {
-                serverRequest
-                    .handler(buffer -> is.populate(buffer))
-                    .endHandler(aVoid -> is.end());
-                routingContext.vertx().executeBlocking(future -> {
-                    request.setEntityStream(is);
-                    appHandler.handle(request);
-                    future.complete();
-                }, false, result -> {
-                    request.close();
-                });
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
+            serverRequest
+                .handler(buffer -> is.populate(buffer))
+                .endHandler(aVoid -> is.end());
+            routingContext.vertx().executeBlocking(future -> {
+                request.setEntityStream(is);
+                appHandler.handle(request);
+                future.complete();
+            }, false, result -> {
+                request.close();
+                try {
+                    is.close();
+                } catch (final IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
         }
     }
 

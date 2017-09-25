@@ -13,7 +13,8 @@ import net.trajano.ms.engine.second.MyApp2;
 
 /**
  * This vericle provdes the HTTP server and {@link Router} that is going to be
- * used by {@link JaxRsRoute}
+ * used by {@link JaxRsRoute} Example usage: vertx run
+ * net.trajano.ms.engine.JaxRsVerticle -cp ms-engine.jar;myapp.jar
  *
  * @author Archimedes Trajano
  */
