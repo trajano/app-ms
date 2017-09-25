@@ -4,9 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.web.Router;
 
 public class Gateway extends AbstractVerticle {
@@ -23,37 +21,13 @@ public class Gateway extends AbstractVerticle {
         final Router router = Router.router(vertx);
         final HttpClient client = vertx.createHttpClient(new HttpClientOptions());
 
-        router.route("/hello").handler(event -> {
-
-            final HttpServerResponse response = event.response();
-            response.putHeader("content-type", "text/plain");
-            response.end("Hello World!");
-        });
-
-        router.routeWithRegex("/v1/.*").handler(event -> {
-            final HttpServerRequest req = event.request();
-            final String uri = req.uri().substring("/v1".length());
-            System.out.println("Proxying request: " + uri);
-            final HttpClientRequest c_req = client.request(req.method(), 8080, "localhost", uri, c_res -> {
-                System.out.println("Proxying response: " + c_res.statusCode());
-                req.response().setChunked(true);
-                req.response().setStatusCode(c_res.statusCode());
-                req.response().headers().setAll(c_res.headers());
-                c_res.handler(data -> {
-                    System.out.println("Proxying response body inside: " + data.toString("ISO-8859-1"));
-                    req.response().write(data);
-                });
-                c_res.endHandler((v) -> req.response().end());
-            });
-
-            c_req.setChunked(true);
-            c_req.headers().setAll(req.headers());
-            req.handler(data -> {
-                System.out.println("Proxying request body " + data.toString("ISO-8859-1"));
-                c_req.write(data);
-            });
-            req.endHandler((v) -> c_req.end());
-        });
+        router.routeWithRegex("/v1/.*").handler(new ProxyRouteHandler(client, req -> {
+            final RequestOptions clientRequestOptions = new RequestOptions();
+            clientRequestOptions.setHost("localhost");
+            clientRequestOptions.setPort(8080);
+            clientRequestOptions.setURI(req.uri().substring(3));
+            return clientRequestOptions;
+        }));
 
         vertx.createHttpServer()
             .requestHandler(req -> {
