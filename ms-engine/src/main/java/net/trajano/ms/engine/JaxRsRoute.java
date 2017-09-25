@@ -56,7 +56,7 @@ public class JaxRsRoute extends AbstractVerticle implements
 
     }
 
-    private final ApplicationHandler appHandler;
+    private ApplicationHandler appHandler;
 
     private final URI baseUri;
 
@@ -107,8 +107,15 @@ public class JaxRsRoute extends AbstractVerticle implements
         resourceConfig.register(new VertxRequestContextFilter());
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
-        appHandler = new ApplicationHandler(resourceConfig);
-        router.route(baseUri.getPath() + "*").handler(this);
+        vertx.executeBlocking(future -> {
+            future.complete(new ApplicationHandler(resourceConfig));
+        }, false,
+            res -> {
+                if (res.succeeded()) {
+                    appHandler = (ApplicationHandler) res.result();
+                    router.route(baseUri.getPath() + "*").handler(this);
+                }
+            });
     }
 
     @Override

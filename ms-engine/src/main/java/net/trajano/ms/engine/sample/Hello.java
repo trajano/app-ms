@@ -70,8 +70,9 @@ public class Hello {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_PLAIN)
-    public String helloHelloPost(@FormParam("me") final String me) {
+    public String helloHelloPost(@FormParam("me") final String me) throws InterruptedException {
 
+        Thread.sleep(5000L);
         return "HelloHello " + me;
     }
 
