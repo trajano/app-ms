@@ -1,5 +1,14 @@
 {
-  "http" : {
-    "port": 8280
-  } 
+	"http": {
+		"port": 8280,
+		"ssl": {
+			"active": true,
+			"alpn": true,
+			"keyFile": "xyz",
+			"certFile": "xyz"
+		}
+	},
+	"applications": [
+		"classname"
+	]
 }

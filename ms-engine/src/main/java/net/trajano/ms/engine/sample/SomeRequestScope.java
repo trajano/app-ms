@@ -5,14 +5,14 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 @Component
-public class SomeAppScope implements
-    ISomeAppScope {
+@RequestScope
+public class SomeRequestScope {
 
     private final int i = ThreadLocalRandom.current().nextInt();
 
-    @Override
     public int get() {
 
         return i;
@@ -21,6 +21,6 @@ public class SomeAppScope implements
     @PostConstruct
     public void init() {
 
-        System.out.println("FFFFA");
+        System.out.println("request" + this);
     }
 }

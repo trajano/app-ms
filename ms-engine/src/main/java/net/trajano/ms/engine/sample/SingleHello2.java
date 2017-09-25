@@ -11,12 +11,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.springframework.stereotype.Component;
+
 import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 
 @Api
-@Path("/hello")
-public class Hello {
+@Path("/s")
+@Component
+public class SingleHello2 {
 
     @Inject
     private SomeRequestScope requestScope;

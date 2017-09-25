@@ -14,6 +14,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -27,9 +29,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.SpringConfiguration;
 import net.trajano.ms.engine.internal.VertxBinder;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
+import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
@@ -85,17 +89,23 @@ public class JaxRsRoute implements
         }
 
         final ResourceConfig resourceConfig = new ResourceConfig();
+        final AnnotationConfigApplicationContext applicationContext;
+        if (applicationClass.getAnnotation(Configuration.class) != null) {
+            applicationContext = new AnnotationConfigApplicationContext(SpringConfiguration.class, applicationClass);
+        } else {
+            applicationContext = new AnnotationConfigApplicationContext(SpringConfiguration.class);
+        }
+
+        resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
+
         resourceConfig.register(new VertxBinder(vertx));
+        resourceConfig.register(new VertxRequestContextFilter());
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
-        resourceConfig.addProperties(singletonMap(ServerProperties.TRACING, "ALL"));
         appHandler = new ApplicationHandler(resourceConfig);
         router.route(baseUri.getPath() + "*").handler(this);
     }
-
-    //    private final Type ContextTYPE = new GenericType<Ref<Context>>() {
-    //    }.getType();
 
     @Override
     public void handle(final RoutingContext routingContext) {
