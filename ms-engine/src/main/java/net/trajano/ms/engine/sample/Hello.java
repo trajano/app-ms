@@ -80,4 +80,13 @@ public class Hello {
 
         LOG.info("INIT");
     }
+
+    @GET
+    @Path("/sleep")
+    @Produces(MediaType.APPLICATION_XML)
+    public Blah sleeping() throws InterruptedException {
+
+        Thread.sleep(5000L);
+        return new Blah();
+    }
 }

@@ -15,8 +15,9 @@ public class Main extends AbstractVerticle {
 
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         final VertxOptions vertOptions = new VertxOptions();
-        vertOptions.setMaxEventLoopExecuteTime(3000000000L);
+        vertOptions.setMaxEventLoopExecuteTime(30000000000L);
         vertOptions.setWarningExceptionTime(1);
+        vertOptions.setWorkerPoolSize(50);
         //        final VertxOptions options = new VertxOptions();
         //        Vertx.clusteredVertx(options, event -> {
         //            final Vertx vertx = event.result();

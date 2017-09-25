@@ -2,9 +2,8 @@ package net.trajano.ms.engine;
 
 import static java.util.Collections.singletonMap;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -12,6 +11,7 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -33,7 +33,6 @@ import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
 import net.trajano.ms.engine.internal.VertxBinder;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
-import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
@@ -120,7 +119,8 @@ public class JaxRsRoute extends AbstractVerticle implements
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
 
         serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
-        request.setWriter(new VertxWebResponseWriter(serverRequest.response()));
+        final VertxWebResponseWriter responseWriter = new VertxWebResponseWriter(serverRequest.response());
+        request.setWriter(responseWriter);
 
         final String contentLengthString = serverRequest.getHeader("Content-Length");
         final int contentLength;
@@ -129,38 +129,38 @@ public class JaxRsRoute extends AbstractVerticle implements
         } else {
             contentLength = 0;
         }
-
-        if (contentLength == 0) {
-            serverRequest
-                .endHandler(aVoid -> {
-                    appHandler.handle(request);
-                    request.close();
-                });
-        } else if (contentLength < 1024) {
-            serverRequest
-                .bodyHandler(body -> {
-                    request.setEntityStream(new VertxBufferInputStream(body));
-                    appHandler.handle(request);
-                    request.close();
-                });
-        } else {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
-            serverRequest
-                .handler(buffer -> is.populate(buffer))
-                .endHandler(aVoid -> is.end());
-            routingContext.vertx().executeBlocking(future -> {
+        routingContext.vertx().executeBlocking(future -> {
+            Future<ContainerResponse> apply;
+            if (serverRequest.isEnded() || contentLength == 0) {
+                apply = appHandler.apply(request);
+                //            } else if (contentLength < 1024) {
+                //                serverRequest
+                //                    .bodyHandler(body -> {
+                //                        request.setEntityStream(new VertxBufferInputStream(body));
+                //                        appHandler.apply(request);
+                //                    });
+            } else {
+                final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
+                serverRequest
+                    .handler(buffer -> is.populate(buffer))
+                    .endHandler(aVoid -> is.end());
                 request.setEntityStream(is);
-                appHandler.handle(request);
-                future.complete();
-            }, false, result -> {
-                request.close();
-                try {
-                    is.close();
-                } catch (final IOException e) {
-                    throw new UncheckedIOException(e);
+                apply = appHandler.apply(request);
+
+            }
+
+            future.complete(apply);
+        },
+            true,
+            res -> {
+                if (res.succeeded()) {
+                    request.close();
+                    //                    ((VertxWebResponseWriter) res.result()).commit();
+                    System.out.println("DONE" + serverRequest.response().ended());
+                } else {
+                    res.cause().printStackTrace(System.err);
                 }
             });
-        }
     }
 
 }
