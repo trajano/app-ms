@@ -124,9 +124,8 @@ public class JaxRsRoute extends AbstractVerticle implements
         final VertxWebResponseWriter responseWriter = new VertxWebResponseWriter(serverRequest.response());
         request.setWriter(responseWriter);
 
-        //        final OutputStream outputStream = new VertxOutputStream(serverRequest.response());
         if (!serverRequest.isEnded()) {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream(serverRequest);
+            final VertxBlockingInputStream is = new VertxBlockingInputStream();
             serverRequest
                 .handler(buffer -> is.populate(buffer))
                 .endHandler(aVoid -> is.end());

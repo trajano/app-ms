@@ -21,7 +21,6 @@ public class VertxWebResponseWriter implements
     public VertxWebResponseWriter(final HttpServerResponse response) {
 
         this.response = response;
-        response.setChunked(true);
     }
 
     @Override
@@ -36,7 +35,7 @@ public class VertxWebResponseWriter implements
     @Override
     public boolean enableResponseBuffering() {
 
-        return false;
+        return true;
     }
 
     /**
@@ -72,10 +71,10 @@ public class VertxWebResponseWriter implements
 
         if (contentLength >= 0) {
             response.putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
-        } else {
-            response.setChunked(true);
         }
+        response.setChunked(responseContext.isChunked());
         final StatusType status = responseContext.getStatusInfo();
+        System.out.println(status.getStatusCode() + " " + status.getReasonPhrase());
         response.setStatusCode(status.getStatusCode());
         response.setStatusMessage(status.getReasonPhrase());
         responseContext.getStringHeaders().forEach((header,
