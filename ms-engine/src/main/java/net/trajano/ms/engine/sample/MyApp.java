@@ -5,6 +5,7 @@ import javax.ws.rs.core.Application;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * This is the Jax-RS Application defintion. This is also where Spring
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @ApplicationPath("/api")
 @Configuration
+@EnableScheduling
 @ComponentScan
 public class MyApp extends Application {
 
