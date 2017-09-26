@@ -93,17 +93,17 @@ public class JaxRsRoute extends AbstractVerticle implements
         }
 
         final ResourceConfig resourceConfig = new ResourceConfig();
-        final AnnotationConfigApplicationContext applicationContext;
+        final AnnotationConfigApplicationContext ctx;
         if (applicationClass.getAnnotation(Configuration.class) != null) {
-            applicationContext = new AnnotationConfigApplicationContext(SpringConfiguration.class, applicationClass);
+            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class, applicationClass);
         } else {
-            applicationContext = new AnnotationConfigApplicationContext(SpringConfiguration.class);
+            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class);
         }
 
-        resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
+        //  resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
         resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
 
-        resourceConfig.register(new VertxBinder(vertx));
+        resourceConfig.register(new VertxBinder(vertx, ctx));
         resourceConfig.register(new VertxRequestContextFilter());
         resourceConfig.register(JacksonJaxbJsonProvider.class);
 
@@ -113,7 +113,14 @@ public class JaxRsRoute extends AbstractVerticle implements
             res -> {
                 if (res.succeeded()) {
                     appHandler = (ApplicationHandler) res.result();
-                    router.route(baseUri.getPath() + "*").handler(this);
+                    router.route(baseUri.getPath() + "*")
+                        .handler(this)
+                        .failureHandler(context -> {
+                            LOG.error("Failured called", context.failure());
+
+                        });
+                } else {
+                    LOG.error("Problem during creation of ApplicationHandler", res.cause());
                 }
             });
     }
@@ -124,7 +131,7 @@ public class JaxRsRoute extends AbstractVerticle implements
         final HttpServerRequest serverRequest = routingContext.request();
         final URI requestUri = URI.create(serverRequest.absoluteURI());
 
-        routingContext.vertx().getOrCreateContext().put(RoutingContext.class.getName(), routingContext);
+        vertx.getOrCreateContext().put(RoutingContext.class.getName(), routingContext);
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
 
         serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
@@ -138,16 +145,18 @@ public class JaxRsRoute extends AbstractVerticle implements
                 .endHandler(aVoid -> is.end());
             request.setEntityStream(is);
         }
-        routingContext.vertx().executeBlocking(future -> {
+
+        vertx.executeBlocking(future -> {
             appHandler.handle(request);
             future.complete();
-        }, false, res -> {
-            if (res.succeeded()) {
-                LOG.debug("Succeeded {}", request);
-            } else {
-                LOG.error("Problem with handler", res.cause());
-            }
-        });
+        },
+            false,
+            res -> {
+                if (res.failed()) {
+                    LOG.error("Problem during creation of ApplicationHandler", res.cause());
+                }
+                routingContext.response().end();
+            });
 
     }
 }

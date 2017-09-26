@@ -26,10 +26,6 @@ public class VertxWebResponseWriter implements
     @Override
     public void commit() {
 
-        if (!response.ended()) {
-            response.end();
-        }
-
     }
 
     @Override
@@ -74,7 +70,6 @@ public class VertxWebResponseWriter implements
         }
         response.setChunked(responseContext.isChunked());
         final StatusType status = responseContext.getStatusInfo();
-        System.out.println(status.getStatusCode() + " " + status.getReasonPhrase());
         response.setStatusCode(status.getStatusCode());
         response.setStatusMessage(status.getReasonPhrase());
         responseContext.getStringHeaders().forEach((header,

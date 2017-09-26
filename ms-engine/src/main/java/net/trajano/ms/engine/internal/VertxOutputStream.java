@@ -25,8 +25,6 @@ public class VertxOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
 
-        LOG.debug("Ending stream {}", stream);
-        stream.end();
     }
 
     @Override
