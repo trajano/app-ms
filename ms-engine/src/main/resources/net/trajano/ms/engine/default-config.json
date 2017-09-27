@@ -2,14 +2,8 @@
 	"http": {
 		"port": 8280,
 		"ssl": {
-			"active": true,
-			"alpn": true,
-			"keyFile": "xyz",
-			"certFile": "xyz"
-		},
-		"minimum_post_size_to_buffer": 1024
-	},
-	"applications": [
-		"classname"
-	]
+			"active": false,
+			"alpn": true
+		}
+	}
 }

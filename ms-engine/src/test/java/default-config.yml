@@ -1,0 +1,10 @@
+http:
+  port: 8280
+  ssl:
+    active: false
+applications: 
+#  - classname
+
+#	alpn: true
+#	keyFile: xyz
+#	certFile: xyz
