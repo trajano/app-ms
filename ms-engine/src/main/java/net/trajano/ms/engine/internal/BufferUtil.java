@@ -12,10 +12,9 @@ public final class BufferUtil {
 
         final Buffer buffer = Buffer.buffer();
 
-        final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
-        final byte[] buf = new byte[1024];
-        int nRead;
-        try {
+        try (final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) {
+            final byte[] buf = new byte[1024];
+            int nRead;
             while ((nRead = is.read(buf, 0, buf.length)) != -1) {
                 buffer.appendBytes(buf, 0, nRead);
             }

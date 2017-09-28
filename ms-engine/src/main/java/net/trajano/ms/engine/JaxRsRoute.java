@@ -1,7 +1,11 @@
 package net.trajano.ms.engine;
 
 import static java.util.Collections.singletonMap;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 
 import javax.ws.rs.ApplicationPath;
@@ -22,7 +26,6 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -37,7 +40,7 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
-public class JaxRsRoute extends AbstractVerticle implements
+public class JaxRsRoute implements
     Handler<RoutingContext> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JaxRsRoute.class);
@@ -48,9 +51,22 @@ public class JaxRsRoute extends AbstractVerticle implements
      * @param router
      * @param applicationClass
      */
-    public static void route(final Vertx vertx,
+    public static void route(
         final Router router,
         final Class<? extends Application> applicationClass) {
+
+        final Vertx vertx;
+        try {
+            final Method vertxMethod = router.getClass().getDeclaredMethod("vertx");
+            vertxMethod.setAccessible(true);
+            vertx = (Vertx) vertxMethod.invoke(router);
+        } catch (IllegalAccessException
+            | IllegalArgumentException
+            | InvocationTargetException
+            | NoSuchMethodException
+            | SecurityException e) {
+            throw new RuntimeException(e);
+        }
 
         new JaxRsRoute(vertx, router, applicationClass);
 
@@ -59,6 +75,8 @@ public class JaxRsRoute extends AbstractVerticle implements
     private ApplicationHandler appHandler;
 
     private final URI baseUri;
+
+    private final Vertx vertx;
 
     private JaxRsRoute(
         final Vertx vertx,
@@ -85,7 +103,7 @@ public class JaxRsRoute extends AbstractVerticle implements
         final Swagger swagger = beanConfig.getSwagger();
         Json.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         final String json = JsonObject.mapFrom(swagger).toString();
-        router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
+        router.get(baseUri.getPath()).produces(APPLICATION_JSON).handler(context -> context.response().putHeader(CONTENT_TYPE, APPLICATION_JSON).end(json));
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         final AnnotationConfigApplicationContext ctx;
@@ -111,11 +129,10 @@ public class JaxRsRoute extends AbstractVerticle implements
                     router.route(baseUri.getPath() + "*")
                         .handler(this)
                         .failureHandler(context -> {
-                            LOG.error("Failured called", context.failure());
-
+                            LOG.error("Failure called", context.failure());
                         });
                 } else {
-                    LOG.error("Problem during creation of ApplicationHandler", res.cause());
+                    throw new IllegalStateException("Problem during creation of ApplicationHandler", res.cause());
                 }
             });
     }

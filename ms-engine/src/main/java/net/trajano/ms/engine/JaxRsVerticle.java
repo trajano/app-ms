@@ -41,11 +41,12 @@ public class JaxRsVerticle extends AbstractVerticle {
 
         config().getJsonArray("applicationClasses").forEach(applicationClassName -> {
             try {
-                JaxRsRoute.route(vertx, router, (Class<? extends Application>) Class.forName((String) applicationClassName));
+                JaxRsRoute.route(router, (Class<? extends Application>) Class.forName((String) applicationClassName));
             } catch (final ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         });
+        ManifestRoute.route(router, "/info");
         http.requestHandler(req -> router.accept(req)).listen();
 
     }
