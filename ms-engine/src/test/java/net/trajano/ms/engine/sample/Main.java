@@ -4,10 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import net.trajano.ms.engine.JaxRsRoute;
 import net.trajano.ms.engine.JaxRsVerticle;
 import net.trajano.ms.engine.JaxRsVerticleOptions;
 import net.trajano.ms.engine.second.MyApp2;
@@ -41,13 +38,4 @@ public class Main extends AbstractVerticle {
 
     }
 
-    @Override
-    public void start() throws Exception {
-
-        final Router router = Router.router(vertx);
-        final HttpServer http = vertx.createHttpServer();
-
-        JaxRsRoute.route(vertx, router, MyApp.class);
-        http.requestHandler(req -> router.accept(req)).listen(8280);
-    }
 }

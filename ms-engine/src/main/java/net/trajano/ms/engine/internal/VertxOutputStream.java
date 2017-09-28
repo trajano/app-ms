@@ -5,15 +5,10 @@ import static io.vertx.core.buffer.Buffer.buffer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 
 public class VertxOutputStream extends OutputStream {
-
-    private static final Logger LOG = LoggerFactory.getLogger(VertxOutputStream.class);
 
     private final WriteStream<Buffer> stream;
 

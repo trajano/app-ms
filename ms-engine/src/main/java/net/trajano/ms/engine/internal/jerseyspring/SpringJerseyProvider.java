@@ -22,8 +22,8 @@ import net.trajano.ms.engine.JaxRsRoute;
 public class SpringJerseyProvider implements
     ComponentProvider {
 
-    private static class SpringManagedBeanFactory implements
-        Supplier {
+    private static class SpringManagedBeanFactory<T> implements
+        Supplier<T> {
 
         private final String beanName;
 
@@ -41,9 +41,10 @@ public class SpringJerseyProvider implements
         }
 
         @Override
-        public Object get() {
+        public T get() {
 
-            final Object bean = ctx.getBean(beanName);
+            @SuppressWarnings("unchecked")
+            final T bean = (T) ctx.getBean(beanName);
             if (bean instanceof Advised) {
                 try {
                     // Unwrap the bean and inject the values inside of it
@@ -66,6 +67,10 @@ public class SpringJerseyProvider implements
 
     private InjectionManager injectionManager;
 
+    @SuppressWarnings({
+        "rawtypes",
+        "unchecked"
+    })
     @Override
     public boolean bind(final Class<?> component,
         final Set<Class<?>> providerContracts) {
@@ -77,7 +82,7 @@ public class SpringJerseyProvider implements
             }
             final String beanName = beanNames[0];
 
-            final Binding<?, ?> binding = Bindings.supplier(new SpringManagedBeanFactory(ctx, injectionManager, beanName))
+            final Binding<Object, ? extends Binding> binding = Bindings.supplier(new SpringManagedBeanFactory(ctx, injectionManager, beanName))
                 .to(component)
                 .to(providerContracts);
             injectionManager.register(binding);
