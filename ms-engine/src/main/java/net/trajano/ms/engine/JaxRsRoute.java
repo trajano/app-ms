@@ -23,7 +23,6 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
-import io.swagger.util.Yaml;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -85,9 +84,7 @@ public class JaxRsRoute extends AbstractVerticle implements
         try {
             final Swagger swagger = beanConfig.getSwagger();
             final String json = Json.mapper().writeValueAsString(swagger);
-            final String yaml = Yaml.mapper().writeValueAsString(swagger);
             router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
-            router.get(baseUri.getPath()).produces("application/yaml").handler(context -> context.response().putHeader("Content-Type", "application/yaml").end(yaml));
         } catch (final JsonProcessingException e) {
             throw new RuntimeException(e);
         }
