@@ -17,16 +17,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
-import io.swagger.util.Json;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
@@ -81,13 +82,10 @@ public class JaxRsRoute extends AbstractVerticle implements
         beanConfig.setBasePath(baseUri.getPath());
         beanConfig.scanAndRead();
 
-        try {
-            final Swagger swagger = beanConfig.getSwagger();
-            final String json = Json.mapper().writeValueAsString(swagger);
-            router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
-        } catch (final JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        final Swagger swagger = beanConfig.getSwagger();
+        Json.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        final String json = JsonObject.mapFrom(swagger).toString();
+        router.get(baseUri.getPath()).produces("application/json").handler(context -> context.response().putHeader("Content-Type", "application/json").end(json));
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         final AnnotationConfigApplicationContext ctx;
