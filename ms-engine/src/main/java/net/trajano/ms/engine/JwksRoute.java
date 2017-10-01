@@ -15,8 +15,7 @@ import net.trajano.ms.engine.internal.BufferUtil;
 import net.trajano.ms.engine.internal.VertxBufferInputStream;
 
 /**
- * This creates a route that will provide data from the MANIFIEST.MF of the
- * application which can contain information such as version and build number.
+ * This creates a route that will provide JWKS
  *
  * @author Archimedes Trajano
  */

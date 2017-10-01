@@ -7,6 +7,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -19,6 +21,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -92,6 +95,36 @@ public class JaxRsRoute implements
             baseUri = URI.create("/");
         }
 
+        String[] basePackages = new String[] {
+            applicationClass.getPackage().getName()
+        };
+        final ComponentScan componentScan = applicationClass.getAnnotation(ComponentScan.class);
+        if (componentScan != null) {
+            final String[] value = componentScan.value();
+            basePackages = componentScan.basePackages();
+            final Class<?>[] basePackageClasses = componentScan.basePackageClasses();
+            if (value != null && basePackages != null) {
+                throw new IllegalStateException("Cannot specify value and basePackages at the same time for ComponentScan");
+            }
+
+            if (value != null) {
+                basePackages = value;
+            }
+
+            if (basePackageClasses != null && basePackages != null) {
+                throw new IllegalStateException("Cannot specify basePackageClasses and basePackages/value at the same time for ComponentScan");
+            }
+
+            if (basePackages == null) {
+                final Set<String> basePackageSet = new HashSet<>(basePackageClasses.length);
+                for (final Class<?> basePackageClass : basePackageClasses) {
+                    basePackageSet.add(basePackageClass.getPackage().getName());
+                }
+                basePackages = basePackageSet.toArray(new String[0]);
+            }
+
+        }
+
         final String resourcePackage = applicationClass.getPackage().getName();
 
         final BeanConfig beanConfig = new BeanConfig();
@@ -114,7 +147,7 @@ public class JaxRsRoute implements
         }
 
         //  resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, resourcePackage));
+        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, String.join(",", basePackages)));
 
         resourceConfig.register(new VertxBinder(vertx, ctx));
         resourceConfig.register(new VertxRequestContextFilter());
