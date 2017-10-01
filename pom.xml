@@ -55,12 +55,12 @@
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>ms-engine</artifactId>
+        <artifactId>ms-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>ms-common</artifactId>
+        <artifactId>ms-engine</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

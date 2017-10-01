@@ -83,6 +83,7 @@ public class MsEngineApplication {
 
         System.out.println("here");
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
+        System.out.println("http" + http);
         JaxRsRoute.route(router, applicationClass);
         System.out.println("here before route");
         ManifestRoute.route(router, "/info");

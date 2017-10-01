@@ -7,6 +7,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -98,24 +99,25 @@ public class JaxRsRoute implements
         String[] basePackages = new String[] {
             applicationClass.getPackage().getName()
         };
+        System.out.println("HEHE");
         final ComponentScan componentScan = applicationClass.getAnnotation(ComponentScan.class);
         if (componentScan != null) {
             final String[] value = componentScan.value();
             basePackages = componentScan.basePackages();
             final Class<?>[] basePackageClasses = componentScan.basePackageClasses();
-            if (value != null && basePackages != null) {
+            if (value.length > 0 && basePackages.length > 0) {
                 throw new IllegalStateException("Cannot specify value and basePackages at the same time for ComponentScan");
             }
 
-            if (value != null) {
+            if (value.length > 0) {
                 basePackages = value;
             }
 
-            if (basePackageClasses != null && basePackages != null) {
+            if (basePackageClasses.length > 0 && basePackages.length > 0) {
                 throw new IllegalStateException("Cannot specify basePackageClasses and basePackages/value at the same time for ComponentScan");
             }
 
-            if (basePackages == null) {
+            if (basePackages.length == 0) {
                 final Set<String> basePackageSet = new HashSet<>(basePackageClasses.length);
                 for (final Class<?> basePackageClass : basePackageClasses) {
                     basePackageSet.add(basePackageClass.getPackage().getName());
@@ -124,6 +126,7 @@ public class JaxRsRoute implements
             }
 
         }
+        System.out.println(Arrays.asList(basePackages));
 
         final String resourcePackage = applicationClass.getPackage().getName();
 
