@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
@@ -49,11 +48,16 @@ public class JwksProvider {
 
     private TokenGenerator tokenGenerator;
 
+    public JwksProvider() {
+
+        System.out.println(this);
+    }
+
     /**
      * Builds JWKS if necessary after 60 seconds, but only builds
      * {@value #MIN_NUMBER_OF_KEYS} at a time.
      */
-    @Scheduled(fixedDelay = 60000)
+    //    @Scheduled(fixedDelay = 60000)
     public void buildJwks() throws NoSuchAlgorithmException {
 
         int nCreated = 0;
