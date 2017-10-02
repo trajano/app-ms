@@ -2,7 +2,6 @@ package net.trajano.ms.engine.sample;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,7 +16,7 @@ public class SomeAppScope implements
         return i;
     }
 
-    @Scheduled(fixedRate = 10000)
+    //@Scheduled(fixedRate = 10000)
     public void work() {
 
         System.gc();

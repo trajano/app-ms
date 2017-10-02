@@ -9,17 +9,18 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import io.vertx.ext.web.RoutingContext;
 
 @Path("/hello")
-@Component
-@Scope("prototype")
 public class Hello {
 
     private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
+
+    private int count;
+
+    @Autowired
+    SomeRequestScope req;
 
     @Autowired
     ISomeAppScope scope;
@@ -27,16 +28,25 @@ public class Hello {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     @Path("/cough")
-    public String cough(@Context final RoutingContext routingContext) {
+    public String cough() {
 
         throw new RuntimeException("ahem");
     }
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello(@Context final RoutingContext routingContext) {
+    @Produces("text/plain")
+    @Path("/count")
+    public Integer getCount() {
 
-        return "Hello" + this + " " + scope + " " + routingContext;
+        return ++count;
+    }
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello(
+        @Context final RoutingContext context) {
+
+        return "Hello" + this + " " + scope + " " + context + " " + req;
         /*
          * @Context final Vertx vertx,
          * @Context final RoutingContext routingContext

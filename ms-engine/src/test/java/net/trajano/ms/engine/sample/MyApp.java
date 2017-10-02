@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ApplicationPath("/api")
 @Configuration
 @EnableScheduling
-@ComponentScan
+@ComponentScan(basePackageClasses = MyApp.class)
 public class MyApp extends Application {
 
 }

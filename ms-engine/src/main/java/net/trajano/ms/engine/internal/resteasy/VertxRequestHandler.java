@@ -1,7 +1,6 @@
 package net.trajano.ms.engine.internal.resteasy;
 
 import java.net.URI;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.NotFoundException;
@@ -27,6 +26,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
+import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 
 public class VertxRequestHandler implements
     Handler<RoutingContext>,
@@ -55,35 +55,30 @@ public class VertxRequestHandler implements
         applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.setParent(baseApplicationContext);
         //        applicationContext.setM(SimpleApplicationEventMulticaster.class);
-        applicationContext.register(SpringConfiguration.class, applicationClass);
-        applicationContext.refresh();
+        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class);
+        //applicationContext.register(SpringConfiguration.class, applicationClass);
+        //        final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
+        //        deployment.setScannedResourceClasses(reflections.getTypesAnnotatedWith(Path.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
+        //        deployment.setScannedProviderClasses(reflections.getTypesAnnotatedWith(Provider.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
+
+        final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
+
+        reflections.getTypesAnnotatedWith(Path.class).forEach(clazz -> applicationContext.register(clazz));
+        reflections.getTypesAnnotatedWith(Provider.class).forEach(clazz -> applicationContext.register(clazz));
+
         deployment = new ResteasyDeployment();
         deployment.setApplicationClass(applicationClass.getName());
-        final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
-        deployment.setScannedResourceClasses(reflections.getTypesAnnotatedWith(Path.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
-        deployment.setScannedProviderClasses(reflections.getTypesAnnotatedWith(Provider.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
 
         deployment.start();
 
-        applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
-            object) -> {
-            deployment.getRegistry().removeRegistrations(object.getClass());
-            deployment.getRegistry().addSingletonResource(object);
-        });
-
-        applicationContext.getBeansWithAnnotation(Provider.class).forEach((name,
-            object) -> {
-            deployment.getProviderFactory().registerProviderInstance(object);
-        });
-
-        //        this.applicationContext = applicationContext;
-        providerFactory = deployment.getProviderFactory();
-        dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
-
         //        dispatcher.getRegistry().addPerRequestResource(Hello.class);
         final SpringBeanProcessor springBeanProcessor = new SpringBeanProcessor(deployment);
+
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
+        applicationContext.refresh();
+        dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
+        providerFactory = deployment.getProviderFactory();
     }
 
     @Override
@@ -104,8 +99,21 @@ public class VertxRequestHandler implements
                     try {
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
+
+                        //                      applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
+                        //                      object) -> {
+                        //                      deployment.getRegistry().removeRegistrations(object.getClass());
+                        //                      deployment.getRegistry().addSingletonResource(object);
+                        //                  });
+                        //
+                        //                  applicationContext.getBeansWithAnnotation(Provider.class).forEach((name,
+                        //                      object) -> {
+                        //                      deployment.getProviderFactory().registerProviderInstance(object);
+                        //                  });
+
+                        final Application application = deployment.getApplication();
                         dispatcher.invokePropagateNotFound(new VertxHttpRequest(context,
-                            URI.create(deployment.getApplication().getClass().getAnnotation(ApplicationPath.class).value()), dispatcher),
+                            URI.create(application.getClass().getAnnotation(ApplicationPath.class).value()), dispatcher),
                             new VertxHttpResponse(context));
                         context.response().end();
                     } finally {

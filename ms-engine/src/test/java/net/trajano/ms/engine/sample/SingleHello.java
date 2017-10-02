@@ -9,12 +9,11 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import io.vertx.ext.web.RoutingContext;
 
 @Path("/sing")
-@Component
+
 public class SingleHello {
 
     private static final Logger LOG = LoggerFactory.getLogger(SingleHello.class);

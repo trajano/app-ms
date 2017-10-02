@@ -9,12 +9,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.springframework.stereotype.Component;
-
 import io.vertx.ext.web.RoutingContext;
 
 @Path("/s")
-@Component
 public class SingleHello2 {
 
     @GET

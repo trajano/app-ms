@@ -19,7 +19,7 @@ public class VertxHttpResponse implements
 
     private final RoutingContext context;
 
-    private final VertxOutputStream os;
+    private OutputStream os;
 
     private final MultivaluedMap<String, String> outputHeaders;
 
@@ -108,7 +108,7 @@ public class VertxHttpResponse implements
     @Override
     public void setOutputStream(final OutputStream os) {
 
-        throw new UnsupportedOperationException();
+        this.os = os;
     }
 
     @Override
