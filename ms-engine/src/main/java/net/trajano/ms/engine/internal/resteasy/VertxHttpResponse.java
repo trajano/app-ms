@@ -21,7 +21,7 @@ public class VertxHttpResponse implements
 
     private OutputStream os;
 
-    private final MultivaluedMap<String, String> outputHeaders;
+    private final MultivaluedMap<String, Object> outputHeaders;
 
     private final HttpServerResponse vertxResponse;
 
@@ -43,14 +43,10 @@ public class VertxHttpResponse implements
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings({
-        "unchecked",
-        "rawtypes"
-    })
     @Override
     public MultivaluedMap<String, Object> getOutputHeaders() {
 
-        return (MultivaluedMap) outputHeaders;
+        return outputHeaders;
     }
 
     @Override

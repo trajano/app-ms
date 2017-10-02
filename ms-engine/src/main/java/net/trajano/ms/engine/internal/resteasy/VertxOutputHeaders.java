@@ -6,16 +6,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.AbstractMultivaluedMap;
-import javax.ws.rs.core.MultivaluedMap;
 
 import io.vertx.core.http.HttpServerResponse;
 
-public class VertxOutputHeaders extends AbstractMultivaluedMap<String, String> implements
-    MultivaluedMap<String, String> {
+public class VertxOutputHeaders extends AbstractMultivaluedMap<String, Object> {
 
-    private static class VertxOutputHeadersMap extends AbstractMap<String, List<String>> {
+    private static class VertxOutputHeadersMap extends AbstractMap<String, List<Object>> {
 
         private final HttpServerResponse vertxResponse;
 
@@ -26,22 +25,23 @@ public class VertxOutputHeaders extends AbstractMultivaluedMap<String, String> i
         }
 
         @Override
-        public Set<Entry<String, List<String>>> entrySet() {
+        public Set<Entry<String, List<Object>>> entrySet() {
 
-            final Map<String, List<String>> ret = new HashMap<>();
+            final Map<String, List<Object>> ret = new HashMap<>();
             vertxResponse.headers().forEach(entry -> {
-                final List<String> list = ret.getOrDefault(entry.getKey(), new LinkedList<>());
+                final List<Object> list = ret.getOrDefault(entry.getKey(), new LinkedList<>());
                 ret.put(entry.getKey(), list);
             });
             return ret.entrySet();
         }
 
         @Override
-        public List<String> put(final String key,
-            final List<String> values) {
+        public List<Object> put(final String key,
+            final List<Object> values) {
 
-            final List<String> prev = vertxResponse.headers().getAll(key);
-            vertxResponse.putHeader(key, values);
+            final List<Object> prev = vertxResponse.headers().getAll(key).stream().map(v -> v).collect(Collectors.toList());
+            List<String> collect = values.stream().map(o -> String.valueOf(o)).collect(Collectors.toList());
+            vertxResponse.putHeader(key, collect);
             return prev;
         }
     }
