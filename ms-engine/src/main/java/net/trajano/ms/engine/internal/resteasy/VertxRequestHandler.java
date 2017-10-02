@@ -18,12 +18,15 @@ import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.reflections.Reflections;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.SpringConfiguration;
 
 public class VertxRequestHandler implements
     Handler<RoutingContext>,
@@ -31,15 +34,29 @@ public class VertxRequestHandler implements
 
     //    private final AnnotationConfigApplicationContext applicationContext;
 
+    private final AnnotationConfigApplicationContext applicationContext;
+
     private final ResteasyDeployment deployment;
 
     private final SynchronousDispatcher dispatcher;
 
     private final ResteasyProviderFactory providerFactory;
 
-    public VertxRequestHandler(final AnnotationConfigApplicationContext applicationContext,
+    public VertxRequestHandler(
         final Class<? extends Application> applicationClass) {
 
+        this(new StaticApplicationContext(), applicationClass);
+    }
+
+    public VertxRequestHandler(final ConfigurableApplicationContext baseApplicationContext,
+        final Class<? extends Application> applicationClass) {
+
+        baseApplicationContext.refresh();
+        applicationContext = new AnnotationConfigApplicationContext();
+        applicationContext.setParent(baseApplicationContext);
+        //        applicationContext.setM(SimpleApplicationEventMulticaster.class);
+        applicationContext.register(SpringConfiguration.class, applicationClass);
+        applicationContext.refresh();
         deployment = new ResteasyDeployment();
         deployment.setApplicationClass(applicationClass.getName());
         final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
@@ -73,6 +90,7 @@ public class VertxRequestHandler implements
     public void close() {
 
         deployment.stop();
+        applicationContext.close();
 
     }
 

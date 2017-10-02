@@ -2,8 +2,6 @@ package net.trajano.ms.engine.sample;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -40,9 +38,7 @@ public class Main2 extends AbstractVerticle {
         httpServerOptions.setPort(8900);
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(MyApp.class);
-
-        try (final VertxRequestHandler requestHandler = new VertxRequestHandler(applicationContext, MyApp.class)) {
+        try (final VertxRequestHandler requestHandler = new VertxRequestHandler(MyApp.class)) {
             router.route("/api/*")
                 .useNormalisedPath(true)
                 .handler(requestHandler)
