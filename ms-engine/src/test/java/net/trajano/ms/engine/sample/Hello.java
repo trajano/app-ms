@@ -1,11 +1,6 @@
 package net.trajano.ms.engine.sample;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -14,26 +9,26 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 
-@Api
 @Path("/hello")
 public class Hello {
 
     private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
 
-    @Inject
-    private SomeRequestScope requestScope;
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/cough")
+    public String cough(@Context final RoutingContext routingContext) {
 
-    @Inject
-    private ISomeAppScope scoped;
+        throw new RuntimeException("ahem");
+    }
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String hello(@Context final RoutingContext routingContext) {
 
-        return "Hello" + routingContext + scoped + " " + requestScope + "  " + this;
+        return "Hello" + this;
         /*
          * @Context final Vertx vertx,
          * @Context final RoutingContext routingContext
@@ -43,51 +38,4 @@ public class Hello {
         //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
-    @GET
-    @Path("/json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Blah hello2B() {
-
-        return new Blah();
-    }
-
-    @GET
-    @Path("/xml")
-    @Produces(MediaType.APPLICATION_XML)
-    public Blah helloB() {
-
-        return new Blah();
-    }
-
-    @GET
-    @Path("/hello")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String helloHello() {
-
-        return "HelloHello";
-    }
-
-    @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String helloHelloPost(@FormParam("me") final String me) throws InterruptedException {
-
-        Thread.sleep(5000L);
-        return "HelloHello " + me;
-    }
-
-    @PostConstruct
-    public void init() {
-
-        LOG.info("INIT");
-    }
-
-    @GET
-    @Path("/sleep")
-    @Produces(MediaType.APPLICATION_XML)
-    public Blah sleeping() throws InterruptedException {
-
-        Thread.sleep(5000L);
-        return new Blah();
-    }
 }

@@ -1,9 +1,5 @@
 package net.trajano.ms.engine;
 
-import static java.util.Collections.singletonMap;
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -12,35 +8,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-
-import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.models.Swagger;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.SpringConfiguration;
-import net.trajano.ms.engine.internal.VertxBinder;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
-import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.VertxSecurityContext;
 import net.trajano.ms.engine.internal.VertxWebResponseWriter;
 
@@ -76,7 +59,7 @@ public class JaxRsRoute implements
 
     }
 
-    private ApplicationHandler appHandler;
+    //    private ApplicationHandler appHandler;
 
     private final URI baseUri;
 
@@ -128,33 +111,21 @@ public class JaxRsRoute implements
         }
         System.out.println(Arrays.asList(basePackages));
 
-        final String resourcePackage = applicationClass.getPackage().getName();
-
-        final BeanConfig beanConfig = new BeanConfig();
-        beanConfig.setResourcePackage(resourcePackage);
-        beanConfig.setScan(true);
-        beanConfig.setBasePath(baseUri.getPath());
-        beanConfig.scanAndRead();
-
-        final Swagger swagger = beanConfig.getSwagger();
-        Json.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        final String json = JsonObject.mapFrom(swagger).toString();
-        router.get(baseUri.getPath()).produces(APPLICATION_JSON).handler(context -> context.response().putHeader(CONTENT_TYPE, APPLICATION_JSON).end(json));
-
-        final ResourceConfig resourceConfig = new ResourceConfig();
-        final AnnotationConfigApplicationContext ctx;
-        if (applicationClass.getAnnotation(Configuration.class) != null) {
-            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class, applicationClass);
-        } else {
-            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class);
-        }
-
-        //  resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
-        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, String.join(",", basePackages)));
-
-        resourceConfig.register(new VertxBinder(vertx, ctx));
-        resourceConfig.register(new VertxRequestContextFilter());
-        resourceConfig.register(JacksonJaxbJsonProvider.class);
+        //
+        //        final ResourceConfig resourceConfig = new ResourceConfig();
+        //        final AnnotationConfigApplicationContext ctx;
+        //        if (applicationClass.getAnnotation(Configuration.class) != null) {
+        //            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class, applicationClass);
+        //        } else {
+        //            ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class);
+        //        }
+        //
+        //        //  resourceConfig.addProperties(singletonMap("contextConfig", applicationContext));
+        //        resourceConfig.addProperties(singletonMap(ServerProperties.PROVIDER_PACKAGES, String.join(",", basePackages)));
+        //
+        //        resourceConfig.register(new VertxBinder(vertx, ctx));
+        //        resourceConfig.register(new VertxRequestContextFilter());
+        //        resourceConfig.register(JacksonJaxbJsonProvider.class);
 
         vertx.executeBlocking(future -> {
             future.complete(new ApplicationHandler(resourceConfig));
@@ -180,6 +151,8 @@ public class JaxRsRoute implements
         final URI requestUri = URI.create(serverRequest.absoluteURI());
 
         vertx.getOrCreateContext().put(RoutingContext.class.getName(), routingContext);
+        final ContainerRequestContext containerRequestContext = null;
+
         final ContainerRequest request = new ContainerRequest(baseUri, requestUri, serverRequest.method().name(), new VertxSecurityContext(serverRequest), new MapPropertiesDelegate());
 
         serverRequest.headers().entries().forEach(entry -> request.getHeaders().add(entry.getKey(), entry.getValue()));
