@@ -1,7 +1,5 @@
 package net.trajano.ms.engine.sample;
 
-import javax.ws.rs.core.Response.Status;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -17,7 +15,7 @@ public class Main2 extends AbstractVerticle {
 
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         final VertxOptions vertOptions = new VertxOptions();
-        vertOptions.setMaxEventLoopExecuteTime(4000000000L);
+        //        vertOptions.setMaxEventLoopExecuteTime(4000000000L);
         vertOptions.setWarningExceptionTime(1);
         vertOptions.setWorkerPoolSize(50);
         //        final VertxOptions options = new VertxOptions();
@@ -29,6 +27,11 @@ public class Main2 extends AbstractVerticle {
 
         final Vertx vertx = Vertx.vertx(vertOptions);
         final DeploymentOptions options = new DeploymentOptions();
+        vertx.deployVerticle(new Main2(), options);
+    }
+
+    @Override
+    public void start() throws Exception {
 
         final Router router = Router.router(vertx);
 
@@ -41,15 +44,7 @@ public class Main2 extends AbstractVerticle {
         try (final VertxRequestHandler requestHandler = new VertxRequestHandler(MyApp.class)) {
             router.route("/api/*")
                 .useNormalisedPath(true)
-                .handler(requestHandler)
-                .failureHandler(context -> {
-                    System.err.println("XXXzz");
-                    context.failure().printStackTrace();
-                    System.err.println("xxxzz");
-                    context.response().setStatusCode(500);
-                    context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                    context.response().end();
-                });
+                .handler(requestHandler);
 
             http.requestHandler(req -> router.accept(req)).listen(res -> {
                 if (res.failed()) {
