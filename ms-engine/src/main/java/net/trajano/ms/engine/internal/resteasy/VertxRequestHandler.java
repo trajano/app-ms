@@ -21,6 +21,7 @@ import org.reflections.Reflections;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
@@ -44,14 +45,26 @@ public class VertxRequestHandler implements
         final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
         deployment.setScannedResourceClasses(reflections.getTypesAnnotatedWith(Path.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
         deployment.setScannedProviderClasses(reflections.getTypesAnnotatedWith(Provider.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
+
         deployment.start();
+
+        applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
+            object) -> {
+            deployment.getRegistry().removeRegistrations(object.getClass());
+            deployment.getRegistry().addSingletonResource(object);
+        });
+
+        applicationContext.getBeansWithAnnotation(Provider.class).forEach((name,
+            object) -> {
+            deployment.getProviderFactory().registerProviderInstance(object);
+        });
 
         //        this.applicationContext = applicationContext;
         providerFactory = deployment.getProviderFactory();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
 
         //        dispatcher.getRegistry().addPerRequestResource(Hello.class);
-        final SpringBeanProcessor springBeanProcessor = new SpringBeanProcessor(dispatcher);
+        final SpringBeanProcessor springBeanProcessor = new SpringBeanProcessor(deployment);
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
     }
@@ -72,6 +85,7 @@ public class VertxRequestHandler implements
                     ThreadLocalResteasyProviderFactory.push(providerFactory);
                     try {
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
+                        ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                         dispatcher.invokePropagateNotFound(new VertxHttpRequest(context,
                             URI.create(deployment.getApplication().getClass().getAnnotation(ApplicationPath.class).value()), dispatcher),
                             new VertxHttpResponse(context));

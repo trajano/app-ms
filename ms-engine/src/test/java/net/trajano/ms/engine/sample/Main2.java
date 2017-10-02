@@ -40,7 +40,7 @@ public class Main2 extends AbstractVerticle {
         httpServerOptions.setPort(8900);
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+        final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(MyApp.class);
 
         try (final VertxRequestHandler requestHandler = new VertxRequestHandler(applicationContext, MyApp.class)) {
             router.route("/api/*")

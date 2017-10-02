@@ -48,7 +48,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
         final Dispatcher dispatcher) {
 
         super(new ResteasyUriInfo(context.normalisedPath(), context.request().query(), baseUri.toString()));
-        System.out.println(context.normalisedPath());
+
         vertxRequest = context.request();
         httpHeaders = new ResteasyHttpHeaders(Conversions.toMultivaluedStringMap(vertxRequest.headers()),
             Conversions.toCookies(context.cookies()));
