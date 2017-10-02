@@ -68,7 +68,6 @@ public class VertxRequestHandler implements
 
         deployment = new ResteasyDeployment();
         deployment.setApplicationClass(applicationClass.getName());
-
         deployment.start();
 
         //        dispatcher.getRegistry().addPerRequestResource(Hello.class);

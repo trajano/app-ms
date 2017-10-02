@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.second.Blah;
 
 @Path("/hello")
 public class Hello {
@@ -56,4 +57,19 @@ public class Hello {
         //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
+    @GET
+    @Path("/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Blah hello2B() {
+
+        return new Blah();
+    }
+
+    @GET
+    @Path("/xml")
+    @Produces(MediaType.APPLICATION_XML)
+    public Blah helloB() {
+
+        return new Blah();
+    }
 }
