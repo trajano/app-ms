@@ -34,11 +34,11 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 
-public class SpringJaxRsRoutingContextHandler implements
+public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
     AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsRoutingContextHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
      * Convenience method to construct and register the routes to a Vert.x router.
@@ -50,7 +50,7 @@ public class SpringJaxRsRoutingContextHandler implements
      * @return the handlers
      */
     @SafeVarargs
-    public static SpringJaxRsRoutingContextHandler[] registerToRouter(final Router router,
+    public static SpringJaxRsHandler[] registerToRouter(final Router router,
         final Class<? extends Application>... applicationClasses) {
 
         return registerToRouter(router, new StaticApplicationContext(), applicationClasses);
@@ -69,14 +69,14 @@ public class SpringJaxRsRoutingContextHandler implements
      * @return the handlers
      */
     @SafeVarargs
-    public static SpringJaxRsRoutingContextHandler[] registerToRouter(final Router router,
+    public static SpringJaxRsHandler[] registerToRouter(final Router router,
         final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application>... applicationClasses) {
 
-        final SpringJaxRsRoutingContextHandler[] ret = new SpringJaxRsRoutingContextHandler[applicationClasses.length];
+        final SpringJaxRsHandler[] ret = new SpringJaxRsHandler[applicationClasses.length];
         int i = 0;
         for (final Class<? extends Application> applicationClass : applicationClasses) {
-            final SpringJaxRsRoutingContextHandler requestHandler = new SpringJaxRsRoutingContextHandler(applicationClass);
+            final SpringJaxRsHandler requestHandler = new SpringJaxRsHandler(applicationClass);
             router.route(requestHandler.baseUriRoute())
                 .useNormalisedPath(true)
                 .handler(requestHandler);
@@ -97,7 +97,7 @@ public class SpringJaxRsRoutingContextHandler implements
      *            application class
      * @return the handler
      */
-    public static SpringJaxRsRoutingContextHandler singleRegistrationToRouter(final Router router,
+    public static SpringJaxRsHandler singleRegistrationToRouter(final Router router,
         final Class<? extends Application> applicationClass) {
 
         return registerToRouter(router, applicationClass)[0];
@@ -113,13 +113,13 @@ public class SpringJaxRsRoutingContextHandler implements
 
     private final ResteasyProviderFactory providerFactory;
 
-    public SpringJaxRsRoutingContextHandler(
+    public SpringJaxRsHandler(
         final Class<? extends Application> applicationClass) {
 
         this(new StaticApplicationContext(), applicationClass);
     }
 
-    public SpringJaxRsRoutingContextHandler(final ConfigurableApplicationContext baseApplicationContext,
+    public SpringJaxRsHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
         baseApplicationContext.refresh();
@@ -224,7 +224,6 @@ public class SpringJaxRsRoutingContextHandler implements
                 }
             },
             res -> {
-                System.out.println(AccessLogger.buildLogLine(context.request(), context.response()));
                 if (res.failed()) {
                     final Throwable wae = res.cause();
                     if (wae instanceof NotFoundException) {

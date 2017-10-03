@@ -29,7 +29,8 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Router;
-import net.trajano.ms.engine.SpringJaxRsRoutingContextHandler;
+import net.trajano.ms.engine.ManifestHandler;
+import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.internal.VertxBufferOutputStream;
 
 public class Main2 extends AbstractVerticle {
@@ -54,7 +55,7 @@ public class Main2 extends AbstractVerticle {
         vertx.deployVerticle(new Main2(), options);
     }
 
-    private SpringJaxRsRoutingContextHandler requestHandler;
+    private SpringJaxRsHandler requestHandler;
 
     @Override
     public void start() throws Exception {
@@ -98,7 +99,8 @@ public class Main2 extends AbstractVerticle {
                 .setKeyValue(privBuf));
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        requestHandler = SpringJaxRsRoutingContextHandler.singleRegistrationToRouter(router, MyApp.class);
+        requestHandler = SpringJaxRsHandler.singleRegistrationToRouter(router, MyApp.class);
+        ManifestHandler.registerToRouter(router);
 
         http.requestHandler(req -> router.accept(req)).listen(res -> {
             if (res.failed()) {

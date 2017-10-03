@@ -30,7 +30,7 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 
-public class SwaggerRoutingContextHandler implements
+public class SwaggerHandler implements
     Handler<RoutingContext>,
     AutoCloseable {
 
@@ -44,13 +44,13 @@ public class SwaggerRoutingContextHandler implements
 
     private final ResteasyProviderFactory providerFactory;
 
-    public SwaggerRoutingContextHandler(
+    public SwaggerHandler(
         final Class<? extends Application> applicationClass) {
 
         this(new StaticApplicationContext(), applicationClass);
     }
 
-    public SwaggerRoutingContextHandler(final ConfigurableApplicationContext baseApplicationContext,
+    public SwaggerHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
         baseApplicationContext.refresh();
