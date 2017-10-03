@@ -1,4 +1,4 @@
-package net.trajano.ms.engine.internal.resteasy;
+package net.trajano.ms.engine;
 
 import java.net.URI;
 
@@ -27,8 +27,10 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
 import net.trajano.ms.engine.internal.VertxRequestContextFilter;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 
-public class VertxRequestHandler implements
+public class SwaggerRoutingContextHandler implements
     Handler<RoutingContext>,
     AutoCloseable {
 
@@ -42,24 +44,19 @@ public class VertxRequestHandler implements
 
     private final ResteasyProviderFactory providerFactory;
 
-    public VertxRequestHandler(
+    public SwaggerRoutingContextHandler(
         final Class<? extends Application> applicationClass) {
 
         this(new StaticApplicationContext(), applicationClass);
     }
 
-    public VertxRequestHandler(final ConfigurableApplicationContext baseApplicationContext,
+    public SwaggerRoutingContextHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
         baseApplicationContext.refresh();
         applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.setParent(baseApplicationContext);
-        //        applicationContext.setM(SimpleApplicationEventMulticaster.class);
         applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class);
-        //applicationContext.register(SpringConfiguration.class, applicationClass);
-        //        final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
-        //        deployment.setScannedResourceClasses(reflections.getTypesAnnotatedWith(Path.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
-        //        deployment.setScannedProviderClasses(reflections.getTypesAnnotatedWith(Provider.class).stream().map(clazz -> clazz.getName()).collect(Collectors.toList()));
 
         final Reflections reflections = new Reflections(applicationClass.getPackage().getName());
 

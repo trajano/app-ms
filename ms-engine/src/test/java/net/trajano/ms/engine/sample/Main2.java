@@ -29,8 +29,8 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Router;
+import net.trajano.ms.engine.SpringJaxRsRoutingContextHandler;
 import net.trajano.ms.engine.internal.VertxBufferOutputStream;
-import net.trajano.ms.engine.internal.resteasy.VertxRequestHandler;
 
 public class Main2 extends AbstractVerticle {
 
@@ -54,7 +54,7 @@ public class Main2 extends AbstractVerticle {
         vertx.deployVerticle(new Main2(), options);
     }
 
-    private VertxRequestHandler requestHandler;
+    private SpringJaxRsRoutingContextHandler requestHandler;
 
     @Override
     public void start() throws Exception {
@@ -89,8 +89,6 @@ public class Main2 extends AbstractVerticle {
 
         final Router router = Router.router(vertx);
 
-        //final HttpServerOptions httpServerOptions = new HttpServerOptions();
-
         final HttpServerOptions httpServerOptions = new HttpServerOptions();
         httpServerOptions.setPort(8900)
             .setUseAlpn(true)
@@ -100,13 +98,8 @@ public class Main2 extends AbstractVerticle {
                 .setKeyValue(privBuf));
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        requestHandler = new VertxRequestHandler(MyApp.class);
-        router.route("/api/*")
-            .useNormalisedPath(true)
-            .handler(requestHandler);
+        requestHandler = SpringJaxRsRoutingContextHandler.singleRegistrationToRouter(router, MyApp.class);
 
-        System.out.println(privBuf);
-        System.out.println(certBuf);
         http.requestHandler(req -> router.accept(req)).listen(res -> {
             if (res.failed()) {
                 res.cause().printStackTrace();
