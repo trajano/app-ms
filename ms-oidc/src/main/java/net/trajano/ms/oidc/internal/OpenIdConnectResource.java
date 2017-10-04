@@ -22,6 +22,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -69,9 +70,9 @@ public class OpenIdConnectResource {
     @GET
     public Response auth(@QueryParam("state") final String state,
         @QueryParam("issuer_id") final String issuerId,
-        @Context final org.wso2.msf4j.Request req) {
+        @Context final UriInfo uriInfo) {
 
-        return Response.ok().status(Status.TEMPORARY_REDIRECT).header("Location", authUri(state, issuerId, req)).build();
+        return Response.ok().status(Status.TEMPORARY_REDIRECT).header("Location", authUri(state, issuerId, uriInfo)).build();
     }
 
     @Path("/auth-uri")
@@ -79,7 +80,7 @@ public class OpenIdConnectResource {
     @Produces(MediaType.TEXT_PLAIN)
     public URI authUri(@QueryParam("state") final String state,
         @QueryParam("issuer_id") final String issuerId,
-        @Context final org.wso2.msf4j.Request req) {
+        @Context final UriInfo uriInfo) {
 
         if (issuerId == null) {
             throw new BadRequestException("Missing issuer_id");

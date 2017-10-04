@@ -5,10 +5,11 @@ import java.net.URI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.URLConnectionEngine;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.trajano.ms.common.JaxRsClientProvider;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 import net.trajano.ms.oidc.internal.IssuerConfig;
 
@@ -21,9 +22,15 @@ public class SimpleClientTest {
         issuerConfig.setUri(URI.create("https://accounts.google.com"));
         issuerConfig.setScope("openid");
         issuerConfig.setClientId("asdf");
-        final JaxRsClientProvider jaxRsClientProvider = new JaxRsClientProvider();
+
         //        final OpenIdConfiguration openIdConfiguration = new MSF4JClient.Builder<WellKnownAPI>().apiClass(WellKnownAPI.class).serviceEndpoint(issuerConfig.getUri().toASCIIString()).build().api().openIdConfiguration();
-        final OpenIdConfiguration openIdConfiguration = jaxRsClientProvider.clientBuilder().build()
+        //        final OpenIdConfiguration openIdConfiguration = new ResteasyClientBuilder()
+        //            .defaultProxy("204.40.130.129", 3128, "http")
+        //            //.httpEngine(new URLConnectionEngine())
+        //            .build()
+        final OpenIdConfiguration openIdConfiguration = new ResteasyClientBuilder()
+            .httpEngine(new URLConnectionEngine())
+            .build()
             .target(UriBuilder.fromUri(issuerConfig.getUri()).path("/.well-known/openid-configuration")).request(MediaType.APPLICATION_JSON).get(OpenIdConfiguration.class);
         System.out.println(openIdConfiguration);
         Assert.assertNotNull(openIdConfiguration.getAuthorizationEndpoint());

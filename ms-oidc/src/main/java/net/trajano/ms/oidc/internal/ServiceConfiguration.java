@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
@@ -24,8 +24,6 @@ import org.springframework.core.io.Resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
 
 import net.trajano.ms.common.beans.AssertionNotRequiredFunction;
 import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
@@ -40,8 +38,8 @@ public class ServiceConfiguration {
     @Autowired(required = false)
     private CacheManager cacheManager;
 
-    @Autowired
-    private ClientBuilder cb;
+    @Context
+    private Client client;
 
     private Map<String, IssuerConfig> issuers;
 
@@ -65,9 +63,7 @@ public class ServiceConfiguration {
     }
 
     @PostConstruct
-    public void init() throws JsonSyntaxException,
-        JsonIOException,
-        IOException {
+    public void init() throws IOException {
 
         Resource resource = applicationContext.getResource("classpath:" + issuersJson);
         if (!resource.exists()) {
@@ -79,7 +75,7 @@ public class ServiceConfiguration {
         mapper.readValue(resource.getInputStream(), IssuersConfig.class);
 
         final IssuersConfig issuersConfig = mapper.readValue(resource.getInputStream(), IssuersConfig.class);
-        final Client client = cb.build();
+
         issuersConfig.getIssuers().forEach(issuer -> {
             issuer.setOpenIdConfiguration(client.target(UriBuilder.fromUri(issuer.getUri()).path("/.well-known/openid-configuration")).request(MediaType.APPLICATION_JSON).get(OpenIdConfiguration.class));
         });
