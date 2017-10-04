@@ -1,4 +1,4 @@
-package net.trajano.ms.common.sample;
+package net.trajano.ms.sample;
 
 import ch.qos.logback.classic.BasicConfigurator;
 import ch.qos.logback.classic.Level;

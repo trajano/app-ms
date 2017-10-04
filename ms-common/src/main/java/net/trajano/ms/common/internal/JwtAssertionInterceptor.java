@@ -10,6 +10,8 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -75,6 +77,9 @@ public class JwtAssertionInterceptor implements
      */
     private final long MAX_NUMBER_OF_KEYS = 20;
 
+    @Context
+    private ResourceInfo resourceInfo;
+
     @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
@@ -82,7 +87,7 @@ public class JwtAssertionInterceptor implements
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
 
-        if (!assertionRequiredFunction.apply(requestContext)) {
+        if (!assertionRequiredFunction.test(resourceInfo)) {
             return;
         }
         final String assertion = requestContext.getHeaderString("X-JWT-Assertion");

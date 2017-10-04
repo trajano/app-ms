@@ -1,4 +1,4 @@
-package net.trajano.ms.common.sample;
+package net.trajano.ms.sample;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;

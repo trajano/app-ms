@@ -3,4 +3,4 @@
  *
  * @author Archimedes Trajano
  */
-package net.trajano.ms.common.sample;
+package net.trajano.ms.sample;

@@ -1,8 +1,8 @@
 package net.trajano.ms.common;
 
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 /**
  * The function returns true if assertion is required for the URI provided.
@@ -10,5 +10,5 @@ import javax.ws.rs.container.ContainerRequestContext;
  * @author Archimedes Trajano
  */
 public interface JwtAssertionRequiredFunction extends
-    Function<ContainerRequestContext, Boolean> {
+    Predicate<ResourceInfo> {
 }

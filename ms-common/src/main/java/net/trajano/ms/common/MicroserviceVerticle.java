@@ -6,6 +6,7 @@ import javax.ws.rs.core.Application;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
@@ -15,6 +16,7 @@ import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 
+@Component
 public class MicroserviceVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);

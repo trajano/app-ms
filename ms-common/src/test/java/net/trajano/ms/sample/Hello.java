@@ -1,4 +1,4 @@
-package net.trajano.ms.common.sample;
+package net.trajano.ms.sample;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.common.JwtNotRequired;
 
 @Api
 @Path("/hello")
@@ -44,6 +45,7 @@ public class Hello {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
+    @JwtNotRequired
     public String hello(
         @Context final RoutingContext context) {
 

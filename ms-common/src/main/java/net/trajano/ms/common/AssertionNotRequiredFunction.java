@@ -1,12 +1,12 @@
 package net.trajano.ms.common;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 public class AssertionNotRequiredFunction implements
     JwtAssertionRequiredFunction {
 
     @Override
-    public Boolean apply(final ContainerRequestContext context) {
+    public boolean test(final ResourceInfo context) {
 
         return false;
     }

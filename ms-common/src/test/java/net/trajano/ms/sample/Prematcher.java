@@ -1,4 +1,4 @@
-package net.trajano.ms.common.sample;
+package net.trajano.ms.sample;
 
 import java.io.IOException;
 

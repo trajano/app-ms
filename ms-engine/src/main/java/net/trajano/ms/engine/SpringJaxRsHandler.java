@@ -79,7 +79,7 @@ public class SpringJaxRsHandler implements
         final SpringJaxRsHandler[] ret = new SpringJaxRsHandler[applicationClasses.length];
         int i = 0;
         for (final Class<? extends Application> applicationClass : applicationClasses) {
-            final SpringJaxRsHandler requestHandler = new SpringJaxRsHandler(applicationClass);
+            final SpringJaxRsHandler requestHandler = new SpringJaxRsHandler(baseApplicationContext, applicationClass);
             router.route(requestHandler.baseUriRoute())
                 .useNormalisedPath(true)
                 .handler(requestHandler);
@@ -106,6 +106,25 @@ public class SpringJaxRsHandler implements
         return multipleRegisterToRouter(router, applicationClass)[0];
     }
 
+    /**
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
+     *
+     * @param router
+     *            vert.x router
+     * @param applicationContext
+     *            application context
+     * @param applicationClass
+     *            application class
+     * @return the handler
+     */
+    public static SpringJaxRsHandler registerToRouter(final Router router,
+        final ConfigurableApplicationContext applicationContext,
+        final Class<? extends Application> applicationClass) {
+
+        return multipleRegisterToRouter(router, applicationContext, applicationClass)[0];
+    }
+
     private final AnnotationConfigApplicationContext applicationContext;
 
     private final URI baseUri;
@@ -127,7 +146,9 @@ public class SpringJaxRsHandler implements
     public SpringJaxRsHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
-        baseApplicationContext.refresh();
+        if (!baseApplicationContext.isActive()) {
+            baseApplicationContext.refresh();
+        }
         applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.setParent(baseApplicationContext);
         applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class);
@@ -172,6 +193,20 @@ public class SpringJaxRsHandler implements
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
         applicationContext.refresh();
+        baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
+            (name,
+                obj) -> {
+                System.out.println("registering {} into provider factory" + name);
+                deployment.getProviderFactory().register(obj);
+            });
+
+        baseApplicationContext.getBeansWithAnnotation(Path.class).forEach(
+            (name,
+                obj) -> {
+                System.out.println("registering {} into provider factory" + name);
+                deployment.getProviderFactory().register(obj);
+            });
+        deployment.start();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
         providerFactory = deployment.getProviderFactory();
     }

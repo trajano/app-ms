@@ -1,102 +1,97 @@
 package net.trajano.ms.common;
 
+import java.util.Stack;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ws.rs.core.Application;
 
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner.Mode;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Router;
-import net.trajano.ms.engine.JaxRsRoute;
-import net.trajano.ms.engine.ManifestRoute;
+import net.trajano.ms.engine.ManifestHandler;
+import net.trajano.ms.engine.SpringJaxRsHandler;
+import net.trajano.ms.engine.SwaggerHandler;
 
+@ComponentScan
+@EnableScheduling
+@Configuration
 public class Microservice {
 
-    public static void run(final Class<? extends Application> application) {
+    private static Class<? extends Application> applicationClass;
 
-        run(Vertx.vertx(), application);
+    private static final Logger LOG = LoggerFactory.getLogger(Microservice.class);
 
+    public static void run(final Class<? extends Application> applicationClass,
+        final String... args) throws Exception {
+
+        if (Microservice.applicationClass != null) {
+            throw new IllegalStateException("Another Application class has already been registered in this JVM.");
+        }
+        Microservice.applicationClass = applicationClass;
+        LOG.debug("Application={}", Microservice.applicationClass.getName());
+        final Object[] sources = new Object[] {
+            Microservice.class
+        };
+        final SpringApplication springApplication = new SpringApplication(sources);
+        springApplication
+            .setBannerMode(Mode.OFF);
+        springApplication.run(args);
     }
 
-    public static void run(final Vertx vertx,
-        final Class<? extends Application> applicationClass) {
+    @Autowired
+    private ConfigurableApplicationContext applicationContext;
 
-        final ConfigStoreOptions yamlStore = new ConfigStoreOptions()
-            .setType("directory")
-            .setConfig(new JsonObject()
-                .put("path", ".")
-                .put("filesets", new JsonArray()
-                    .add(new JsonObject()
-                        .put("pattern", "application.yml")
-                        .put("format", "yaml"))));
+    private final Stack<AutoCloseable> handlerStack = new Stack<>();
 
-        final ConfigRetrieverOptions configRetrieverOptions = new ConfigRetrieverOptions()
-            .addStore(yamlStore);
-        final ConfigRetriever configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
+    @Autowired
+    private HttpServerOptions httpServerOptions;
 
-        final Context context = vertx.getOrCreateContext();
+    private Vertx vertx;
 
-        configRetriever.getConfig(r -> {
-            if (r.succeeded()) {
-                final HttpServer http = startServer(vertx, r.result(), applicationClass);
-                context.put("http", http);
-            }
-        });
-        configRetriever.listen(event -> {
-            final HttpServer http = (HttpServer) context.get("http");
+    @Autowired
+    private VertxOptions vertxOptions;
 
-            http.close((v) -> {
-                final HttpServer newHttp = startServer(vertx, event.getNewConfiguration(), applicationClass);
-                context.put("http", newHttp);
-            });
-        });
+    @PostConstruct
+    public void start() throws Exception {
 
-    }
-
-    private static HttpServer startServer(final Vertx vertx,
-        final JsonObject config,
-        final Class<? extends Application> applicationClass) {
-
+        vertx = Vertx.vertx(vertxOptions);
         final Router router = Router.router(vertx);
 
-        System.out.println("here" + config.getJsonObject("http"));
+        handlerStack.push(SwaggerHandler.registerToRouter(router, applicationClass));
+        handlerStack.push(ManifestHandler.registerToRouter(router));
+        handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, applicationClass));
 
-        final HttpServerOptions httpServerOptions;
-        if (config.getJsonObject("http") != null) {
-            httpServerOptions = new HttpServerOptions(config.getJsonObject("http"));
-        } else {
-            httpServerOptions = new HttpServerOptions().setPort(8210);
-        }
-        System.out.println("here ok" + httpServerOptions.getPort());
-        if (config.getString("certificatePath") != null && config.getString("keyPath") != null) {
-            httpServerOptions
-                .setKeyCertOptions(new PemKeyCertOptions()
-                    .addCertPath(config.getString("certificatePath"))
-                    .addKeyPath(config.getString("keyPath")));
-        }
-
-        System.out.println("here");
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
-        System.out.println("http" + http);
-        JaxRsRoute.route(router, applicationClass);
-        System.out.println("here before route");
-        ManifestRoute.route(router, "/info");
+
         http.requestHandler(req -> router.accept(req)).listen(res -> {
             if (res.failed()) {
-                res.cause().printStackTrace();
+                LOG.error(res.cause().getMessage(), res.cause());
+                vertx.close();
             } else {
-                System.out.println("Here route");
-                System.out.println(http.actualPort());
+                LOG.debug("Listening on port {}", http.actualPort());
             }
         });
-        System.out.println("here");
-        return http;
+    }
 
+    @PreDestroy
+    public void stop() throws Exception {
+
+        while (handlerStack.peek() != null) {
+            handlerStack.pop().close();
+        }
+        vertx.close();
     }
 }
