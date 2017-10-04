@@ -3,8 +3,10 @@ package net.trajano.ms.engine.sample;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,9 @@ public class Hello {
     private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
 
     private int count;
+
+    @Context
+    private Client jaxrsClient;
 
     @Autowired
     SomeRequestScope req;
@@ -72,5 +77,19 @@ public class Hello {
     public Blah helloB() {
 
         return new Blah();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/maven")
+    public Response maven() {
+
+        final Response response = jaxrsClient.target("http://search.maven.org/solrsearch/select?q=g:%22com.google.inject%22&rows=20&wt=json").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").get();
+        try {
+            final String value = response.readEntity(String.class);
+            return Response.ok(value).build();
+        } finally {
+            response.close();
+        }
     }
 }

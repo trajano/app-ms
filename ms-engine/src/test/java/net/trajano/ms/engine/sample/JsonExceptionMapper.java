@@ -12,6 +12,7 @@ public class JsonExceptionMapper implements
     @Override
     public Response toResponse(final Throwable exception) {
 
+        exception.printStackTrace();
         return Response.ok(new ErrorResponse(exception)).status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
