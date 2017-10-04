@@ -13,7 +13,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import net.trajano.ms.common.JwksProvider;
 import net.trajano.ms.common.JwtClaimsProcessor;
 import net.trajano.ms.common.TokenGenerator;
-import net.trajano.ms.common.internal.JwtAssertionInterceptor;
+import net.trajano.ms.common.jaxrs.JwtAssertionInterceptor;
 
 public class InterceptorTest {
 

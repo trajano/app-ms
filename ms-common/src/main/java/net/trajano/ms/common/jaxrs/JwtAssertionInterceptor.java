@@ -1,4 +1,4 @@
-package net.trajano.ms.common.internal;
+package net.trajano.ms.common.jaxrs;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

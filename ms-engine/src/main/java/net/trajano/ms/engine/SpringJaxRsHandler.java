@@ -199,13 +199,6 @@ public class SpringJaxRsHandler implements
                 LOG.debug("registering {} into provider factory", name);
                 deployment.getProviderFactory().register(obj);
             });
-
-        baseApplicationContext.getBeansWithAnnotation(Path.class).forEach(
-            (name,
-                obj) -> {
-                LOG.debug("registering {} into provider factory", name);
-                deployment.getProviderFactory().register(obj);
-            });
         deployment.start();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
         providerFactory = deployment.getProviderFactory();

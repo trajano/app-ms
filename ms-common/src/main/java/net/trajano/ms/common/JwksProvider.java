@@ -71,7 +71,7 @@ public class JwksProvider {
                 jwk = buildNewRsaKey();
                 jwksCache.putIfAbsent(cacheKey, jwk.toJSONString());
                 ++nCreated;
-                LOG.debug("Created new JWK kid={0}", jwk.getKeyID());
+                LOG.debug("Created new JWK kid={}", jwk.getKeyID());
             }
         }
 
@@ -143,7 +143,7 @@ public class JwksProvider {
         ParseException {
 
         if (jwksCache == null) {
-            LOG.warn("A org.springframework.cache.Cache named {0} was not provided an in-memory cache will be used", JWKS_CACHE);
+            LOG.warn("A org.springframework.cache.Cache named {} was not provided an in-memory cache will be used", JWKS_CACHE);
             final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
             jwksCache = cm.getCache(JWKS_CACHE);
         }

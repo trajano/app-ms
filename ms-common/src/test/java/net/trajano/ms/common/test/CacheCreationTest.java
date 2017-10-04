@@ -10,7 +10,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 
 import net.trajano.ms.common.JwksProvider;
 import net.trajano.ms.common.TokenGenerator;
-import net.trajano.ms.common.internal.JwksResource;
+import net.trajano.ms.sample.JwksResource;
 
 public class CacheCreationTest {
 
