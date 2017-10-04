@@ -5,8 +5,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import net.trajano.ms.engine.sample.ErrorResponse;
-
 @Provider
 public class JsonExceptionMapper implements
     ExceptionMapper<Throwable> {
