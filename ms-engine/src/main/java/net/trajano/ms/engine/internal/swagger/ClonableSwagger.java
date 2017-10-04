@@ -14,8 +14,8 @@ import io.vertx.core.http.HttpServerRequest;
 public class ClonableSwagger extends Swagger {
 
     /**
-     * Creates a shallow copy of the swagger but set the scheme, host and base path
-     * to the base URI
+     * Creates a shallow copy of the swagger but set the scheme, host and base
+     * path to the base URI
      *
      * @param baseUri
      *            base URI
