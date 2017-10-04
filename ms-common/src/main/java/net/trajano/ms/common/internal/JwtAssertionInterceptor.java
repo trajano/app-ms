@@ -228,7 +228,6 @@ public class JwtAssertionInterceptor implements
     @Autowired(required = false)
     public void setAssertionRequiredFunction(final JwtAssertionRequiredFunction assertionRequiredFunction) {
 
-        System.out.println("settings " + assertionRequiredFunction);
         this.assertionRequiredFunction = assertionRequiredFunction;
     }
 

@@ -196,14 +196,14 @@ public class SpringJaxRsHandler implements
         baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
             (name,
                 obj) -> {
-                System.out.println("registering {} into provider factory" + name);
+                LOG.debug("registering {} into provider factory", name);
                 deployment.getProviderFactory().register(obj);
             });
 
         baseApplicationContext.getBeansWithAnnotation(Path.class).forEach(
             (name,
                 obj) -> {
-                System.out.println("registering {} into provider factory" + name);
+                LOG.debug("registering {} into provider factory", name);
                 deployment.getProviderFactory().register(obj);
             });
         deployment.start();

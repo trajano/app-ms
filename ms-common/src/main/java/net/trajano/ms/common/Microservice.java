@@ -41,7 +41,6 @@ public class Microservice {
             throw new IllegalStateException("Another Application class has already been registered in this JVM.");
         }
         Microservice.applicationClass = applicationClass;
-        LOG.debug("Application={}", Microservice.applicationClass.getName());
         final Object[] sources = new Object[] {
             Microservice.class
         };
@@ -66,6 +65,8 @@ public class Microservice {
 
     @PostConstruct
     public void start() throws Exception {
+
+        LOG.debug("Application={}", Microservice.applicationClass.getName());
 
         vertx = Vertx.vertx(vertxOptions);
         final Router router = Router.router(vertx);

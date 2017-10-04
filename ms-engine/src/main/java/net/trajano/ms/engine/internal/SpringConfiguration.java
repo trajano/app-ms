@@ -16,7 +16,6 @@ public class SpringConfiguration {
         final CustomScopeConfigurer configurer = new CustomScopeConfigurer();
 
         configurer.setScopes(Collections.singletonMap("request", scope));
-        System.out.println(configurer);
         return configurer;
     }
 

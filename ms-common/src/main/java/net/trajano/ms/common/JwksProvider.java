@@ -48,11 +48,6 @@ public class JwksProvider {
 
     private TokenGenerator tokenGenerator;
 
-    public JwksProvider() {
-
-        System.out.println(this);
-    }
-
     /**
      * Builds JWKS if necessary after 60 seconds, but only builds
      * {@value #MIN_NUMBER_OF_KEYS} at a time.
