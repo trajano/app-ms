@@ -1,5 +1,6 @@
 package net.trajano.ms.engine.internal;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.web.impl.CookieImpl;
 
 public final class Conversions {
@@ -50,6 +52,26 @@ public final class Conversions {
             mvm.add(entry.getKey(), entry.getValue());
         });
         return mvm;
+    }
+
+    public static RequestOptions toRequestOptions(final URI uri) {
+
+        final RequestOptions options = new RequestOptions()
+            .setSsl("https".equals(uri.getScheme()))
+            .setHost(uri.getHost());
+        if (uri.getPort() > 0) {
+            options.setPort(uri.getPort());
+        } else if (options.isSsl()) {
+            options.setPort(443);
+        } else {
+            options.setPort(80);
+        }
+        if (uri.getRawQuery() == null) {
+            options.setURI(uri.getRawPath());
+        } else {
+            options.setURI(uri.getRawPath() + "?" + uri.getRawQuery());
+        }
+        return options;
     }
 
     public static io.vertx.ext.web.Cookie toVertxCookie(final NewCookie cookie) {

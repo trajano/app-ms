@@ -24,7 +24,7 @@ public class Prematcher implements
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
 
-        LOG.debug("requestContext={} routingContext={}", requestContext, routingContext);
+        LOG.debug("requestContext={} routingContext={} uri={}", requestContext, routingContext, routingContext.request().uri());
 
     }
 }

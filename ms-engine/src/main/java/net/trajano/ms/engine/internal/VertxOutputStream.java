@@ -6,23 +6,34 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.streams.WriteStream;
 
 public class VertxOutputStream extends OutputStream {
 
-    private final HttpServerResponse stream;
+    private final WriteStream<Buffer> stream;
 
-    public VertxOutputStream(final HttpServerResponse stream) {
+    public VertxOutputStream(final WriteStream<Buffer> stream) {
 
         this.stream = stream;
     }
 
     private void addChunkedIfNeeded() {
 
-        if (stream.headers().get(HttpHeaders.CONTENT_LENGTH) == null) {
-            stream.setChunked(true);
+        if (stream instanceof HttpServerResponse) {
+            final HttpServerResponse resp = (HttpServerResponse) stream;
+            if (resp.headers().get(HttpHeaders.CONTENT_LENGTH) == null) {
+                resp.setChunked(true);
+            }
+        } else if (stream instanceof HttpClientRequest) {
+            final HttpClientRequest req = (HttpClientRequest) stream;
+            if (req.headers().get(HttpHeaders.CONTENT_LENGTH) == null) {
+                req.setChunked(true);
+            }
         }
+
     }
 
     @Override

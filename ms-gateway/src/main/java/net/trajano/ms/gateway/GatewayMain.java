@@ -1,10 +1,12 @@
 package net.trajano.ms.gateway;
 
+import javax.ws.rs.core.Application;
+
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.wso2.msf4j.spring.MSF4JSpringApplication;
 
+import net.trajano.ms.common.Microservice;
 import net.trajano.ms.common.beans.CommonMs;
 
 @Configuration
@@ -13,10 +15,10 @@ import net.trajano.ms.common.beans.CommonMs;
     CommonMs.class,
     GatewayMain.class
 })
-public class GatewayMain {
+public class GatewayMain extends Application {
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
 
-        MSF4JSpringApplication.run(GatewayMain.class, args);
+        Microservice.run(GatewayMain.class, args);
     }
 }
