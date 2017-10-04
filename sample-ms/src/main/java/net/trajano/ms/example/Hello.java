@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
+import net.trajano.ms.common.JwtNotRequired;
 
 @SwaggerDefinition(
     info = @Info(
@@ -21,6 +22,7 @@ import io.swagger.annotations.SwaggerDefinition;
 @Api
 @Component
 @Path("/hello")
+@JwtNotRequired
 public class Hello {
 
     @ApiOperation(value = "displays hello world")

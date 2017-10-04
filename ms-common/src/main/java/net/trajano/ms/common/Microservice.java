@@ -92,7 +92,7 @@ public class Microservice {
                 LOG.error(res.cause().getMessage(), res.cause());
                 vertx.close();
             } else {
-                LOG.debug("Listening on port {}", http.actualPort());
+                LOG.info("Listening on port {}", http.actualPort());
             }
         });
     }
