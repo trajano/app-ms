@@ -2,9 +2,9 @@ package net.trajano.ms.engine.sample;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ public class Prematcher implements
 
     private static final Logger LOG = LoggerFactory.getLogger(Prematcher.class);
 
-    @Inject
+    @Context
     private RoutingContext routingContext;
 
     @Override

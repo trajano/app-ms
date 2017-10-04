@@ -1,6 +1,5 @@
 package net.trajano.ms.engine.sample;
 
-import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -10,27 +9,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.springframework.stereotype.Component;
-
-import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 
-@Api
 @Path("/s")
-@Component
 public class SingleHello2 {
-
-    @Inject
-    private SomeRequestScope requestScope;
-
-    @Inject
-    private ISomeAppScope scoped;
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String hello(@Context final RoutingContext routingContext) {
 
-        return "Hello" + routingContext + scoped + " " + requestScope + "  " + this;
+        return "Hello" + routingContext + "  " + this;
     }
 
     @GET

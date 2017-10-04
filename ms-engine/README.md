@@ -27,3 +27,5 @@ src/main/java/<basepackage>/Application
 
 Changed to single ApplicationContext 
 and require all paths to be singleton context.
+
+The opinionated version will use @Inject

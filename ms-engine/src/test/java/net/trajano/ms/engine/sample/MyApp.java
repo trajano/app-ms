@@ -18,14 +18,13 @@ import io.swagger.annotations.SwaggerDefinition;
  *
  * @author Archimedes Trajano
  */
-@SwaggerDefinition(
-    info = @Info(
-        title = "Sample microservice from hello",
-        version = "1.0"))
 @ApplicationPath("/api")
+@SwaggerDefinition(
+    info = @Info(title = "Test",
+        version = "1.0"))
 @Configuration
 @EnableScheduling
-@ComponentScan
+@ComponentScan(basePackageClasses = MyApp.class)
 public class MyApp extends Application {
 
 }

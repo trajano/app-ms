@@ -10,45 +10,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.second.Blah;
 
-@Api
-@Path("/hello")
-public class Hello {
+@Path("/sing")
 
-    private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
+public class SingleHello {
 
-    private int count;
-
-    @Autowired
-    SomeRequestScope req;
+    private static final Logger LOG = LoggerFactory.getLogger(SingleHello.class);
 
     @Autowired
     ISomeAppScope scope;
 
     @GET
+    @Produces(MediaType.TEXT_PLAIN)
     @Path("/cough")
-    public String cough() {
+    public String cough(@Context final RoutingContext routingContext) {
 
         throw new RuntimeException("ahem");
     }
 
     @GET
-    @Produces("text/plain")
-    @Path("/count")
-    public Integer getCount() {
-
-        return ++count;
-    }
-
-    @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String hello(
-        @Context final RoutingContext context) {
+    public String hello(@Context final RoutingContext routingContext) {
 
-        return "Hello" + this + " " + scope + " " + context + " " + req;
+        return "Hello" + this + " " + scope + " " + routingContext;
         /*
          * @Context final Vertx vertx,
          * @Context final RoutingContext routingContext
@@ -58,19 +43,4 @@ public class Hello {
         //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
     }
 
-    @GET
-    @Path("/json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Blah hello2B() {
-
-        return new Blah();
-    }
-
-    @GET
-    @Path("/xml")
-    @Produces(MediaType.APPLICATION_XML)
-    public Blah helloB() {
-
-        return new Blah();
-    }
 }

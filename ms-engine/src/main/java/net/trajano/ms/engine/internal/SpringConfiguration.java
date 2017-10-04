@@ -11,11 +11,12 @@ import org.springframework.web.context.request.RequestScope;
 public class SpringConfiguration {
 
     @Bean
-    public static CustomScopeConfigurer customScopeConfigurer(final RequestScope requestScope) {
+    public static CustomScopeConfigurer customScopeConfigurer(final RequestScope scope) {
 
         final CustomScopeConfigurer configurer = new CustomScopeConfigurer();
 
-        configurer.setScopes(Collections.singletonMap("request", requestScope));
+        configurer.setScopes(Collections.singletonMap("request", scope));
+        System.out.println(configurer);
         return configurer;
     }
 

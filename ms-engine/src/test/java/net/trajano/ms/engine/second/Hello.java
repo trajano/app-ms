@@ -9,10 +9,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 
-@Api
 @Path("/hello")
 public class Hello {
     //

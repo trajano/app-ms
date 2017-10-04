@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -19,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.google.common.cache.Cache;
@@ -47,14 +47,13 @@ import net.trajano.ms.common.JwtClaimsProcessor;
  * @author Archimedes Trajano
  */
 @Component
-@Scope("singleton")
+@Singleton
 @Provider
 public class JwtAssertionInterceptor implements
     ContainerRequestFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
-    @Autowired(required = false)
     private JwtAssertionRequiredFunction assertionRequiredFunction;
 
     @Autowired(required = false)
@@ -82,8 +81,15 @@ public class JwtAssertionInterceptor implements
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
 
+    public JwtAssertionInterceptor() {
+
+        System.out.println("ALALAO2" + this);
+    }
+
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
+
+        System.out.println("ALALAO" + this);
 
         if (!assertionRequiredFunction.apply(requestContext)) {
             return;
@@ -218,9 +224,17 @@ public class JwtAssertionInterceptor implements
         }
 
         if (assertionRequiredFunction == null) {
-            LOG.debug("assertionRequiredFunction  was not specified, will use the default");
+            LOG.debug("assertionRequiredFunction was not specified, will use the default");
             assertionRequiredFunction = new DefaultAssertionRequiredFunction();
         }
+        System.out.println("ALA" + this);
+    }
+
+    @Autowired(required = false)
+    public void setAssertionRequiredFunction(final JwtAssertionRequiredFunction assertionRequiredFunction) {
+
+        System.out.println("settings " + assertionRequiredFunction);
+        this.assertionRequiredFunction = assertionRequiredFunction;
     }
 
     public void setClaimsProcessor(final JwtClaimsProcessor claimsProcessor) {
