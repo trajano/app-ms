@@ -50,10 +50,10 @@ public class SpringJaxRsHandler implements
      * @return the handlers
      */
     @SafeVarargs
-    public static SpringJaxRsHandler[] registerToRouter(final Router router,
+    public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
         final Class<? extends Application>... applicationClasses) {
 
-        return registerToRouter(router, new StaticApplicationContext(), applicationClasses);
+        return multipleRegisterToRouter(router, new StaticApplicationContext(), applicationClasses);
     }
 
     /**
@@ -69,7 +69,7 @@ public class SpringJaxRsHandler implements
      * @return the handlers
      */
     @SafeVarargs
-    public static SpringJaxRsHandler[] registerToRouter(final Router router,
+    public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
         final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application>... applicationClasses) {
 
@@ -97,15 +97,15 @@ public class SpringJaxRsHandler implements
      *            application class
      * @return the handler
      */
-    public static SpringJaxRsHandler singleRegistrationToRouter(final Router router,
+    public static SpringJaxRsHandler registerToRouter(final Router router,
         final Class<? extends Application> applicationClass) {
 
-        return registerToRouter(router, applicationClass)[0];
+        return multipleRegisterToRouter(router, applicationClass)[0];
     }
 
     private final AnnotationConfigApplicationContext applicationContext;
 
-    private URI baseUri;
+    private final URI baseUri;
 
     private final ResteasyDeployment deployment;
 

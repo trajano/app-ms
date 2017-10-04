@@ -10,9 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import io.swagger.annotations.Api;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.second.Blah;
 
+@Api
 @Path("/hello")
 public class Hello {
 
@@ -27,7 +29,6 @@ public class Hello {
     ISomeAppScope scope;
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
     @Path("/cough")
     public String cough() {
 

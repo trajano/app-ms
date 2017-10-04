@@ -7,6 +7,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import io.swagger.annotations.Info;
+import io.swagger.annotations.SwaggerDefinition;
+
 /**
  * This is the Jax-RS Application defintion. This is also where Spring
  * annotations can be configured. This will automatically scan for JAX-RS
@@ -16,6 +19,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author Archimedes Trajano
  */
 @ApplicationPath("/api")
+@SwaggerDefinition(
+    info = @Info(title = "Test",
+        version = "1.0"))
 @Configuration
 @EnableScheduling
 @ComponentScan(basePackageClasses = MyApp.class)
