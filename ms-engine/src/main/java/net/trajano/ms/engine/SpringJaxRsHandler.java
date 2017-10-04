@@ -252,9 +252,8 @@ public class SpringJaxRsHandler implements
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                         ResteasyProviderFactory.pushContext(Client.class, clientBuilder.build());
 
-                        final Application application = deployment.getApplication();
                         dispatcher.invokePropagateNotFound(new VertxHttpRequest(context,
-                            URI.create(application.getClass().getAnnotation(ApplicationPath.class).value()), dispatcher),
+                            baseUri, dispatcher),
                             new VertxHttpResponse(context));
                         future.complete();
                     } finally {

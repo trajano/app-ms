@@ -26,8 +26,8 @@ public class SwaggerHandler implements
     AutoCloseable {
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -53,8 +53,8 @@ public class SwaggerHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -77,9 +77,9 @@ public class SwaggerHandler implements
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
-            baseUri = URI.create(annotation.value() + "").normalize();
+            baseUri = URI.create(annotation.value()).normalize();
         } else {
-            baseUri = URI.create("");
+            baseUri = URI.create("/");
         }
 
         Application application;
@@ -91,7 +91,7 @@ public class SwaggerHandler implements
         }
 
         swagger = new ClonableSwagger();
-        swagger.setBasePath(baseUri.toASCIIString() + "/");
+        swagger.setBasePath(baseUri.toASCIIString());
         final Reader swaggerReader = new Reader(swagger);
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
