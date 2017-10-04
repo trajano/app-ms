@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.StaticApplicationContext;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -44,7 +43,8 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x router.
+     * Convenience method to construct and register the routes to a Vert.x
+     * router.
      *
      * @param router
      *            vert.x router
@@ -56,12 +56,12 @@ public class SpringJaxRsHandler implements
     public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
         final Class<? extends Application>... applicationClasses) {
 
-        return multipleRegisterToRouter(router, new StaticApplicationContext(), applicationClasses);
+        return multipleRegisterToRouter(router, null, applicationClasses);
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x router
-     * with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x
+     * router with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -91,8 +91,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route to a
-     * Vert.x router.
+     * Convenience method to construct and register a single application route
+     * to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -107,8 +107,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route to a
-     * Vert.x router.
+     * Convenience method to construct and register a single application route
+     * to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -140,14 +140,22 @@ public class SpringJaxRsHandler implements
     public SpringJaxRsHandler(
         final Class<? extends Application> applicationClass) {
 
-        this(new StaticApplicationContext(), applicationClass);
+        this(null, applicationClass);
     }
 
     public SpringJaxRsHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
-        if (baseApplicationContext.isActive()) {
+        if (baseApplicationContext == null) {
+            LOG.debug("baseApplicationContext={} is null, a new application context will be created.");
+            applicationContext = new AnnotationConfigApplicationContext();
+        } else if (baseApplicationContext.isActive()) {
             LOG.debug("baseApplicationContext={} is active, will use as parent.");
+            applicationContext = new AnnotationConfigApplicationContext();
+            applicationContext.setParent(baseApplicationContext);
+        } else if (!(baseApplicationContext instanceof AnnotationConfigApplicationContext)) {
+            LOG.debug("baseApplicationContext={} is not active, but is not an instance of AnnotationConfigApplicationContext, will activate and use as parent.");
+            baseApplicationContext.refresh();
             applicationContext = new AnnotationConfigApplicationContext();
             applicationContext.setParent(baseApplicationContext);
         } else {
@@ -196,14 +204,16 @@ public class SpringJaxRsHandler implements
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
         applicationContext.refresh();
-        baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
-            (name,
-                obj) -> {
-                if (!deployment.getProviderFactory().isRegistered(obj)) {
-                    LOG.debug("registering {} into provider factory", name);
-                    deployment.getProviderFactory().register(obj);
-                }
-            });
+        if (baseApplicationContext != null) {
+            baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
+                (name,
+                    obj) -> {
+                    if (!deployment.getProviderFactory().isRegistered(obj)) {
+                        LOG.debug("registering {} into provider factory", name);
+                        deployment.getProviderFactory().register(obj);
+                    }
+                });
+        }
         deployment.start();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
         providerFactory = deployment.getProviderFactory();

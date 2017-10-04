@@ -11,7 +11,7 @@ import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 
-public class Main extends AbstractVerticle {
+public class EngineSampleMain extends AbstractVerticle {
 
     public static void main(final String[] args) throws Exception {
 
@@ -21,7 +21,7 @@ public class Main extends AbstractVerticle {
 
         final Vertx vertx = Vertx.vertx(vertOptions);
         final DeploymentOptions options = new DeploymentOptions();
-        vertx.deployVerticle(new Main(), options);
+        vertx.deployVerticle(new EngineSampleMain(), options);
     }
 
     private SpringJaxRsHandler requestHandler;
