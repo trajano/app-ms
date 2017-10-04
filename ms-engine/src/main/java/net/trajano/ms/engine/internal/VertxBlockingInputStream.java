@@ -14,6 +14,8 @@ public class VertxBlockingInputStream extends InputStream {
 
     private static final Buffer END_BUFFER = Symbol.newSymbol(Buffer.class);
 
+    private static final Buffer END_BUFFER_WITH_ERROR = Symbol.newSymbol(Buffer.class);
+
     private static final Logger LOG = LoggerFactory.getLogger(VertxBlockingInputStream.class);
 
     private int availableBytes = 0;
@@ -21,6 +23,8 @@ public class VertxBlockingInputStream extends InputStream {
     private long bytesRead = 0;
 
     private Buffer currentBuffer;
+
+    private IOException exceptionToThrow = null;
 
     private int pos;
 
@@ -40,6 +44,18 @@ public class VertxBlockingInputStream extends InputStream {
     public void end() {
 
         queue.add(END_BUFFER);
+    }
+
+    /**
+     * End the buffer because of an error.
+     *
+     * @param e
+     */
+    public void error(final Throwable e) {
+
+        exceptionToThrow = new IOException(e);
+        queue.add(END_BUFFER_WITH_ERROR);
+
     }
 
     public void populate(final Buffer buffer) {
@@ -62,6 +78,8 @@ public class VertxBlockingInputStream extends InputStream {
         }
         if (currentBuffer == null) {
             throw new IOException("Obtained a null buffer from the queue");
+        } else if (currentBuffer == END_BUFFER_WITH_ERROR) {
+            throw exceptionToThrow;
         } else if (currentBuffer == END_BUFFER) {
             return -1;
         } else {

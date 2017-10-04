@@ -25,7 +25,7 @@ public class VertxClientResponse extends ClientResponse {
                 .endHandler(aVoid -> is.end());
             System.out.println("prepared client response handlers");
         }).exceptionHandler(e -> {
-            httpClientRequest.connection().close();
+            is.error(e);
             throw new RuntimeException("innie", e);
         });
         System.out.println("prepared response handlers");
