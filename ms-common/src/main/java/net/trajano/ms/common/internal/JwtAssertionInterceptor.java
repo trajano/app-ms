@@ -7,7 +7,6 @@ import java.text.ParseException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -47,7 +46,6 @@ import net.trajano.ms.common.JwtClaimsProcessor;
  * @author Archimedes Trajano
  */
 @Component
-@Singleton
 @Provider
 public class JwtAssertionInterceptor implements
     ContainerRequestFilter {
@@ -81,15 +79,8 @@ public class JwtAssertionInterceptor implements
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
 
-    public JwtAssertionInterceptor() {
-
-        System.out.println("ALALAO2" + this);
-    }
-
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-
-        System.out.println("ALALAO" + this);
 
         if (!assertionRequiredFunction.apply(requestContext)) {
             return;
@@ -227,7 +218,6 @@ public class JwtAssertionInterceptor implements
             LOG.debug("assertionRequiredFunction was not specified, will use the default");
             assertionRequiredFunction = new DefaultAssertionRequiredFunction();
         }
-        System.out.println("ALA" + this);
     }
 
     @Autowired(required = false)

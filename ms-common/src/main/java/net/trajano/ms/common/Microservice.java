@@ -16,7 +16,7 @@ import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.JaxRsRoute;
 import net.trajano.ms.engine.ManifestRoute;
 
-public class MsEngineApplication {
+public class Microservice {
 
     public static void run(final Class<? extends Application> application) {
 
