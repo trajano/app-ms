@@ -54,13 +54,12 @@ public class JwtAssertionInterceptor implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
-    private JwtAssertionRequiredFunction assertionRequiredFunction;
+    private JwtAssertionRequiredFunction assertionRequiredFunction = new DefaultAssertionRequiredFunction();
 
     @Autowired(required = false)
     @Qualifier("authz.audience")
     private URI audience;
 
-    @Autowired(required = false)
     private JwtClaimsProcessor claimsProcessor;
 
     @Autowired(required = false)
@@ -70,6 +69,9 @@ public class JwtAssertionInterceptor implements
     @Autowired
     private JwksProvider jwksProvider;
 
+    /**
+     * In-memory public key cache.
+     */
     private Cache<String, RSAKey> keyCache;
 
     /**
@@ -83,6 +85,11 @@ public class JwtAssertionInterceptor implements
     @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
+
+    /**
+     * Flag to indicate that the application is missing a claims processor.
+     */
+    private boolean warnedAlready;
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
@@ -172,6 +179,9 @@ public class JwtAssertionInterceptor implements
                     .entity("claims validation failed")
                     .build());
             }
+        } else if (!warnedAlready) {
+            LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation (this message will only appear once)");
+            warnedAlready = true;
         }
 
     }
@@ -208,10 +218,6 @@ public class JwtAssertionInterceptor implements
         if (signatureJwksUri == null) {
             LOG.warn("authz.signature.jwks.uri not specified, no signature verification will be performed");
         }
-        if (claimsProcessor == null) {
-            LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation");
-
-        }
         if (audience == null) {
             LOG.warn("`authz.audience` was not specified, will accept any audience");
         }
@@ -219,13 +225,8 @@ public class JwtAssertionInterceptor implements
             LOG.warn("`authz.issuer` was not specified, will accept any issuer");
         }
 
-        if (assertionRequiredFunction == null) {
-            LOG.debug("assertionRequiredFunction was not specified, will use the default");
-            assertionRequiredFunction = new DefaultAssertionRequiredFunction();
-        }
     }
 
-    @Autowired(required = false)
     public void setAssertionRequiredFunction(final JwtAssertionRequiredFunction assertionRequiredFunction) {
 
         this.assertionRequiredFunction = assertionRequiredFunction;
