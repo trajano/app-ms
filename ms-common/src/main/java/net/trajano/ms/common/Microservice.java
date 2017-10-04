@@ -21,6 +21,7 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
+import net.trajano.ms.common.internal.JwksRouteHandler;
 import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
@@ -58,6 +59,9 @@ public class Microservice {
     @Autowired
     private HttpServerOptions httpServerOptions;
 
+    @Autowired
+    private JwksRouteHandler jwksRouteHandler;
+
     private Vertx vertx;
 
     @Autowired
@@ -73,6 +77,7 @@ public class Microservice {
 
         handlerStack.push(SwaggerHandler.registerToRouter(router, applicationClass));
         handlerStack.push(ManifestHandler.registerToRouter(router));
+        router.route("/.well-known/jwks").handler(jwksRouteHandler);
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, applicationClass));
 
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
