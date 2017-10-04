@@ -84,12 +84,12 @@ public class Hello {
     @Path("/maven")
     public Response maven() {
 
-        final Response response = jaxrsClient.target("http://search.maven.org/solrsearch/select?q=g:%22com.google.inject%22&rows=20&wt=json").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").get();
+        final Response clientResponse = jaxrsClient.target("http://search.maven.org/solrsearch/select?q=g:%22com.google.inject%22&rows=20&wt=json").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").get();
         try {
-            final String value = response.readEntity(String.class);
+            final String value = clientResponse.readEntity(String.class);
             return Response.ok(value).build();
         } finally {
-            response.close();
+            clientResponse.close();
         }
     }
 }
