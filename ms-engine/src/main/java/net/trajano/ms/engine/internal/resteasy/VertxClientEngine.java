@@ -1,7 +1,6 @@
 package net.trajano.ms.engine.internal.resteasy;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,13 +11,11 @@ import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 
-import io.vertx.core.Future;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import net.trajano.ms.engine.internal.Conversions;
-import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 import net.trajano.ms.engine.internal.VertxOutputStream;
 
 public class VertxClientEngine implements
@@ -41,6 +38,7 @@ public class VertxClientEngine implements
     @Override
     public void close() {
 
+        System.out.println("closing");
         httpClient.close();
 
     }
@@ -61,54 +59,23 @@ public class VertxClientEngine implements
     public ClientResponse invoke(final ClientInvocation request) {
 
         final RequestOptions options = Conversions.toRequestOptions(request.getUri());
-        final HttpClientRequest clientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
+        final HttpClientRequest httpClientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
 
-        final Future<ClientResponse> futureClientResponse = Future.future();
+        final VertxClientResponse clientResponse = new VertxClientResponse(request.getClientConfiguration(), httpClientRequest);
 
-        clientRequest.handler(clientResponse -> {
-
-            final ClientResponse response = new ClientResponse(request.getClientConfiguration()) {
-
-                private final VertxBlockingInputStream is = new VertxBlockingInputStream();
-
-                @Override
-                protected InputStream getInputStream() {
-
-                    clientResponse.handler(buffer -> is.populate(buffer))
-                        .endHandler(aVoid -> is.end());
-
-                    return is;
-                }
-
-                @Override
-                public void releaseConnection() throws IOException {
-
-                    is.close();
-                    clientRequest.end();
-
-                }
-
-                @Override
-                protected void setInputStream(final InputStream is) {
-
-                    throw new UnsupportedOperationException("Cannot set input stream");
-                }
-            };
-            futureClientResponse.complete(response);
-
-        });
         request.getHeaders().asMap().forEach((name,
             value) -> {
-            clientRequest.putHeader(name, value);
+            httpClientRequest.putHeader(name, value);
         });
 
         try {
-            request.writeRequestBody(new VertxOutputStream(clientRequest));
-            clientRequest.end();
+            request.writeRequestBody(new VertxOutputStream(httpClientRequest));
+            return clientResponse;
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            httpClientRequest.end();
         }
-        return futureClientResponse.result();
     }
 
 }
