@@ -70,6 +70,7 @@ public class VertxClientEngine implements
 
         try {
             request.writeRequestBody(new VertxOutputStream(httpClientRequest));
+            System.out.println("wrote request body");
             return clientResponse;
         } catch (final IOException e) {
             throw new UncheckedIOException(e);

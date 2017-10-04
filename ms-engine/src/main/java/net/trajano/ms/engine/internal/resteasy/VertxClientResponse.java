@@ -23,14 +23,19 @@ public class VertxClientResponse extends ClientResponse {
 
             httpClientResponse.handler(buffer -> is.populate(buffer))
                 .endHandler(aVoid -> is.end());
+            System.out.println("prepared client response handlers");
         }).exceptionHandler(e -> {
+            httpClientRequest.connection().close();
+            throw new RuntimeException("innie", e);
         });
+        System.out.println("prepared response handlers");
 
     }
 
     @Override
     protected InputStream getInputStream() {
 
+        System.out.println("inputstream get");
         return is;
     }
 
