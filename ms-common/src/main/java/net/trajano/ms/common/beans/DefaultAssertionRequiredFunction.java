@@ -1,6 +1,8 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.beans;
 
 import javax.ws.rs.container.ResourceInfo;
+
+import net.trajano.ms.common.JwtNotRequired;
 
 /**
  * Checks if the URI is flagged as JwtNotRequired and if so will bypass checks
@@ -9,7 +11,7 @@ import javax.ws.rs.container.ResourceInfo;
  * @author Archimedes Trajano
  */
 public class DefaultAssertionRequiredFunction implements
-    JwtAssertionRequiredFunction {
+    JwtAssertionRequiredPredicate {
 
     @Override
     public boolean test(final ResourceInfo resourceInfo) {

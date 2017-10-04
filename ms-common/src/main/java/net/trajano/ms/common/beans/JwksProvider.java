@@ -1,6 +1,6 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.beans;
 
-import static net.trajano.ms.common.CommonMs.JWKS_CACHE;
+import static net.trajano.ms.common.beans.CommonMs.JWKS_CACHE;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;

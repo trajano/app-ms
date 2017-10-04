@@ -36,10 +36,10 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.DefaultAssertionRequiredFunction;
-import net.trajano.ms.common.JwksProvider;
-import net.trajano.ms.common.JwtAssertionRequiredFunction;
-import net.trajano.ms.common.JwtClaimsProcessor;
+import net.trajano.ms.common.beans.DefaultAssertionRequiredFunction;
+import net.trajano.ms.common.beans.JwksProvider;
+import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
+import net.trajano.ms.common.beans.JwtClaimsProcessor;
 
 /**
  * This performs assertion check on the header data. It ignores the /jwks and
@@ -54,7 +54,7 @@ public class JwtAssertionInterceptor implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
-    private JwtAssertionRequiredFunction assertionRequiredFunction = new DefaultAssertionRequiredFunction();
+    private JwtAssertionRequiredPredicate assertionRequiredPredicate;
 
     @Autowired(required = false)
     @Qualifier("authz.audience")
@@ -66,7 +66,6 @@ public class JwtAssertionInterceptor implements
     @Qualifier("authz.issuer")
     private URI issuer;
 
-    @Autowired
     private JwksProvider jwksProvider;
 
     /**
@@ -86,15 +85,10 @@ public class JwtAssertionInterceptor implements
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
 
-    /**
-     * Flag to indicate that the application is missing a claims processor.
-     */
-    private boolean warnedAlready;
-
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
 
-        if (!assertionRequiredFunction.test(resourceInfo)) {
+        if (!assertionRequiredPredicate.test(resourceInfo)) {
             return;
         }
         final String assertion = requestContext.getHeaderString("X-JWT-Assertion");
@@ -179,11 +173,7 @@ public class JwtAssertionInterceptor implements
                     .entity("claims validation failed")
                     .build());
             }
-        } else if (!warnedAlready) {
-            LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation (this message will only appear once)");
-            warnedAlready = true;
         }
-
     }
 
     /**
@@ -224,19 +214,29 @@ public class JwtAssertionInterceptor implements
         if (issuer == null) {
             LOG.warn("`authz.issuer` was not specified, will accept any issuer");
         }
+        if (claimsProcessor == null) {
+            LOG.warn("JwtClaimsProcessor was not defined, will not peform any claims validation");
+        }
+        if (assertionRequiredPredicate == null) {
+            LOG.debug("assertionRequiredPredicate was not defined, default annotation based predicate will be used");
+            assertionRequiredPredicate = new DefaultAssertionRequiredFunction();
+        }
 
     }
 
-    public void setAssertionRequiredFunction(final JwtAssertionRequiredFunction assertionRequiredFunction) {
+    @Autowired(required = false)
+    public void setAssertionRequiredFunction(final JwtAssertionRequiredPredicate assertionRequiredFunction) {
 
-        this.assertionRequiredFunction = assertionRequiredFunction;
+        assertionRequiredPredicate = assertionRequiredFunction;
     }
 
+    @Autowired(required = false)
     public void setClaimsProcessor(final JwtClaimsProcessor claimsProcessor) {
 
         this.claimsProcessor = claimsProcessor;
     }
 
+    @Autowired
     public void setJwksProvider(final JwksProvider jwksProvider) {
 
         this.jwksProvider = jwksProvider;

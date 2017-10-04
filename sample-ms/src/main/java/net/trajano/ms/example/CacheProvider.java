@@ -6,7 +6,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import net.trajano.ms.common.CommonMs;
+import net.trajano.ms.common.beans.CommonMs;
 
 @Configuration
 public class CacheProvider {

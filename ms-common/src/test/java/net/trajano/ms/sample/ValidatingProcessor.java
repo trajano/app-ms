@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.JwtClaimsProcessor;
+import net.trajano.ms.common.beans.JwtClaimsProcessor;
 
 @Component
 public class ValidatingProcessor implements

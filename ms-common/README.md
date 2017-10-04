@@ -12,3 +12,8 @@ This project sets up the common framework for all the microservices and has cert
 It provides some common services
 
 * Token provider
+
+The application context is laid out as follows
+
+* Configurations <- this is the root
+* Application + Common <- this combines the two

@@ -27,8 +27,8 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import net.trajano.ms.common.AssertionNotRequiredFunction;
-import net.trajano.ms.common.JwtAssertionRequiredFunction;
+import net.trajano.ms.common.beans.AssertionNotRequiredFunction;
+import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @Configuration
@@ -93,7 +93,7 @@ public class ServiceConfiguration {
     }
 
     @Bean
-    public JwtAssertionRequiredFunction noAssertionRequired() {
+    public JwtAssertionRequiredPredicate noAssertionRequired() {
 
         return new AssertionNotRequiredFunction();
     }

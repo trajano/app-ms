@@ -1,4 +1,4 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.beans;
 
 import java.util.function.Predicate;
 
@@ -9,6 +9,6 @@ import javax.ws.rs.container.ResourceInfo;
  *
  * @author Archimedes Trajano
  */
-public interface JwtAssertionRequiredFunction extends
+public interface JwtAssertionRequiredPredicate extends
     Predicate<ResourceInfo> {
 }

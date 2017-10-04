@@ -44,8 +44,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -61,8 +60,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -92,8 +91,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -108,8 +107,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -147,11 +146,14 @@ public class SpringJaxRsHandler implements
     public SpringJaxRsHandler(final ConfigurableApplicationContext baseApplicationContext,
         final Class<? extends Application> applicationClass) {
 
-        if (!baseApplicationContext.isActive()) {
-            baseApplicationContext.refresh();
+        if (baseApplicationContext.isActive()) {
+            LOG.debug("baseApplicationContext={} is active, will use as parent.");
+            applicationContext = new AnnotationConfigApplicationContext();
+            applicationContext.setParent(baseApplicationContext);
+        } else {
+            LOG.debug("baseApplicationContext={} is not active, will reuse.");
+            applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
-        applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.setParent(baseApplicationContext);
         applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
@@ -197,8 +199,10 @@ public class SpringJaxRsHandler implements
         baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
             (name,
                 obj) -> {
-                LOG.debug("registering {} into provider factory", name);
-                deployment.getProviderFactory().register(obj);
+                if (!deployment.getProviderFactory().isRegistered(obj)) {
+                    LOG.debug("registering {} into provider factory", name);
+                    deployment.getProviderFactory().register(obj);
+                }
             });
         deployment.start();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();

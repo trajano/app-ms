@@ -1,4 +1,4 @@
-package net.trajano.ms.common.internal;
+package net.trajano.ms.common.beans;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.common.JwksProvider;
 
 /**
  * This endpoint is exposed by every microservice to provide JWKS that is used

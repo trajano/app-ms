@@ -1,4 +1,4 @@
-package net.trajano.ms.common.internal;
+package net.trajano.ms.common.internal.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

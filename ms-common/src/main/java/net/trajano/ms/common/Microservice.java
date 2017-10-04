@@ -12,22 +12,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
-import net.trajano.ms.common.internal.JwksRouteHandler;
+import net.trajano.ms.common.beans.CommonMs;
+import net.trajano.ms.common.beans.JwksRouteHandler;
+import net.trajano.ms.common.internal.config.ConfigurationProvider;
+import net.trajano.ms.common.jaxrs.CommonMsJaxRs;
 import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 
-@ComponentScan
-@EnableScheduling
 @Configuration
 public class Microservice {
 
@@ -43,6 +43,7 @@ public class Microservice {
         }
         Microservice.applicationClass = applicationClass;
         final Object[] sources = new Object[] {
+            ConfigurationProvider.class,
             Microservice.class
         };
         final SpringApplication springApplication = new SpringApplication(sources);
@@ -52,15 +53,12 @@ public class Microservice {
     }
 
     @Autowired
-    private ConfigurableApplicationContext applicationContext;
+    private ConfigurableApplicationContext baseApplicationContext;
 
     private final Stack<AutoCloseable> handlerStack = new Stack<>();
 
     @Autowired
     private HttpServerOptions httpServerOptions;
-
-    @Autowired
-    private JwksRouteHandler jwksRouteHandler;
 
     private Vertx vertx;
 
@@ -77,8 +75,15 @@ public class Microservice {
 
         handlerStack.push(SwaggerHandler.registerToRouter(router, applicationClass));
         handlerStack.push(ManifestHandler.registerToRouter(router));
-        router.route("/.well-known/jwks").handler(jwksRouteHandler);
+
+        final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+        applicationContext.setParent(baseApplicationContext);
+        applicationContext.register(CommonMs.class);
+        applicationContext.register(CommonMsJaxRs.class);
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, applicationClass));
+
+        final JwksRouteHandler jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);
+        router.route("/.well-known/jwks").handler(jwksRouteHandler);
 
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 

@@ -4,14 +4,12 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.common.Microservice;
-import net.trajano.ms.common.jaxrs.JwtAssertionInterceptor;
 
 /**
  * This is the Jax-RS Application defintion. This is also where Spring
@@ -34,19 +32,12 @@ public class MyApp extends Application {
         Microservice.run(MyApp.class, args);
     }
 
-    @Autowired
-    private JwtAssertionInterceptor interceptor;
-
-    @Autowired
-    private ValidatingProcessor validatingProcessor;
-
     /**
      * Change some settings on the interceptor
      */
     @PostConstruct
     public void init() {
 
-        interceptor.setClaimsProcessor(validatingProcessor);
     }
 
 }

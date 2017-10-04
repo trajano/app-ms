@@ -6,19 +6,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import net.trajano.ms.common.CommonMs;
-import net.trajano.ms.common.MsEngineApplication;
+import net.trajano.ms.common.Microservice;
 
 @Configuration
 @EnableScheduling
-@ComponentScan(basePackageClasses = {
-    CommonMs.class,
-    SampleMain.class
-})
+@ComponentScan
 public class SampleMain extends Application {
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
 
-        MsEngineApplication.run(SampleMain.class);
+        Microservice.run(SampleMain.class, args);
     }
 }

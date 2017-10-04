@@ -1,9 +1,9 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.beans;
 
 import javax.ws.rs.container.ResourceInfo;
 
 public class AssertionNotRequiredFunction implements
-    JwtAssertionRequiredFunction {
+    JwtAssertionRequiredPredicate {
 
     @Override
     public boolean test(final ResourceInfo context) {

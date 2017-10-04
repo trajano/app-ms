@@ -1,4 +1,4 @@
-package net.trajano.ms.common;
+package net.trajano.ms.common.beans;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
