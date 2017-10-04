@@ -17,7 +17,7 @@ The purpose of the cluster was to enable pushing the load across multiple nodes,
 
 ### Spring
 
-Spring is used for dependency injection by the users so we can utilize the other stuff that spring has to offer such as scheduling and JPA Repositories.  There is only *one* application context throughout the app
+Spring is used for dependency injection by the users so we can utilize the other stuff that spring has to offer such as scheduling and JPA Repositories.
 
 ### Jersey
 
@@ -29,3 +29,16 @@ Changed to single ApplicationContext
 and require all paths to be singleton context.
 
 The opinionated version will use @Inject
+
+## Quick comparison
+
+### vs. WSO2
+
+Like WSO2 it uses Netty underneath it all which is provided by Vert.X on this implementation.  
+This provides the *full JAX-RS server* stack, not just partial support it also provides the *full JAX-RS Client stack* and promotes its use.
+
+This supports Swagger and is ready to use with Postman import support.  WSO2 Swagger does not import properly into Postman.
+
+### vs. Spring-boot
+
+Depending on the implementation used, this uses Netty which is more performant than Tomcat.  This does not provide use the servlet API.
