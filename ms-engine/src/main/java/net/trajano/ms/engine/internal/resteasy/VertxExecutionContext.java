@@ -10,6 +10,8 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
 
+import io.vertx.core.Vertx;
+
 public class VertxExecutionContext extends AbstractExecutionContext {
 
     private static class AsynchronousResponse extends AbstractAsynchronousResponse {
@@ -104,6 +106,8 @@ public class VertxExecutionContext extends AbstractExecutionContext {
 
     private boolean suspended;
 
+    private Vertx vertx;
+
     public VertxExecutionContext(final SynchronousDispatcher dispatcher,
         final HttpRequest request,
         final HttpResponse response) {
@@ -144,7 +148,9 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) throws IllegalStateException {
 
-        // TODO Auto-generated method stub
+        vertx.setTimer(time, timerId -> {
+
+        });
         return null;
     }
 
