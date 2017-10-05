@@ -1,6 +1,7 @@
 package net.trajano.ms.engine.internal.resteasy;
 
 import java.util.Date;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ServiceUnavailableException;
@@ -14,7 +15,6 @@ import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 
@@ -27,7 +27,12 @@ public class VertxExecutionContext implements
 
         private boolean done;
 
-        private final Future<Object> future;
+        /**
+         * Prevent access from multiple threads.
+         */
+        private final Semaphore lock = new Semaphore(1);
+
+        private final Semaphore resumeLock = new Semaphore(0);
 
         private boolean suspended = true;
 
@@ -40,11 +45,9 @@ public class VertxExecutionContext implements
         public AsynchronousResponse(final SynchronousDispatcher dispatcher,
             final HttpRequest request,
             final HttpResponse response,
-            final Future<Object> future,
             final Vertx vertx) {
 
             super(dispatcher, request, response);
-            this.future = future;
             this.vertx = vertx;
         }
 
@@ -68,12 +71,18 @@ public class VertxExecutionContext implements
 
         private void handleTimeout() {
 
-            LOG.debug("Suspend timeout has occured in response timerId={}", suspendTimerId);
+            LOG.error("Suspend timeout has occured in response timerId={}", suspendTimerId);
+            if (timeoutHandler != null) {
+                timeoutHandler.handleTimeout(this);
+            }
             timedout = true;
             cancel();
 
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void initialRequestThreadFinished() {
 
@@ -109,40 +118,69 @@ public class VertxExecutionContext implements
         @Override
         public boolean resume(final Object response) {
 
-            if (!suspended) {
-                return false;
+            try {
+                lock.acquire();
+
+                if (!suspended || isDone()) {
+                    return false;
+                }
+                suspended = false;
+                vertx.cancelTimer(suspendTimerId);
+                internalResume(response);
+                return true;
+            } catch (final InterruptedException e) {
+                Thread.interrupted();
+                throw new RuntimeException(e);
+            } finally {
+                resumeLock.release();
+                lock.release();
             }
-            suspended = false;
-            vertx.cancelTimer(suspendTimerId);
-            internalResume(response);
-            future.complete(response);
-            return true;
         }
 
         @Override
         public boolean resume(final Throwable response) {
 
-            if (!suspended) {
-                return false;
+            try {
+                lock.acquire();
+
+                if (!suspended || isDone()) {
+                    return false;
+                }
+                suspended = false;
+                vertx.cancelTimer(suspendTimerId);
+                internalResume(response);
+                return true;
+            } catch (final InterruptedException e) {
+                Thread.interrupted();
+                throw new RuntimeException(e);
+            } finally {
+                resumeLock.release();
+                lock.release();
             }
-            suspended = false;
-            vertx.cancelTimer(suspendTimerId);
-            internalResume(response);
-            future.fail(response);
-            return true;
+
         }
 
         private boolean sendCancel(final ServiceUnavailableException exception) {
 
-            if (!suspended) {
-                return false;
-            }
-            vertx.cancelTimer(suspendTimerId);
+            try {
+                lock.acquire();
 
-            internalResume(exception.getResponse());
-            suspended = false;
-            cancelled = true;
-            return false;
+                if (!suspended || isDone()) {
+                    return false;
+                }
+                vertx.cancelTimer(suspendTimerId);
+
+                internalResume(exception.getResponse());
+                suspended = false;
+                cancelled = true;
+                return true;
+            } catch (final InterruptedException e) {
+                Thread.interrupted();
+                throw new RuntimeException(e);
+            } finally {
+                resumeLock.release();
+                lock.release();
+            }
         }
 
         @Override
@@ -163,24 +201,25 @@ public class VertxExecutionContext implements
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxExecutionContext.class);
 
-    private final AsynchronousResponse asynchronousResponse;
+    private AsynchronousResponse asynchronousResponse;
 
-    private final Future<Object> future;
+    private final SynchronousDispatcher dispatcher;
 
-    private final RoutingContext routingContext;
+    private final HttpRequest request;
 
-    private boolean suspended;
+    private final HttpResponse response;
 
-    private long suspendTimerId;
+    private final Vertx vertx;
 
     public VertxExecutionContext(final RoutingContext routingContext,
         final SynchronousDispatcher dispatcher,
         final HttpRequest request,
         final HttpResponse response) {
 
-        this.routingContext = routingContext;
-        future = Future.future();
-        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, future, routingContext.vertx());
+        vertx = routingContext.vertx();
+        this.request = request;
+        this.response = response;
+        this.dispatcher = dispatcher;
     }
 
     @Override
@@ -189,39 +228,32 @@ public class VertxExecutionContext implements
         return asynchronousResponse;
     }
 
-    private void handleTimeout() {
-
-        LOG.debug("Suspend timeout has occured timerId={}", suspendTimerId);
-
-    }
-
     @Override
     public boolean isSuspended() {
 
-        return suspended;
+        return asynchronousResponse != null;
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend() throws IllegalStateException {
 
-        suspended = true;
+        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, vertx);
         return asynchronousResponse;
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend(final long millis) throws IllegalStateException {
 
-        suspendTimerId = routingContext.vertx().setTimer(millis, timerId -> {
-            handleTimeout();
-        });
-        return asynchronousResponse;
+        return suspend(millis, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) throws IllegalStateException {
 
-        return suspend(unit.toMillis(time));
+        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, vertx);
+        asynchronousResponse.setTimeout(time, unit);
+        return asynchronousResponse;
 
     }
 
