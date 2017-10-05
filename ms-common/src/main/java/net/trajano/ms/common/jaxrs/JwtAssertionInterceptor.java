@@ -164,6 +164,7 @@ public class JwtAssertionInterceptor implements
             return;
         }
 
+        requestContext.setSecurityContext(new JwtSecurityContext(claims, requestContext.getUriInfo()));
         if (claimsProcessor != null) {
             final boolean validateClaims = claimsProcessor.apply(claims);
             LOG.debug("{}.validateClaims result={}", claimsProcessor, validateClaims);
