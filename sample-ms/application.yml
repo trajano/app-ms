@@ -1,2 +1,5 @@
 http:
   port: 8280
+vertx:
+  workerPoolSize: 200
+  
