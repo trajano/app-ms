@@ -107,7 +107,6 @@ public class Hello {
     @Produces(MediaType.TEXT_PLAIN)
     public void suspend(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
 
-        asyncResponse.setTimeout(5, TimeUnit.SECONDS);
         Thread.sleep(2000);
         asyncResponse.resume(Response.ok("hello").build());
     }

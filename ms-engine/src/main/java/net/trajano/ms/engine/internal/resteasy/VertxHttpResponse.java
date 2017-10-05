@@ -40,6 +40,11 @@ public class VertxHttpResponse implements
 
     }
 
+    public void close() {
+
+        vertxResponse.end();
+    }
+
     /**
      * {@inheritDoc}
      */

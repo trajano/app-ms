@@ -11,10 +11,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
-import org.jboss.resteasy.core.SynchronousExecutionContext;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
 import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
-import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 
@@ -63,9 +61,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
             is = null;
         }
 
-        final HttpResponse response = new VertxHttpResponse(context);
-
-        asynchronousContext = new SynchronousExecutionContext(dispatcher, this, response);
+        asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
     }
 
     @Override
