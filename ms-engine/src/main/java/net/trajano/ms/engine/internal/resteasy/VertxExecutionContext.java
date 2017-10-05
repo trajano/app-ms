@@ -32,7 +32,7 @@ public class VertxExecutionContext implements
          */
         private final Semaphore lock = new Semaphore(1);
 
-        private final Semaphore resumeLock = new Semaphore(0);
+        private final RoutingContext routingContext;
 
         private boolean suspended = true;
 
@@ -45,10 +45,11 @@ public class VertxExecutionContext implements
         public AsynchronousResponse(final SynchronousDispatcher dispatcher,
             final HttpRequest request,
             final HttpResponse response,
-            final Vertx vertx) {
+            final RoutingContext routingContext) {
 
             super(dispatcher, request, response);
-            this.vertx = vertx;
+            this.routingContext = routingContext;
+            vertx = routingContext.vertx();
         }
 
         @Override
@@ -132,8 +133,9 @@ public class VertxExecutionContext implements
                 Thread.interrupted();
                 throw new RuntimeException(e);
             } finally {
-                resumeLock.release();
                 lock.release();
+                routingContext.response().end();
+
             }
         }
 
@@ -154,7 +156,6 @@ public class VertxExecutionContext implements
                 Thread.interrupted();
                 throw new RuntimeException(e);
             } finally {
-                resumeLock.release();
                 lock.release();
             }
 
@@ -178,7 +179,6 @@ public class VertxExecutionContext implements
                 Thread.interrupted();
                 throw new RuntimeException(e);
             } finally {
-                resumeLock.release();
                 lock.release();
             }
         }
@@ -209,14 +209,14 @@ public class VertxExecutionContext implements
 
     private final HttpResponse response;
 
-    private final Vertx vertx;
+    private final RoutingContext routingContext;
 
     public VertxExecutionContext(final RoutingContext routingContext,
         final SynchronousDispatcher dispatcher,
         final HttpRequest request,
         final HttpResponse response) {
 
-        vertx = routingContext.vertx();
+        this.routingContext = routingContext;
         this.request = request;
         this.response = response;
         this.dispatcher = dispatcher;
@@ -237,7 +237,7 @@ public class VertxExecutionContext implements
     @Override
     public ResteasyAsynchronousResponse suspend() throws IllegalStateException {
 
-        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, vertx);
+        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, routingContext);
         return asynchronousResponse;
     }
 
@@ -251,7 +251,7 @@ public class VertxExecutionContext implements
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) throws IllegalStateException {
 
-        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, vertx);
+        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, routingContext);
         asynchronousResponse.setTimeout(time, unit);
         return asynchronousResponse;
 
