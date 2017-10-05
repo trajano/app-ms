@@ -5,11 +5,15 @@ import java.io.InputStream;
 
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.http.HttpClientRequest;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 
 public class VertxClientResponse extends ClientResponse {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxClientResponse.class);
 
     private final VertxBlockingInputStream is;
 
@@ -23,18 +27,18 @@ public class VertxClientResponse extends ClientResponse {
 
             httpClientResponse.handler(buffer -> is.populate(buffer))
                 .endHandler(aVoid -> is.end());
-            System.out.println("prepared client response handlers");
+            LOG.trace("prepared HTTP client response handler");
         }).exceptionHandler(e -> {
             is.error(e);
         });
-        System.out.println("prepared response handlers");
+        LOG.trace("prepared HTTP client request handler");
 
     }
 
     @Override
     protected InputStream getInputStream() {
 
-        System.out.println("inputstream get");
+        LOG.trace("inputStream={}", is);
         return is;
     }
 

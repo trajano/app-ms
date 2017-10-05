@@ -10,6 +10,8 @@ import javax.net.ssl.SSLContext;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -21,6 +23,8 @@ import net.trajano.ms.engine.internal.VertxOutputStream;
 
 public class VertxClientEngine implements
     ClientHttpEngine {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxClientEngine.class);
 
     private final SSLContext sslContext;
 
@@ -39,7 +43,7 @@ public class VertxClientEngine implements
     @Override
     public void close() {
 
-        System.out.println("closing");
+        LOG.trace("closing {}", this);
 
     }
 
@@ -71,7 +75,7 @@ public class VertxClientEngine implements
 
         try {
             request.writeRequestBody(new VertxOutputStream(httpClientRequest));
-            System.out.println("wrote request body");
+            LOG.trace("request body written on {}", this);
             return clientResponse;
         } catch (final IOException e) {
             throw new UncheckedIOException(e);

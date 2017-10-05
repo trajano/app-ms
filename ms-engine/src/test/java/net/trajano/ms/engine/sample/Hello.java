@@ -8,8 +8,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.swagger.annotations.Api;
@@ -19,8 +17,6 @@ import net.trajano.ms.engine.second.Blah;
 @Api
 @Path("/hello")
 public class Hello {
-
-    private static final Logger LOG = LoggerFactory.getLogger(Hello.class);
 
     private int count;
 
