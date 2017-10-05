@@ -7,6 +7,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -14,7 +15,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.engines.URLConnectionEngine;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
@@ -33,6 +33,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
 import net.trajano.ms.engine.internal.VertxRequestContextFilter;
+import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 
@@ -129,8 +130,6 @@ public class SpringJaxRsHandler implements
 
     private final URI baseUri;
 
-    private final ResteasyClientBuilder clientBuilder;
-
     private final ResteasyDeployment deployment;
 
     private final SynchronousDispatcher dispatcher;
@@ -180,7 +179,6 @@ public class SpringJaxRsHandler implements
         }
 
         // Use URLConnectionEngine
-        clientBuilder = new ResteasyClientBuilder().httpEngine(new URLConnectionEngine());
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
@@ -258,6 +256,8 @@ public class SpringJaxRsHandler implements
                 try {
                     ThreadLocalResteasyProviderFactory.push(providerFactory);
                     try {
+
+                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(context.vertx()));
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                         ResteasyProviderFactory.pushContext(Client.class, clientBuilder.build());

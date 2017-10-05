@@ -5,7 +5,10 @@ import java.util.Date;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.springframework.stereotype.Component;
 
@@ -24,6 +27,9 @@ import net.trajano.ms.common.JwtNotRequired;
 @Path("/hello")
 @JwtNotRequired
 public class Hello {
+
+    @Context
+    private Client jaxrsClient;
 
     @ApiOperation(value = "displays hello world")
     @GET
@@ -45,5 +51,20 @@ public class Hello {
         final MyType myType = new MyType();
         myType.setFoo("Hello world at " + new Date());
         return myType;
+    }
+
+    @ApiOperation(value = "displays openid config of google")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/openid")
+    public Response maven() {
+
+        final Response clientResponse = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").get();
+        try {
+            final String value = clientResponse.readEntity(String.class);
+            return Response.ok(value).build();
+        } finally {
+            clientResponse.close();
+        }
     }
 }

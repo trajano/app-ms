@@ -16,9 +16,10 @@ public class VertxClientTest {
 
         final Vertx vertx = Vertx.vertx();
 
-        final Client client = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(vertx.createHttpClient())).build();
+        final Client client = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(vertx)).build();
         final Response response = client.target("https://accounts.google.com/.well-known/openid-configuration").request().get();
         System.out.println(response.readEntity(String.class));
         response.close();
+        client.close();
     }
 }

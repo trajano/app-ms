@@ -11,6 +11,7 @@ import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
@@ -21,13 +22,13 @@ import net.trajano.ms.engine.internal.VertxOutputStream;
 public class VertxClientEngine implements
     ClientHttpEngine {
 
-    private final HttpClient httpClient;
-
     private final SSLContext sslContext;
 
-    public VertxClientEngine(final HttpClient httpClient) {
+    private final Vertx vertx;
 
-        this.httpClient = httpClient;
+    public VertxClientEngine(final Vertx vertx) {
+
+        this.vertx = vertx;
         try {
             sslContext = SSLContext.getDefault();
         } catch (final NoSuchAlgorithmException e) {
@@ -39,7 +40,6 @@ public class VertxClientEngine implements
     public void close() {
 
         System.out.println("closing");
-        httpClient.close();
 
     }
 
@@ -58,6 +58,7 @@ public class VertxClientEngine implements
     @Override
     public ClientResponse invoke(final ClientInvocation request) {
 
+        final HttpClient httpClient = vertx.createHttpClient();
         final RequestOptions options = Conversions.toRequestOptions(request.getUri());
         final HttpClientRequest httpClientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
 
@@ -76,6 +77,7 @@ public class VertxClientEngine implements
             throw new UncheckedIOException(e);
         } finally {
             httpClientRequest.end();
+            httpClient.close();
         }
     }
 
