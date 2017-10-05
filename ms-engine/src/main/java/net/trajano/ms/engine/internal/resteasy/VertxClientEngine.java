@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
@@ -26,13 +27,17 @@ public class VertxClientEngine implements
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxClientEngine.class);
 
+    private final HttpClientOptions clientOptions;
+
     private final SSLContext sslContext;
 
     private final Vertx vertx;
 
-    public VertxClientEngine(final Vertx vertx) {
+    public VertxClientEngine(final Vertx vertx,
+        final HttpClientOptions clientOptions) {
 
         this.vertx = vertx;
+        this.clientOptions = clientOptions;
         try {
             sslContext = SSLContext.getDefault();
         } catch (final NoSuchAlgorithmException e) {
@@ -62,7 +67,7 @@ public class VertxClientEngine implements
     @Override
     public ClientResponse invoke(final ClientInvocation request) {
 
-        final HttpClient httpClient = vertx.createHttpClient();
+        final HttpClient httpClient = vertx.createHttpClient(clientOptions);
         final RequestOptions options = Conversions.toRequestOptions(request.getUri());
         final HttpClientRequest httpClientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
 

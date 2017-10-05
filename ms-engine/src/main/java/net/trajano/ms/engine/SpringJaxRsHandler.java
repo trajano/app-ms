@@ -23,11 +23,13 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -44,8 +46,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -61,8 +62,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -92,8 +93,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -108,8 +109,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -133,6 +134,8 @@ public class SpringJaxRsHandler implements
     private final ResteasyDeployment deployment;
 
     private final SynchronousDispatcher dispatcher;
+
+    private HttpClientOptions httpClientOptions = new HttpClientOptions();
 
     private final ResteasyProviderFactory providerFactory;
 
@@ -178,7 +181,6 @@ public class SpringJaxRsHandler implements
             throw new ExceptionInInitializerError(e);
         }
 
-        // Use URLConnectionEngine
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
@@ -257,7 +259,7 @@ public class SpringJaxRsHandler implements
                     ThreadLocalResteasyProviderFactory.push(providerFactory);
                     try {
 
-                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(context.vertx()));
+                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(context.vertx(), httpClientOptions));
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                         ResteasyProviderFactory.pushContext(Client.class, clientBuilder.build());
@@ -300,6 +302,12 @@ public class SpringJaxRsHandler implements
                     }
                 }
             });
+    }
+
+    @Autowired(required = false)
+    public void setHttpClientOptions(final HttpClientOptions httpClientOptions) {
+
+        this.httpClientOptions = httpClientOptions;
     }
 
 }
