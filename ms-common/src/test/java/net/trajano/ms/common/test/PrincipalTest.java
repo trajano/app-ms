@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.jaxrs.IdTokenPrincipal;
+import net.trajano.ms.common.IdTokenPrincipal;
 
 public class PrincipalTest {
 

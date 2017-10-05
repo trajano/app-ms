@@ -1,4 +1,4 @@
-package net.trajano.ms.common.jaxrs;
+package net.trajano.ms.common;
 
 import java.net.URI;
 import java.security.Principal;

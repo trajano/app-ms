@@ -12,6 +12,8 @@ import javax.ws.rs.core.UriInfo;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
+import net.trajano.ms.common.IdTokenPrincipal;
+
 public class JwtSecurityContext implements
     SecurityContext {
 
