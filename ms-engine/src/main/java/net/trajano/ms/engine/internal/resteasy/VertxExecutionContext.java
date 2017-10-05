@@ -3,86 +3,145 @@ package net.trajano.ms.engine.internal.resteasy;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.ServiceUnavailableException;
+
 import org.jboss.resteasy.core.AbstractAsynchronousResponse;
-import org.jboss.resteasy.core.AbstractExecutionContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
+import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 
-public class VertxExecutionContext extends AbstractExecutionContext {
+public class VertxExecutionContext implements
+    ResteasyAsynchronousContext {
 
     private static class AsynchronousResponse extends AbstractAsynchronousResponse {
 
+        private boolean cancelled = false;
+
+        private boolean done;
+
+        private final Future<Object> future;
+
+        private boolean suspended = true;
+
+        private long suspendTimerId;
+
+        private boolean timedout;
+
+        private final Vertx vertx;
+
         public AsynchronousResponse(final SynchronousDispatcher dispatcher,
             final HttpRequest request,
-            final HttpResponse response) {
+            final HttpResponse response,
+            final Future<Object> future,
+            final Vertx vertx) {
 
             super(dispatcher, request, response);
+            this.future = future;
+            this.vertx = vertx;
         }
 
         @Override
         public boolean cancel() {
 
-            // TODO Auto-generated method stub
-            return false;
+            return sendCancel(new ServiceUnavailableException());
         }
 
         @Override
         public boolean cancel(final Date retryAfter) {
 
-            // TODO Auto-generated method stub
-            return false;
+            return sendCancel(new ServiceUnavailableException(retryAfter));
         }
 
         @Override
         public boolean cancel(final int retryAfter) {
 
-            // TODO Auto-generated method stub
-            return false;
+            return sendCancel(new ServiceUnavailableException((long) retryAfter));
+        }
+
+        private void handleTimeout() {
+
+            LOG.debug("Suspend timeout has occured in response timerId={}", suspendTimerId);
+            timedout = true;
+            cancel();
+
         }
 
         @Override
         public void initialRequestThreadFinished() {
 
-            // TODO Auto-generated method stub
-
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean isCancelled() {
 
-            // TODO Auto-generated method stub
-            return false;
+            return cancelled;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean isDone() {
 
-            // TODO Auto-generated method stub
-            return false;
+            return done || cancelled || timedout;
         }
 
         @Override
         public boolean isSuspended() {
 
-            // TODO Auto-generated method stub
-            return false;
+            return suspended;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean resume(final Object response) {
 
-            // TODO Auto-generated method stub
-            return false;
+            if (!suspended) {
+                return false;
+            }
+            suspended = false;
+            vertx.cancelTimer(suspendTimerId);
+            internalResume(response);
+            future.complete(response);
+            return true;
         }
 
         @Override
         public boolean resume(final Throwable response) {
 
-            // TODO Auto-generated method stub
+            if (!suspended) {
+                return false;
+            }
+            suspended = false;
+            vertx.cancelTimer(suspendTimerId);
+            internalResume(response);
+            future.fail(response);
+            return true;
+        }
+
+        private boolean sendCancel(final ServiceUnavailableException exception) {
+
+            if (!suspended) {
+                return false;
+            }
+            vertx.cancelTimer(suspendTimerId);
+
+            internalResume(exception.getResponse());
+            suspended = false;
+            cancelled = true;
             return false;
         }
 
@@ -90,39 +149,50 @@ public class VertxExecutionContext extends AbstractExecutionContext {
         public boolean setTimeout(final long time,
             final TimeUnit unit) {
 
-            // TODO Auto-generated method stub
-            return false;
+            if (done) {
+                return false;
+            }
+            suspendTimerId = vertx.setTimer(unit.toMillis(time), timerId -> {
+                handleTimeout();
+            });
+
+            return true;
         }
 
     }
 
+    private static final Logger LOG = LoggerFactory.getLogger(VertxExecutionContext.class);
+
     private final AsynchronousResponse asynchronousResponse;
 
-    private final SynchronousDispatcher dispatcher;
+    private final Future<Object> future;
 
-    private final HttpRequest request;
-
-    private final HttpResponse response;
+    private final RoutingContext routingContext;
 
     private boolean suspended;
 
-    private Vertx vertx;
+    private long suspendTimerId;
 
-    public VertxExecutionContext(final SynchronousDispatcher dispatcher,
+    public VertxExecutionContext(final RoutingContext routingContext,
+        final SynchronousDispatcher dispatcher,
         final HttpRequest request,
         final HttpResponse response) {
 
-        super(dispatcher, request, response);
-        this.dispatcher = dispatcher;
-        this.request = request;
-        this.response = response;
-        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response);
+        this.routingContext = routingContext;
+        future = Future.future();
+        asynchronousResponse = new AsynchronousResponse(dispatcher, request, response, future, routingContext.vertx());
     }
 
     @Override
     public ResteasyAsynchronousResponse getAsyncResponse() {
 
         return asynchronousResponse;
+    }
+
+    private void handleTimeout() {
+
+        LOG.debug("Suspend timeout has occured timerId={}", suspendTimerId);
+
     }
 
     @Override
@@ -134,24 +204,25 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     @Override
     public ResteasyAsynchronousResponse suspend() throws IllegalStateException {
 
-        // TODO Auto-generated method stub
-        return null;
+        suspended = true;
+        return asynchronousResponse;
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend(final long millis) throws IllegalStateException {
 
-        return suspend(millis, TimeUnit.MILLISECONDS);
+        suspendTimerId = routingContext.vertx().setTimer(millis, timerId -> {
+            handleTimeout();
+        });
+        return asynchronousResponse;
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) throws IllegalStateException {
 
-        vertx.setTimer(time, timerId -> {
+        return suspend(unit.toMillis(time));
 
-        });
-        return null;
     }
 
 }

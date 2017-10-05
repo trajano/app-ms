@@ -1,11 +1,14 @@
 package net.trajano.ms.example;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -30,6 +33,14 @@ public class Hello {
 
     @Context
     private Client jaxrsClient;
+
+    @ApiOperation(value = "throws an exception")
+    @GET
+    @Path("/cough")
+    public Response cough() {
+
+        throw new RuntimeException("ahem");
+    }
 
     @ApiOperation(value = "displays hello world")
     @GET
@@ -67,4 +78,38 @@ public class Hello {
             clientResponse.close();
         }
     }
+
+    @ApiOperation(value = "displays hello world after 5 seconds")
+    @GET
+    @Path("/s1")
+    @Produces(MediaType.TEXT_PLAIN)
+    public void s1(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+        asyncResponse.setTimeout(5, TimeUnit.SECONDS);
+        Thread.sleep(1000);
+        asyncResponse.cancel(5);
+    }
+
+    @ApiOperation(value = "displays hello world after 5 seconds")
+    @GET
+    @Path("/st")
+    @Produces(MediaType.TEXT_PLAIN)
+    public void st(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+        asyncResponse.setTimeout(1, TimeUnit.SECONDS);
+        Thread.sleep(2000);
+        asyncResponse.cancel(5);
+    }
+
+    @ApiOperation(value = "displays hello world after 5 seconds")
+    @GET
+    @Path("/suspend")
+    @Produces(MediaType.TEXT_PLAIN)
+    public void suspend(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+        asyncResponse.setTimeout(5, TimeUnit.SECONDS);
+        Thread.sleep(2000);
+        asyncResponse.resume(Response.ok("hello").build());
+    }
+
 }

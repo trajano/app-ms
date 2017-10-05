@@ -10,7 +10,6 @@ import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
 import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
@@ -45,7 +44,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
     public VertxHttpRequest(final RoutingContext context,
         final URI baseUri,
-        final Dispatcher dispatcher) {
+        final SynchronousDispatcher dispatcher) {
 
         super(new ResteasyUriInfo(context.normalisedPath(), context.request().query(), baseUri.toString()));
 
@@ -65,7 +64,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
         final HttpResponse response = new VertxHttpResponse(context);
 
-        asynchronousContext = new VertxExecutionContext((SynchronousDispatcher) dispatcher, this, response);
+        asynchronousContext = new VertxExecutionContext(context, dispatcher, this, response);
     }
 
     @Override
