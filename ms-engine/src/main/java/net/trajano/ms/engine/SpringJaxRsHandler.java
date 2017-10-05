@@ -272,6 +272,7 @@ public class SpringJaxRsHandler implements
                     ThreadLocalResteasyProviderFactory.pop();
                 }
             },
+            false,
             res -> {
                 if (res.failed()) {
                     final Throwable wae = res.cause();
