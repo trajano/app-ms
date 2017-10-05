@@ -40,9 +40,12 @@ public class VertxHttpResponse implements
 
     }
 
+    @Override
     public void close() {
 
-        vertxResponse.end();
+        if (!vertxResponse.ended()) {
+            vertxResponse.end();
+        }
     }
 
     /**
