@@ -38,6 +38,7 @@ public class VertxClientResponse extends ClientResponse {
             metadataLock.release();
         }).exceptionHandler(e -> {
             is.error(e);
+            metadataLock.release();
         });
         LOG.trace("prepared HTTP client request handler");
 
@@ -60,7 +61,7 @@ public class VertxClientResponse extends ClientResponse {
     @Override
     public void releaseConnection() throws IOException {
 
-        //httpClientRequest.end();
+        LOG.debug("connection released");
 
     }
 
