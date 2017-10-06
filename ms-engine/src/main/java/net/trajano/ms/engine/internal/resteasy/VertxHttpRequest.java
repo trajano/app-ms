@@ -52,13 +52,13 @@ public class VertxHttpRequest extends BaseHttpRequest {
             Conversions.toCookies(context.cookies()));
         attributes = new HashMap<>();
 
+        is = new VertxBlockingInputStream();
         if (!vertxRequest.isEnded()) {
-            is = new VertxBlockingInputStream();
             vertxRequest
                 .handler(buffer -> is.populate(buffer))
                 .endHandler(aVoid -> is.end());
         } else {
-            is = null;
+            is.end();
         }
 
         asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
