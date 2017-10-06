@@ -11,7 +11,6 @@ import org.junit.Test;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.net.ProxyOptions;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 
 public class VertxClientTest {
@@ -22,10 +21,7 @@ public class VertxClientTest {
         final Vertx vertx = Vertx.vertx();
 
         final HttpClientOptions options = new HttpClientOptions()
-            .setPipelining(true)
-            .setProxyOptions(new ProxyOptions()
-                .setHost("204.40.130.129")
-                .setPort(3128));
+            .setPipelining(true);
         final HttpClient httpClient = vertx.createHttpClient(options);
         final Client client = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(httpClient)).build();
         String entity;
