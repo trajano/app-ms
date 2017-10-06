@@ -1,7 +1,6 @@
 package net.trajano.ms.example;
 
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -44,23 +43,16 @@ public class Hello {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/async")
-    public void async(@Suspended final AsyncResponse asyncResponse) {
+    public void async(@Suspended final AsyncResponse asyncResponse) throws Exception {
 
         final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").async().get();
 
+        final Response responseFromClient = futureResponseFromClient.get();
         try {
-            final Response responseFromClient = futureResponseFromClient.get();
-            try {
-                final String object = responseFromClient.readEntity(String.class);
-                asyncResponse.resume(object);
-            } finally {
-                responseFromClient.close();
-            }
-        } catch (InterruptedException
-            | ExecutionException e) {
-            e.printStackTrace();
-            Thread.currentThread().interrupt();
-            asyncResponse.resume(e);
+            final String object = responseFromClient.readEntity(String.class);
+            asyncResponse.resume(object);
+        } finally {
+            responseFromClient.close();
         }
     }
 
