@@ -19,6 +19,7 @@ import org.jboss.resteasy.spi.ResteasyUriInfo;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.Conversions;
+import net.trajano.ms.engine.internal.NullInputStream;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
 
 /**
@@ -37,7 +38,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
     private final ResteasyHttpHeaders httpHeaders;
 
-    private final VertxBlockingInputStream is;
+    private final InputStream is;
 
     private final HttpServerRequest vertxRequest;
 
@@ -52,13 +53,14 @@ public class VertxHttpRequest extends BaseHttpRequest {
             Conversions.toCookies(context.cookies()));
         attributes = new HashMap<>();
 
-        is = new VertxBlockingInputStream();
         if (!vertxRequest.isEnded()) {
+            final VertxBlockingInputStream is = new VertxBlockingInputStream();
             vertxRequest
                 .handler(buffer -> is.populate(buffer))
                 .endHandler(aVoid -> is.end());
+            this.is = is;
         } else {
-            is.end();
+            is = new NullInputStream();
         }
 
         asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
