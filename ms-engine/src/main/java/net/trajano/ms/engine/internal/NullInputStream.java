@@ -5,7 +5,12 @@ import java.io.InputStream;
 
 public class NullInputStream extends InputStream {
 
-    public static NullInputStream INSTANCE = new NullInputStream();
+    private static final NullInputStream INSTANCE = new NullInputStream();
+
+    public static InputStream nullInputStream() {
+
+        return INSTANCE;
+    }
 
     @Override
     public int read() throws IOException {
