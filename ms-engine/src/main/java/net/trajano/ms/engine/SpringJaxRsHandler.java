@@ -7,7 +7,6 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -23,12 +22,12 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
@@ -38,7 +37,7 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
-import net.trajano.ms.engine.internal.resteasy.VertxJsonProvider;
+import net.trajano.ms.engine.jaxrs.VertxJsonProvider;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -47,8 +46,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -64,8 +62,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -95,8 +93,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -111,8 +109,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -137,7 +135,7 @@ public class SpringJaxRsHandler implements
 
     private final SynchronousDispatcher dispatcher;
 
-    private HttpClientOptions httpClientOptions = new HttpClientOptions();
+    private HttpClientOptions httpClientOptions;
 
     private final ResteasyProviderFactory providerFactory;
 
@@ -166,7 +164,7 @@ public class SpringJaxRsHandler implements
             LOG.debug("baseApplicationContext={} is not active, will reuse.");
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
-        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class);
+        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, VertxJsonProvider.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
@@ -183,7 +181,6 @@ public class SpringJaxRsHandler implements
             throw new ExceptionInInitializerError(e);
         }
 
-        applicationContext.register(VertxJsonProvider.class);
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
@@ -216,6 +213,10 @@ public class SpringJaxRsHandler implements
                         deployment.getProviderFactory().register(obj);
                     }
                 });
+        }
+        httpClientOptions = applicationContext.getBean(HttpClientOptions.class);
+        if (httpClientOptions == null) {
+            httpClientOptions = new HttpClientOptions();
         }
         deployment.start();
         dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
@@ -253,6 +254,7 @@ public class SpringJaxRsHandler implements
     @Override
     public void handle(final RoutingContext context) {
 
+        final Client client = jaxRsClient(context.vertx());
         context.vertx().executeBlocking(
             future -> {
                 if (LOG.isDebugEnabled()) {
@@ -262,11 +264,9 @@ public class SpringJaxRsHandler implements
                     ThreadLocalResteasyProviderFactory.push(providerFactory);
                     try {
 
-                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(context.vertx(), httpClientOptions));
-                        //final ClientBuilder clientBuilder = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new URLConnectionEngine());
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
-                        ResteasyProviderFactory.pushContext(Client.class, clientBuilder.build());
+                        ResteasyProviderFactory.pushContext(Client.class, client);
 
                         dispatcher.invokePropagateNotFound(new VertxHttpRequest(context,
                             baseUri, dispatcher),
@@ -278,8 +278,7 @@ public class SpringJaxRsHandler implements
                 } finally {
                     ThreadLocalResteasyProviderFactory.pop();
                 }
-            },
-            false,
+            }, false,
             res -> {
                 if (res.failed()) {
                     final Throwable wae = res.cause();
@@ -308,10 +307,15 @@ public class SpringJaxRsHandler implements
             });
     }
 
-    @Autowired(required = false)
-    public void setHttpClientOptions(final HttpClientOptions httpClientOptions) {
+    private Client jaxRsClient(final Vertx vertx) {
 
-        this.httpClientOptions = httpClientOptions;
+        Client jaxRsClient = (Client) vertx.getOrCreateContext().get(Client.class.getName());
+        if (jaxRsClient == null) {
+            final HttpClient httpClient = vertx.createHttpClient(httpClientOptions);
+            jaxRsClient = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(httpClient)).build();
+            vertx.getOrCreateContext().put(Client.class.getName(), jaxRsClient);
+        }
+        return jaxRsClient;
     }
 
 }

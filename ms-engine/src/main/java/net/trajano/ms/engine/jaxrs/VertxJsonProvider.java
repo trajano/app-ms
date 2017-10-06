@@ -1,4 +1,4 @@
-package net.trajano.ms.engine.internal.resteasy;
+package net.trajano.ms.engine.jaxrs;
 
 import java.io.IOException;
 import java.io.InputStream;
