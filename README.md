@@ -1,7 +1,7 @@
 Microservice Application
 ========================
 
-[![Build Status](https://travis-ci.org/trajano/app-ms.svg?branch=master)](https://travis-ci.org/trajano/app-ms) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=${project.groupId}:${project.artifactId})](https://sonarqube.com/dashboard?id=${project.groupId}:${project.artifactId})
+[![Build Status](https://travis-ci.org/trajano/app-ms.svg?branch=master)](https://travis-ci.org/trajano/app-ms) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=net.trajano.ms.app:app-ms)](https://sonarqube.com/dashboard?id=net.trajano.ms.app:app-ms)
 
 This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.
 
