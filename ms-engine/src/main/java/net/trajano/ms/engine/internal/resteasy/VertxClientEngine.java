@@ -33,6 +33,11 @@ public class VertxClientEngine implements
 
     private final Vertx vertx;
 
+    public VertxClientEngine(final Vertx vertx) {
+
+        this(vertx, new HttpClientOptions());
+    }
+
     public VertxClientEngine(final Vertx vertx,
         final HttpClientOptions clientOptions) {
 

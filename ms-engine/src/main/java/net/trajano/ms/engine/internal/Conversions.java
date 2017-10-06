@@ -1,5 +1,7 @@
 package net.trajano.ms.engine.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,10 +13,29 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.web.impl.CookieImpl;
 
 public final class Conversions {
+
+    /**
+     * Loads up the whole input stream data to a buffer/
+     *
+     * @param is
+     * @return
+     */
+    public static Buffer toBuffer(final InputStream is) throws IOException {
+
+        final Buffer b = Buffer.buffer(1024);
+        final byte[] buf = new byte[1024];
+        int len;
+        while ((len = is.read(buf)) >= 0) {
+            b.appendBytes(buf, 0, len);
+        }
+        return b;
+
+    }
 
     /**
      * Converts a VertX cookie to a JaxRS Cookie.

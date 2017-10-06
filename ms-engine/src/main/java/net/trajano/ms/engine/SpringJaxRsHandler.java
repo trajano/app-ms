@@ -38,6 +38,7 @@ import net.trajano.ms.engine.internal.VertxRequestContextFilter;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
+import net.trajano.ms.engine.internal.resteasy.VertxJsonProvider;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -181,6 +182,7 @@ public class SpringJaxRsHandler implements
             throw new ExceptionInInitializerError(e);
         }
 
+        applicationContext.register(VertxJsonProvider.class);
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
@@ -259,7 +261,8 @@ public class SpringJaxRsHandler implements
                     ThreadLocalResteasyProviderFactory.push(providerFactory);
                     try {
 
-                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(context.vertx(), httpClientOptions));
+                        final ClientBuilder clientBuilder = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(context.vertx(), httpClientOptions));
+                        //final ClientBuilder clientBuilder = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new URLConnectionEngine());
                         ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                         ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                         ResteasyProviderFactory.pushContext(Client.class, clientBuilder.build());

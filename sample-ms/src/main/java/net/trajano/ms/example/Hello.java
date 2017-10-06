@@ -1,6 +1,8 @@
 package net.trajano.ms.example;
 
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
@@ -19,6 +21,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
+import io.vertx.core.json.JsonObject;
 import net.trajano.ms.common.JwtNotRequired;
 
 @SwaggerDefinition(
@@ -33,6 +36,47 @@ public class Hello {
 
     @Context
     private Client jaxrsClient;
+
+    @ApiOperation(value = "displays openid config of google async")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/async")
+    public void async(@Suspended final AsyncResponse asyncResponse) {
+
+        final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").async().get();
+
+        try {
+            final Response responseFromClient = futureResponseFromClient.get();
+            try {
+                final String object = responseFromClient.readEntity(String.class);
+                asyncResponse.resume(object);
+            } finally {
+                responseFromClient.close();
+            }
+        } catch (InterruptedException
+            | ExecutionException e) {
+            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            asyncResponse.resume(e);
+        }
+    }
+
+    @ApiOperation(value = "displays openid config of google async")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/async2")
+    public Response async2() throws Exception {
+
+        final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").accept(MediaType.APPLICATION_JSON).async().get();
+
+        final Response responseFromClient = futureResponseFromClient.get();
+        try {
+            final JsonObject object = responseFromClient.readEntity(JsonObject.class);
+            return Response.ok(object.toString()).build();
+        } finally {
+            responseFromClient.close();
+        }
+    }
 
     @ApiOperation(value = "throws an exception")
     @GET
@@ -62,6 +106,17 @@ public class Hello {
         final MyType myType = new MyType();
         myType.setFoo("Hello world at " + new Date());
         return myType;
+    }
+
+    @ApiOperation(value = "displays hello world")
+    @GET
+    @Path("/j")
+    @Produces({
+        MediaType.APPLICATION_JSON
+    })
+    public JsonObject jspm() {
+
+        return new JsonObject();
     }
 
     @ApiOperation(value = "displays openid config of google")
