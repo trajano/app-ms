@@ -60,7 +60,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
                 .endHandler(aVoid -> is.end());
             this.is = is;
         } else {
-            is = new NullInputStream();
+            is = NullInputStream.INSTANCE;
         }
 
         asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
