@@ -67,12 +67,19 @@ public class CacheCreationTest {
         final JwksProvider jwksProvider = new JwksProvider();
         System.out.println(jwksProvider);
         final TokenGenerator tokenGenerator = new TokenGenerator();
+        System.out.println(jwksProvider + "1");
         tokenGenerator.setRandom(cryptoProvider.secureRandom());
+        System.out.println(jwksProvider + "2");
         jwksProvider.setTokenGenerator(tokenGenerator);
+        System.out.println(jwksProvider + "3");
         jwksProvider.setKeyPairGenerator(cryptoProvider.keyPairGenerator());
+        System.out.println(jwksProvider + "4");
         jwksProvider.setRandom(cryptoProvider.secureRandom());
+        System.out.println(jwksProvider + "5");
         jwksProvider.init();
+        System.out.println(jwksProvider + "6");
         final JWKSet keySet = jwksProvider.getKeySet();
+        System.out.println(jwksProvider + "7");
         assertNotNull(keySet);
         assertEquals(JwksProvider.MIN_NUMBER_OF_KEYS, keySet.getKeys().size());
     }

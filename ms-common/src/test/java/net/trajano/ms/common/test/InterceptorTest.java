@@ -53,6 +53,8 @@ public class InterceptorTest {
         tokenGenerator.setRandom(cryptoProvider.secureRandom());
 
         jwksProvider.setTokenGenerator(tokenGenerator);
+        jwksProvider.setKeyPairGenerator(cryptoProvider.keyPairGenerator());
+        jwksProvider.setRandom(cryptoProvider.secureRandom());
         jwksProvider.init();
 
         final JwtAssertionInterceptor interceptor = new JwtAssertionInterceptor();
