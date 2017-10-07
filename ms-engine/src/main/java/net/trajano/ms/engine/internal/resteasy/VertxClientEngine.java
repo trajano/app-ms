@@ -71,8 +71,8 @@ public class VertxClientEngine implements
             httpClientRequest.putHeader(name, value);
         });
 
-        try {
-            request.writeRequestBody(new VertxOutputStream(httpClientRequest));
+        try (final VertxOutputStream os = new VertxOutputStream(httpClientRequest)) {
+            request.writeRequestBody(os);
             LOG.trace("request body written on {}", this);
             return clientResponse;
         } catch (final IOException e) {
