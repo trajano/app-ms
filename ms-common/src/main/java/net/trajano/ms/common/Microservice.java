@@ -74,7 +74,7 @@ public class Microservice {
     private VertxOptions vertxOptions;
 
     @PostConstruct
-    public void start() throws Exception {
+    public void start() {
 
         LOG.debug("Application={}", Microservice.applicationClass.getName());
 
@@ -95,7 +95,7 @@ public class Microservice {
 
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        http.requestHandler(req -> router.accept(req)).listen(res -> {
+        http.requestHandler(router::accept).listen(res -> {
             if (res.failed()) {
                 LOG.error(res.cause().getMessage(), res.cause());
                 vertx.close();
