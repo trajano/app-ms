@@ -10,6 +10,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
@@ -117,9 +118,9 @@ public class Hello {
     @Produces({
         MediaType.APPLICATION_JSON
     })
-    public JsonObject jspm() {
+    public JsonObject json(@QueryParam("who") final String who) {
 
-        return new JsonObject();
+        return new JsonObject().put("who", who);
     }
 
     @ApiOperation(value = "displays openid config of google")
@@ -137,7 +138,7 @@ public class Hello {
         }
     }
 
-    @ApiOperation(value = "displays hello world after 5 seconds")
+    @ApiOperation(value = "Cancelling after 1 seconds")
     @GET
     @Path("/s1")
     @Produces(MediaType.TEXT_PLAIN)
@@ -148,7 +149,7 @@ public class Hello {
         asyncResponse.cancel(5);
     }
 
-    @ApiOperation(value = "displays hello world after 5 seconds")
+    @ApiOperation(value = "Timeout after 2 seconds")
     @GET
     @Path("/st")
     @Produces(MediaType.TEXT_PLAIN)
@@ -156,7 +157,7 @@ public class Hello {
 
         asyncResponse.setTimeout(1, TimeUnit.SECONDS);
         Thread.sleep(2000);
-        asyncResponse.cancel(5);
+        asyncResponse.resume(Response.ok("hello").build());
     }
 
     @ApiOperation(value = "displays hello world after 5 seconds")

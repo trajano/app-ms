@@ -1,7 +1,6 @@
 package net.trajano.ms.engine.internal.resteasy;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -47,10 +46,10 @@ public class VertxHttpRequest extends BaseHttpRequest {
     private final HttpServerRequest vertxRequest;
 
     public VertxHttpRequest(final RoutingContext context,
-        final URI baseUri,
+        final ResteasyUriInfo uriInfo,
         final SynchronousDispatcher dispatcher) {
 
-        super(new ResteasyUriInfo(context.normalisedPath(), context.request().query(), baseUri.toString()));
+        super(uriInfo);
 
         vertxRequest = context.request();
         LOG.debug("vertxRequest.isEnded={}", vertxRequest.isEnded());
@@ -61,7 +60,6 @@ public class VertxHttpRequest extends BaseHttpRequest {
         } else {
             is = NullInputStream.nullInputStream();
         }
-        vertxRequest.resume();
 
         httpHeaders = new ResteasyHttpHeaders(Conversions.toMultivaluedStringMap(vertxRequest.headers()),
             Conversions.toCookies(context.cookies()));

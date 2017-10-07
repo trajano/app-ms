@@ -19,6 +19,7 @@ import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.SpringConfiguration;
@@ -254,37 +256,29 @@ public class SpringJaxRsHandler implements
     @Override
     public void handle(final RoutingContext context) {
 
-        context.request().pause();
         final Client client = jaxRsClient(context.vertx());
+        final HttpServerRequest serverRequest = context.request();
+        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.uri(), serverRequest.query(), baseUri.toASCIIString());
+        final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
+        final VertxHttpResponse response = new VertxHttpResponse(context);
+        ThreadLocalResteasyProviderFactory.push(providerFactory);
+        ResteasyProviderFactory.pushContext(RoutingContext.class, context);
+        ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
+        ResteasyProviderFactory.pushContext(Client.class, client);
         context.vertx().executeBlocking(
             future -> {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("{} {}", context.request().method(), context.request().absoluteURI());
+                    LOG.debug("{} {}", context.request().method(), serverRequest.absoluteURI());
                 }
-                try {
-                    ThreadLocalResteasyProviderFactory.push(providerFactory);
-                    try {
-
-                        ResteasyProviderFactory.pushContext(RoutingContext.class, context);
-                        ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
-                        ResteasyProviderFactory.pushContext(Client.class, client);
-
-                        dispatcher.invokePropagateNotFound(new VertxHttpRequest(context,
-                            baseUri, dispatcher),
-                            new VertxHttpResponse(context));
-                        future.complete();
-                    } finally {
-                        ResteasyProviderFactory.clearContextData();
-                    }
-                } finally {
-                    ThreadLocalResteasyProviderFactory.pop();
-                }
+                dispatcher.invokePropagateNotFound(request,
+                    response);
+                future.complete();
             }, false,
             res -> {
                 if (res.failed()) {
                     final Throwable wae = res.cause();
                     if (wae instanceof NotFoundException) {
-                        LOG.debug("uri={} was not found", context.request().absoluteURI());
+                        LOG.debug("uri={} was not found", serverRequest.uri());
                         context.response().setStatusCode(404);
                         context.response().setStatusMessage(Status.NOT_FOUND.getReasonPhrase());
                         if (context.request().method() != HttpMethod.HEAD) {
@@ -305,6 +299,8 @@ public class SpringJaxRsHandler implements
                         context.response().end();
                     }
                 }
+                ResteasyProviderFactory.clearContextData();
+                ThreadLocalResteasyProviderFactory.pop();
             });
     }
 
