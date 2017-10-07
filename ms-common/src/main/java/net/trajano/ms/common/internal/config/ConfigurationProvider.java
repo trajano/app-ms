@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.Json;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;
 
@@ -48,7 +47,6 @@ public class ConfigurationProvider {
     public HttpClientOptions httpClientOptions() {
 
         final HttpClientOptions options = new HttpClientOptions();
-        System.out.println("HERE");
         if (httpClientProxyHost != null) {
             final ProxyOptions proxyOptions = new ProxyOptions()
                 .setHost(httpClientProxyHost)
@@ -58,7 +56,6 @@ public class ConfigurationProvider {
                 .setPassword(httpClientProxyPassword);
             options.setProxyOptions(proxyOptions);
         }
-        System.out.println(Json.encode(options));
         return options;
     }
 
