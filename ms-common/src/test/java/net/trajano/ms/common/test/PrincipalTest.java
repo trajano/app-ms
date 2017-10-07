@@ -17,5 +17,6 @@ public class PrincipalTest {
         final IdTokenPrincipal idTokenPrincipal = new IdTokenPrincipal(claimsSet);
         assertEquals("archie", idTokenPrincipal.getName());
         assertEquals("archie@accounts.trajano.net", idTokenPrincipal.getAuthority());
+        assertEquals(claimsSet, idTokenPrincipal.getClaimsSet());
     }
 }
