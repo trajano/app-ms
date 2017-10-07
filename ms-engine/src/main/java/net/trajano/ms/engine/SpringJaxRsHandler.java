@@ -1,5 +1,7 @@
 package net.trajano.ms.engine;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Set;
 
@@ -48,8 +50,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -65,8 +66,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -96,8 +97,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -112,8 +113,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -261,48 +262,56 @@ public class SpringJaxRsHandler implements
         final HttpServerRequest serverRequest = context.request();
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.uri(), serverRequest.query(), baseUri.toASCIIString());
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
-        final VertxHttpResponse response = new VertxHttpResponse(context);
-        ThreadLocalResteasyProviderFactory.push(providerFactory);
-        ResteasyProviderFactory.pushContext(RoutingContext.class, context);
-        ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
-        ResteasyProviderFactory.pushContext(Client.class, client);
-        context.vertx().executeBlocking(
-            future -> {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("{} {}", context.request().method(), serverRequest.absoluteURI());
-                }
-                dispatcher.invokePropagateNotFound(request,
-                    response);
-                future.complete();
-            }, false,
-            res -> {
-                if (res.failed()) {
-                    final Throwable wae = res.cause();
-                    if (wae instanceof NotFoundException) {
-                        LOG.debug("uri={} was not found", serverRequest.uri());
-                        context.response().setStatusCode(404);
-                        context.response().setStatusMessage(Status.NOT_FOUND.getReasonPhrase());
-                        if (context.request().method() != HttpMethod.HEAD) {
-                            context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                            context.response().end(wae.getLocalizedMessage());
+        try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
+            context.vertx().executeBlocking(
+                future -> {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("{} {}", context.request().method(), serverRequest.absoluteURI());
+                    }
+                    ThreadLocalResteasyProviderFactory.push(providerFactory);
+                    ResteasyProviderFactory.pushContext(RoutingContext.class, context);
+                    ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
+                    ResteasyProviderFactory.pushContext(Client.class, client);
+                    try {
+                        dispatcher.invokePropagateNotFound(request,
+                            response);
+                        future.complete();
+                    } finally {
+                        ResteasyProviderFactory.clearContextData();
+                        ThreadLocalResteasyProviderFactory.pop();
+                    }
+                }, false,
+                res -> {
+                    if (res.failed()) {
+                        final Throwable wae = res.cause();
+                        if (wae instanceof NotFoundException) {
+                            LOG.debug("uri={} was not found", serverRequest.uri());
+                            context.response().setStatusCode(404);
+                            context.response().setStatusMessage(Status.NOT_FOUND.getReasonPhrase());
+                            if (context.request().method() != HttpMethod.HEAD) {
+                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+                                context.response().end(wae.getLocalizedMessage());
+                            }
+                        } else {
+                            LOG.error(wae.getMessage(), wae);
+                            context.response().setStatusCode(500);
+                            context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                            if (context.request().method() != HttpMethod.HEAD) {
+                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+                                context.response().end(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                            }
                         }
                     } else {
-                        LOG.error(wae.getMessage(), wae);
-                        context.response().setStatusCode(500);
-                        context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                        if (context.request().method() != HttpMethod.HEAD) {
-                            context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                            context.response().end(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                        if (!context.response().ended()) {
+                            context.response().end();
                         }
                     }
-                } else {
-                    if (!context.response().ended()) {
-                        context.response().end();
-                    }
-                }
-                ResteasyProviderFactory.clearContextData();
-                ThreadLocalResteasyProviderFactory.pop();
-            });
+                });
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+
+        }
     }
 
     private Client jaxRsClient(final Vertx vertx) {

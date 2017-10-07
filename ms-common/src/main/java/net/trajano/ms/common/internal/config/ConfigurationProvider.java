@@ -13,10 +13,10 @@ import io.vertx.core.net.ProxyType;
 @Configuration
 public class ConfigurationProvider {
 
-    @Value("${http.client.proxy.host:}")
+    @Value("${http.client.proxy.host:#{null}}")
     private String httpClientProxyHost;
 
-    @Value("${http.client.proxy.password:}")
+    @Value("${http.client.proxy.password:#{null}}")
     private String httpClientProxyPassword;
 
     /**
@@ -31,7 +31,7 @@ public class ConfigurationProvider {
     @Value("${http.client.proxy.proxyType:HTTP}")
     private ProxyType httpClientProxyType;
 
-    @Value("${http.client.proxy.username:}")
+    @Value("${http.client.proxy.username:#{null}}")
     private String httpClientProxyUsername;
 
     @Value("${http.port:8900}")

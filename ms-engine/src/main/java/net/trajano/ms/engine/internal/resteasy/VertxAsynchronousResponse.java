@@ -150,7 +150,6 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
                 writeLock.acquire();
             }
             internalResume(entity);
-            vertxResponse.close();
             done.set(true);
             if (timeoutTimerID != -1) {
                 if (!routingContext.vertx().cancelTimer(timeoutTimerID)) {

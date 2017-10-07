@@ -20,10 +20,11 @@ import io.vertx.ext.web.impl.CookieImpl;
 public final class Conversions {
 
     /**
-     * Loads up the whole input stream data to a buffer/
+     * Pumps the contents of an {@link InputStream} to a {@link Buffer}.
      *
      * @param is
-     * @return
+     *            input stream
+     * @return buffer
      */
     public static Buffer toBuffer(final InputStream is) throws IOException {
 
@@ -38,10 +39,11 @@ public final class Conversions {
     }
 
     /**
-     * Converts a VertX cookie to a JaxRS Cookie.
+     * Converts a Vert.X cookie to a JAX-RS Cookie.
      *
      * @param vertxCookie
-     * @return
+     *            Vert.X cookie
+     * @return JAX-RS Cookie
      */
     public static Cookie toCookie(final io.vertx.ext.web.Cookie vertxCookie) {
 
