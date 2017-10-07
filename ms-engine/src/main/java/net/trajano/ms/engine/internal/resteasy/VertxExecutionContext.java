@@ -37,6 +37,13 @@ public class VertxExecutionContext extends AbstractExecutionContext {
         return asynchronousResponse;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This is implemented as a check to whether an asynchronous response was
+     * initialized by either {@link #suspend()}, {@link #suspend(long)} or
+     * {@link #suspend(long, TimeUnit)}.
+     */
     @Override
     public boolean isSuspended() {
 
@@ -44,7 +51,7 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     }
 
     @Override
-    public ResteasyAsynchronousResponse suspend() throws IllegalStateException {
+    public ResteasyAsynchronousResponse suspend() {
 
         asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, vertxResponse, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
@@ -52,14 +59,14 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     }
 
     @Override
-    public ResteasyAsynchronousResponse suspend(final long millis) throws IllegalStateException {
+    public ResteasyAsynchronousResponse suspend(final long millis) {
 
         return suspend(millis, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public ResteasyAsynchronousResponse suspend(final long time,
-        final TimeUnit unit) throws IllegalStateException {
+        final TimeUnit unit) {
 
         asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, vertxResponse, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
