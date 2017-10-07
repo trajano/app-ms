@@ -15,6 +15,8 @@ import org.jboss.resteasy.plugins.server.BaseHttpRequest;
 import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
@@ -29,6 +31,8 @@ import net.trajano.ms.engine.internal.VertxBlockingInputStream;
  * @author Archimedes Trajano
  */
 public class VertxHttpRequest extends BaseHttpRequest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxHttpRequest.class);
 
     private final ResteasyAsynchronousContext asynchronousContext;
 
@@ -49,19 +53,19 @@ public class VertxHttpRequest extends BaseHttpRequest {
         super(new ResteasyUriInfo(context.normalisedPath(), context.request().query(), baseUri.toString()));
 
         vertxRequest = context.request();
-        httpHeaders = new ResteasyHttpHeaders(Conversions.toMultivaluedStringMap(vertxRequest.headers()),
-            Conversions.toCookies(context.cookies()));
-        attributes = new HashMap<>();
+        LOG.debug("vertxRequest.isEnded={}", vertxRequest.isEnded());
 
         if (!vertxRequest.isEnded()) {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream();
-            vertxRequest
-                .handler(buffer -> is.populate(buffer))
-                .endHandler(aVoid -> is.end());
+            final VertxBlockingInputStream is = new VertxBlockingInputStream(vertxRequest);
             this.is = is;
         } else {
             is = NullInputStream.nullInputStream();
         }
+        vertxRequest.resume();
+
+        httpHeaders = new ResteasyHttpHeaders(Conversions.toMultivaluedStringMap(vertxRequest.headers()),
+            Conversions.toCookies(context.cookies()));
+        attributes = new HashMap<>();
 
         asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
     }

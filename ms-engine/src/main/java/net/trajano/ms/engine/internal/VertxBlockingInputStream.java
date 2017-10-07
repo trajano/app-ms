@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
 
 public class VertxBlockingInputStream extends InputStream {
 
@@ -34,6 +35,22 @@ public class VertxBlockingInputStream extends InputStream {
     private int pos;
 
     private final BlockingQueue<Buffer> queue = new LinkedBlockingQueue<>();
+
+    /**
+     * Constructs VertxBlockingInputStream without any associated handlers
+     * configured on a ReadStream.
+     */
+    public VertxBlockingInputStream() {
+
+    }
+
+    public VertxBlockingInputStream(final ReadStream<Buffer> readStream) {
+
+        readStream
+            .handler(buffer -> populate(buffer))
+            .endHandler(aVoid -> end());
+
+    }
 
     @Override
     public int available() throws IOException {

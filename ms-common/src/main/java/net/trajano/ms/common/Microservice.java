@@ -1,6 +1,7 @@
 package net.trajano.ms.common;
 
-import java.util.Stack;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -13,7 +14,7 @@ import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -28,13 +29,20 @@ import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 
-@Configuration
+@Component
 public class Microservice {
 
     private static Class<? extends Application> applicationClass;
 
     private static final Logger LOG = LoggerFactory.getLogger(Microservice.class);
 
+    /**
+     * @param applicationClass
+     *            JAX-RS Application class
+     * @param args
+     *            command line arguments
+     * @throws Exception
+     */
     public static void run(final Class<? extends Application> applicationClass,
         final String... args) throws Exception {
 
@@ -55,7 +63,7 @@ public class Microservice {
     @Autowired
     private ConfigurableApplicationContext baseApplicationContext;
 
-    private final Stack<AutoCloseable> handlerStack = new Stack<>();
+    private final Deque<AutoCloseable> handlerStack = new LinkedList<>();
 
     @Autowired
     private HttpServerOptions httpServerOptions;
