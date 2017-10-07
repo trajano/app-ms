@@ -22,6 +22,11 @@ public class VertxBlockingInputStream extends InputStream {
 
     private long bytesRead = 0;
 
+    /**
+     * Flag to indicate that the stream is closed.
+     */
+    private boolean closed = false;
+
     private Buffer currentBuffer;
 
     private IOException exceptionToThrow = null;
@@ -39,6 +44,7 @@ public class VertxBlockingInputStream extends InputStream {
     @Override
     public void close() throws IOException {
 
+        closed = true;
     }
 
     public void end() {
@@ -67,6 +73,9 @@ public class VertxBlockingInputStream extends InputStream {
     @Override
     public int read() throws IOException {
 
+        if (closed) {
+            throw new IOException("Stream is closed");
+        }
         if (currentBuffer == null) {
             try {
                 currentBuffer = queue.take();

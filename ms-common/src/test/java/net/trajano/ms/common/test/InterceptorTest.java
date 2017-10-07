@@ -10,6 +10,7 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jwt.JWTClaimsSet;
 
+import net.trajano.ms.common.beans.CryptoProvider;
 import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.beans.JwtClaimsProcessor;
 import net.trajano.ms.common.beans.TokenGenerator;
@@ -46,8 +47,11 @@ public class InterceptorTest {
     public void testInterceptor() throws Exception {
 
         final JwksProvider jwksProvider = new JwksProvider();
+        final CryptoProvider cryptoProvider = new CryptoProvider();
+
         final TokenGenerator tokenGenerator = new TokenGenerator();
-        tokenGenerator.init();
+        tokenGenerator.setRandom(cryptoProvider.secureRandom());
+
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.init();
 

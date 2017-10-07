@@ -4,13 +4,13 @@ import static net.trajano.ms.common.beans.CommonMs.JWKS_CACHE;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.annotation.PostConstruct;
 
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
@@ -46,14 +47,20 @@ public class JwksProvider {
      */
     private Cache jwksCache;
 
+    @Autowired
+    private KeyPairGenerator keyPairGenerator;
+
+    @Autowired
+    private Random random;
+
     private TokenGenerator tokenGenerator;
 
     /**
      * Builds JWKS if necessary after 60 seconds, but only builds
      * {@value #MIN_NUMBER_OF_KEYS} at a time.
      */
-    //    @Scheduled(fixedDelay = 60000)
-    public void buildJwks() throws NoSuchAlgorithmException {
+    @Scheduled(fixedDelay = 60000)
+    public void buildJwks() {
 
         int nCreated = 0;
         for (int i = 0; i < MAX_NUMBER_OF_KEYS; ++i) {
@@ -77,21 +84,17 @@ public class JwksProvider {
 
     }
 
-    private JWK buildNewRsaKey() throws NoSuchAlgorithmException {
+    private JWK buildNewRsaKey() {
 
-        final KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
-        gen.initialize(2048);
-        final KeyPair keyPair = gen.generateKeyPair();
+        final KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-        final JWK jwk = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
             .privateKey((RSAPrivateKey) keyPair.getPrivate())
             .keyID(tokenGenerator.newToken())
             .build();
-        return jwk;
     }
 
-    public JWSSigner getASigner() throws NoSuchAlgorithmException,
-        InvalidKeySpecException,
+    public JWSSigner getASigner() throws InvalidKeySpecException,
         ParseException,
         JOSEException {
 
@@ -106,7 +109,7 @@ public class JwksProvider {
     public RSAKey getASigningKey() {
 
         final List<JWK> keys = getKeySet().getKeys();
-        return (RSAKey) keys.get(tokenGenerator.random().nextInt(keys.size()));
+        return (RSAKey) keys.get(random.nextInt(keys.size()));
     }
 
     public RSAKey getDecryptionKey(final String keyID) {
@@ -139,8 +142,7 @@ public class JwksProvider {
     }
 
     @PostConstruct
-    public void init() throws NoSuchAlgorithmException,
-        ParseException {
+    public void init() {
 
         if (jwksCache == null) {
             LOG.warn("A org.springframework.cache.Cache named {} was not provided an in-memory cache will be used", JWKS_CACHE);

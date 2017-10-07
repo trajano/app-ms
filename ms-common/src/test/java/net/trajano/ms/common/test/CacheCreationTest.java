@@ -8,11 +8,14 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import com.nimbusds.jose.jwk.JWKSet;
 
+import net.trajano.ms.common.beans.CryptoProvider;
 import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.sample.JwksResource;
 
 public class CacheCreationTest {
+
+    private final CryptoProvider cryptoProvider = new CryptoProvider();
 
     /**
      * Verify that the concurrent cache manager returns something.
@@ -25,7 +28,7 @@ public class CacheCreationTest {
 
         final JwksProvider jwksProvider = new JwksProvider();
         final TokenGenerator tokenGenerator = new TokenGenerator();
-        tokenGenerator.init();
+        tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.setJwksCache(cm.getCache("aaaKs_cache"));
         jwksProvider.init();
@@ -37,7 +40,7 @@ public class CacheCreationTest {
 
         final JwksProvider jwksProvider = new JwksProvider();
         final TokenGenerator tokenGenerator = new TokenGenerator();
-        tokenGenerator.init();
+        tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.init();
         final JWKSet keySet = jwksProvider.getKeySet();
@@ -50,7 +53,7 @@ public class CacheCreationTest {
 
         final JwksProvider jwksProvider = new JwksProvider();
         final TokenGenerator tokenGenerator = new TokenGenerator();
-        tokenGenerator.init();
+        tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.init();
 

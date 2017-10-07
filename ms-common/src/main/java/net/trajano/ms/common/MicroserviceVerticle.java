@@ -1,6 +1,7 @@
 package net.trajano.ms.common;
 
-import java.util.Stack;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import javax.ws.rs.core.Application;
 
@@ -21,7 +22,7 @@ public class MicroserviceVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
-    private final Stack<AutoCloseable> handlerStack = new Stack<>();
+    private final Deque<AutoCloseable> handlerStack = new LinkedList<>();
 
     @Override
     public void start() throws Exception {
@@ -40,7 +41,7 @@ public class MicroserviceVerticle extends AbstractVerticle {
 
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
-        http.requestHandler(req -> router.accept(req)).listen(res -> {
+        http.requestHandler(router::accept).listen(res -> {
             if (res.failed()) {
                 LOG.error(res.cause().getMessage(), res.cause());
                 vertx.close();

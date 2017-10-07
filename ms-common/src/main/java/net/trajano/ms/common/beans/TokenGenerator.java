@@ -1,11 +1,8 @@
 package net.trajano.ms.common.beans;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.util.Random;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,20 +15,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class TokenGenerator {
 
-    private static final int TOKEN_LENGTH = 21;
-
-    private SecureRandom random;
-
     /**
-     * Initializes the random
-     *
-     * @throws NoSuchAlgorithmException
+     * Only allow letters and numbers, no symbols. It makes it easier to copy and
+     * paste for testing.
      */
-    @PostConstruct
-    public void init() throws NoSuchAlgorithmException {
+    private static final char[] ALLOWED_TOKEN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 
-        random = SecureRandom.getInstanceStrong();
-    }
+    private static final int TOKEN_LENGTH = 32;
+
+    private Random random;
 
     /**
      * Provides a new string useful for keys and access tokens.
@@ -40,13 +32,16 @@ public class TokenGenerator {
      */
     public String newToken() {
 
-        final byte[] buf = new byte[TOKEN_LENGTH];
-        random.nextBytes(buf);
-        return Base64.getUrlEncoder().encodeToString(buf);
+        final char[] buf = new char[TOKEN_LENGTH];
+        for (int i = 0; i < TOKEN_LENGTH; ++i) {
+            buf[i] = ALLOWED_TOKEN_CHARACTERS[random.nextInt(ALLOWED_TOKEN_CHARACTERS.length)];
+        }
+        return new String(buf);
     }
 
-    public SecureRandom random() {
+    @Autowired
+    public void setRandom(final Random random) {
 
-        return random;
+        this.random = random;
     }
 }
