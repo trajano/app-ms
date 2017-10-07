@@ -44,6 +44,7 @@
     </site>
   </distributionManagement>
   <properties>
+    <linkcheck.skip>true</linkcheck.skip>
     <repo.id>app-ms</repo.id>
   </properties>
   <dependencyManagement>
