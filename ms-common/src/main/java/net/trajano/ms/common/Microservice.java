@@ -37,14 +37,15 @@ public class Microservice {
     private static final Logger LOG = LoggerFactory.getLogger(Microservice.class);
 
     /**
+     * Bootstrap the microservice application.
+     *
      * @param applicationClass
      *            JAX-RS Application class
      * @param args
      *            command line arguments
-     * @throws Exception
      */
     public static void run(final Class<? extends Application> applicationClass,
-        final String... args) throws Exception {
+        final String... args) {
 
         if (Microservice.applicationClass != null) {
             throw new IllegalStateException("Another Application class has already been registered in this JVM.");

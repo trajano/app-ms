@@ -13,7 +13,7 @@ import net.trajano.ms.common.Microservice;
 @ComponentScan
 public class SampleMain extends Application {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
 
         Microservice.run(SampleMain.class, args);
     }

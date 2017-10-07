@@ -17,7 +17,7 @@ import net.trajano.ms.common.beans.CommonMs;
 })
 public class GatewayMain extends Application {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
 
         Microservice.run(GatewayMain.class, args);
     }

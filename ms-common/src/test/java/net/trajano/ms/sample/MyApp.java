@@ -27,7 +27,7 @@ import net.trajano.ms.common.Microservice;
 @ComponentScan
 public class MyApp extends Application {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
 
         Microservice.run(MyApp.class, args);
     }
