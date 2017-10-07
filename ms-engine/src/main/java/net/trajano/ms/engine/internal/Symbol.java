@@ -10,34 +10,9 @@ import java.lang.reflect.Proxy;
  *
  * @author Archimedes Trajano
  */
-public final class Symbol {
-
-    private static class SymbolInvocationHandler implements
-        InvocationHandler {
-
-        private final String symbolName;
-
-        public SymbolInvocationHandler(final String symbolName) {
-
-            this.symbolName = symbolName;
-        }
-
-        @Override
-        public Object invoke(final Object proxy,
-            final Method method,
-            final Object[] args) throws Throwable {
-
-            if ("equals".equals(method.getName())) {
-                return proxy == args[0];
-            } else if ("hashCode".equals(method.getName())) {
-                return symbolName.hashCode();
-            } else if ("toString".equals(method.getName())) {
-                return symbolName;
-            }
-            throw new UnsupportedOperationException();
-        }
-
-    }
+public final class Symbol
+    implements
+    InvocationHandler {
 
     public static <T> T newSymbol(final Class<T> clazz) {
 
@@ -51,9 +26,37 @@ public final class Symbol {
         try {
             return (T) Proxy.newProxyInstance(Symbol.class.getClassLoader(), new Class[] {
                 clazz
-            }, new SymbolInvocationHandler(name));
+            }, new Symbol(name));
         } catch (final IllegalArgumentException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private final String symbolName;
+
+    /**
+     * Constructs Symbol.
+     *
+     * @param symbolName
+     *            symbol name
+     */
+    private Symbol(final String symbolName) {
+
+        this.symbolName = symbolName;
+    }
+
+    @Override
+    public Object invoke(final Object proxy,
+        final Method method,
+        final Object[] args) throws Throwable {
+
+        if ("equals".equals(method.getName())) {
+            return proxy == args[0];
+        } else if ("hashCode".equals(method.getName())) {
+            return symbolName.hashCode();
+        } else if ("toString".equals(method.getName())) {
+            return symbolName;
+        }
+        throw new UnsupportedOperationException();
     }
 }
