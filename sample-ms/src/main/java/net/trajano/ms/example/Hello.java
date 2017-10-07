@@ -118,9 +118,12 @@ public class Hello {
     @Produces({
         MediaType.APPLICATION_JSON
     })
-    public JsonObject json(@QueryParam("who") final String who) {
+    public JsonObject json(@QueryParam("who") final String who,
+        @Context final io.vertx.core.Vertx vertx) {
 
-        return new JsonObject().put("who", who);
+        return new JsonObject()
+            .put("context", vertx.getOrCreateContext().toString())
+            .put("who", who);
     }
 
     @ApiOperation(value = "displays openid config of google")
