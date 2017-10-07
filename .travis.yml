@@ -32,7 +32,8 @@ install:
 before_script:
 - mvn clean
 script:
-- mvn verify site sonar:sonar
+- mvn verify sonar:sonar
+- mvn site
 deploy:
 - provider: script
   skip_cleanup: true
