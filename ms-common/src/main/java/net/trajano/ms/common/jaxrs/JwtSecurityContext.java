@@ -19,6 +19,9 @@ public class JwtSecurityContext implements
 
     private final IdTokenPrincipal principal;
 
+    /**
+     * Roles.
+     */
     private final Set<String> roles;
 
     private final boolean secure;
@@ -30,11 +33,11 @@ public class JwtSecurityContext implements
         secure = "https".equals(uriInfo.getRequestUri().getScheme());
 
         try {
-            final String[] roles = principal.getClaimsSet().getStringArrayClaim("roles");
-            if (roles == null) {
-                this.roles = Collections.emptySet();
+            final String[] claimRoles = principal.getClaimsSet().getStringArrayClaim("roles");
+            if (claimRoles == null) {
+                roles = Collections.emptySet();
             } else {
-                this.roles = Stream.of(roles).collect(Collectors.toSet());
+                roles = Stream.of(claimRoles).collect(Collectors.toSet());
             }
         } catch (final ParseException e) {
             throw new ExceptionInInitializerError(e);
