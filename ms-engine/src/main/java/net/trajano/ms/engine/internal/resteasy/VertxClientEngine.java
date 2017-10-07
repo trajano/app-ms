@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.security.NoSuchAlgorithmException;
 
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
@@ -25,17 +26,20 @@ public class VertxClientEngine implements
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxClientEngine.class);
 
+    private final HostnameVerifier hostnameVerifier;
+
     private final HttpClient httpClient;
 
     private final SSLContext sslContext;
 
     public VertxClientEngine(final HttpClient httpClient) {
 
-        this.httpClient = httpClient;
         try {
+            this.httpClient = httpClient;
             sslContext = SSLContext.getDefault();
+            hostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
         } catch (final NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -49,7 +53,7 @@ public class VertxClientEngine implements
     @Override
     public HostnameVerifier getHostnameVerifier() {
 
-        return null;
+        return hostnameVerifier;
     }
 
     @Override
@@ -67,9 +71,7 @@ public class VertxClientEngine implements
         final VertxClientResponse clientResponse = new VertxClientResponse(request.getClientConfiguration(), httpClientRequest);
 
         request.getHeaders().asMap().forEach((name,
-            value) -> {
-            httpClientRequest.putHeader(name, value);
-        });
+            value) -> httpClientRequest.putHeader(name, value));
 
         try (final VertxOutputStream os = new VertxOutputStream(httpClientRequest)) {
             request.writeRequestBody(os);
