@@ -28,7 +28,7 @@ public final class Symbol
                 clazz
             }, new Symbol(name));
         } catch (final IllegalArgumentException e) {
-            throw new RuntimeException(e);
+            throw new ExceptionInInitializerError(e);
         }
     }
 
