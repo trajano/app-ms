@@ -51,27 +51,21 @@ public final class Conversions {
     public static Map<String, Cookie> toCookies(final Set<io.vertx.ext.web.Cookie> vertxCookies) {
 
         final Map<String, Cookie> cookies = new HashMap<>(vertxCookies.size());
-        vertxCookies.forEach(vertxCookie -> {
-            cookies.put(vertxCookie.getName(), toCookie(vertxCookie));
-        });
+        vertxCookies.forEach(vertxCookie -> cookies.put(vertxCookie.getName(), toCookie(vertxCookie)));
         return cookies;
     }
 
     public static MultivaluedMap<String, Object> toMultivaluedMap(final MultiMap multimap) {
 
         final MultivaluedMap<String, Object> mvm = new MultivaluedHashMap<>(multimap.size());
-        multimap.forEach(entry -> {
-            mvm.add(entry.getKey(), entry.getValue());
-        });
+        multimap.forEach(entry -> mvm.add(entry.getKey(), entry.getValue()));
         return mvm;
     }
 
     public static MultivaluedMap<String, String> toMultivaluedStringMap(final MultiMap multimap) {
 
         final MultivaluedMap<String, String> mvm = new MultivaluedHashMap<>(multimap.size());
-        multimap.forEach(entry -> {
-            mvm.add(entry.getKey(), entry.getValue());
-        });
+        multimap.forEach(entry -> mvm.add(entry.getKey(), entry.getValue()));
         return mvm;
     }
 
