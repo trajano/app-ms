@@ -19,7 +19,7 @@ addons:
   ssh_known_hosts:
   - github.com
   - site.trajano.net:6022
-  sonarqube:
+  sonarcloud:
     token:
       secure: N2uRP7Ujbqou4TmMgSJcl/6fjWCSEzWuoiiyT085hZ5ANVFPqFlSfYKg/IPIsqZJXdf60GD+Cm9lIusjZih2RZ3dnVBnTXABeeBPJp5c7LuZHxdleSZ39WYT9p2Vya13kJCJvI12VrqOmsU9Bw1D9PNgOtoC+94JIhTQOcxy6UEn7GWg+zh0oNzl/t749psLc+23eY/DCohWyMK2xYM9raGpjL6SM/Bi1ip9lPIdza77J/emAxmgL3aN57xlzxL1y1dFru3rRXqVAtOmg/A6GtgF1XlpDkiAESZ/8Bwup7BT4BmdqkatViLLCWJIKlPZRjCnlAn+X2EvwoC1lgKkVlcr5kLcompspxtRvgHFJf+82CBqpntBO8NSP0nnxdtBdmzxUrtX2UUoazrYJxOiBtJpCcps72bmoLoV69VqPeBsmHeDai8vK+IKzHWy+vFYavPGnOKnARXunbb93dKwtjuVo5eloz58fyOQ6tYkcI5xyVfjQtA6ftN9vdBbpgiuF23PqzO6UXeZbLXsBqdcaqfnp7KymLubjfYbspMtbjbi+46aT43Q8enm6GrRPyi4/d7Ap9lzTPfj3b1CkZhZYcm64iRzqawQYkftgCBlUPeFSDWQR+vn1+iJzG4USQrsmRUnpg7jbZb8h9en5u2lsUgtWohrrsFr6cbxPqXuGHE=
 env:
