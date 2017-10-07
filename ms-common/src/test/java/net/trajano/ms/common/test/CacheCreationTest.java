@@ -31,6 +31,9 @@ public class CacheCreationTest {
         tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
         jwksProvider.setJwksCache(cm.getCache("aaaKs_cache"));
+        jwksProvider.setKeyPairGenerator(cryptoProvider.keyPairGenerator());
+        jwksProvider.setRandom(cryptoProvider.secureRandom());
+
         jwksProvider.init();
 
     }
@@ -42,6 +45,8 @@ public class CacheCreationTest {
         final TokenGenerator tokenGenerator = new TokenGenerator();
         tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
+        jwksProvider.setKeyPairGenerator(cryptoProvider.keyPairGenerator());
+        jwksProvider.setRandom(cryptoProvider.secureRandom());
         jwksProvider.init();
         final JWKSet keySet = jwksProvider.getKeySet();
         assertNotNull(keySet);
@@ -55,6 +60,8 @@ public class CacheCreationTest {
         final TokenGenerator tokenGenerator = new TokenGenerator();
         tokenGenerator.setRandom(cryptoProvider.secureRandom());
         jwksProvider.setTokenGenerator(tokenGenerator);
+        jwksProvider.setKeyPairGenerator(cryptoProvider.keyPairGenerator());
+        jwksProvider.setRandom(cryptoProvider.secureRandom());
         jwksProvider.init();
 
         final JwksResource jwksResource = new JwksResource();

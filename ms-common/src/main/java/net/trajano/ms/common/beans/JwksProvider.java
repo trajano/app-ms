@@ -47,10 +47,8 @@ public class JwksProvider {
      */
     private Cache jwksCache;
 
-    @Autowired
     private KeyPairGenerator keyPairGenerator;
 
-    @Autowired
     private Random random;
 
     private TokenGenerator tokenGenerator;
@@ -161,9 +159,21 @@ public class JwksProvider {
     }
 
     @Autowired
+    public void setKeyPairGenerator(final KeyPairGenerator keyPairGenerator) {
+
+        this.keyPairGenerator = keyPairGenerator;
+
+    }
+
+    @Autowired
+    public void setRandom(final Random random) {
+
+        this.random = random;
+    }
+
+    @Autowired
     public void setTokenGenerator(final TokenGenerator tokenGenerator) {
 
         this.tokenGenerator = tokenGenerator;
     }
-
 }
