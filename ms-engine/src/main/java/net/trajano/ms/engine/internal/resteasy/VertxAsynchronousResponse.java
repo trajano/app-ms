@@ -31,8 +31,6 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
 
     private long timeoutTimerID = -1;
 
-    private final VertxHttpResponse vertxResponse;
-
     private final Semaphore writeLock = new Semaphore(1);
 
     public VertxAsynchronousResponse(final SynchronousDispatcher dispatcher,
@@ -41,7 +39,6 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
         final RoutingContext routingContext) {
 
         super(dispatcher, request, response);
-        vertxResponse = response;
         this.routingContext = routingContext;
     }
 

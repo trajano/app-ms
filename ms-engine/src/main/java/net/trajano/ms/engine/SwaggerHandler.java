@@ -26,8 +26,8 @@ public class SwaggerHandler implements
     AutoCloseable {
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -53,8 +53,8 @@ public class SwaggerHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -91,7 +91,6 @@ public class SwaggerHandler implements
         }
 
         swagger = new ClonableSwagger();
-        swagger.setBasePath(baseUri.toASCIIString());
         final Reader swaggerReader = new Reader(swagger);
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
@@ -137,7 +136,7 @@ public class SwaggerHandler implements
         try {
             context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .end(Buffer.buffer(io.swagger.util.Json.mapper()
-                    .writeValueAsBytes(swagger.withRequest(context.request()))));
+                    .writeValueAsBytes(swagger.withRoutingContext(context))));
         } catch (final JsonProcessingException e) {
             throw new RuntimeException(e);
         }
