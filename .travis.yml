@@ -34,7 +34,6 @@ before_script:
 - mvn clean
 script:
 - mvn verify sonar:sonar -Dmaven.test.failure.ignore=true
-- mvn site
 deploy:
 - provider: script
   skip_cleanup: true
