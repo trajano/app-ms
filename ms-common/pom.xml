@@ -20,6 +20,16 @@
         <version>1.5.7.RELEASE</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.gemstone.gemfire</groupId>
+            <artifactId>gemfire</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.crashub</groupId>
+            <artifactId>crash.shell</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -78,7 +88,7 @@
             <inherited>false</inherited>
             <configuration>
               <rules>
-                <dependencyConvergence />
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>

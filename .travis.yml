@@ -37,7 +37,7 @@ script:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: mvn -e deploy && mvn -e site-deploy -Dmaven.javadoc.skip=true
+  script: mvn -e deploy && mvn -e site-deploy
   on:
     branch: master
 - provider: script

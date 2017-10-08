@@ -28,8 +28,8 @@ import net.trajano.ms.gateway.OAuthTokenResponse;
 public class TokenResource {
 
     /**
-     * This performs a check whether the given client is authorized. It will throw a
-     * {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will
+     * throw a {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param clientId
@@ -59,7 +59,8 @@ public class TokenResource {
      * {@link IdTokenResponse} that contains the claims that are used within the
      * application behind the gateway.
      * <p>
-     * If there is an authentication failure then {@link #invalidGrant()} is thrown.
+     * If there is an authentication failure then {@link #invalidGrant()} is
+     * thrown.
      *
      * @param accessToken
      *            the access token
@@ -74,11 +75,12 @@ public class TokenResource {
     }
 
     /**
-     * This will process the "urn:ietf:params:oauth:grant-type:jwt-bearer" grant.
-     * This will provide an OAuth token response containing the the access_token
-     * used by the application.
+     * This will process the "urn:ietf:params:oauth:grant-type:jwt-bearer"
+     * grant. This will provide an OAuth token response containing the the
+     * access_token used by the application.
      * <p>
-     * If there is an authentication failure then {@link #invalidGrant()} is thrown.
+     * If there is an authentication failure then {@link #invalidGrant()} is
+     * thrown.
      *
      * @param assertion
      *            the JWT token.
@@ -96,9 +98,11 @@ public class TokenResource {
 
     /**
      * This will process the "refresh_token" grant. This will provide an updated
-     * OAuth token response containing the the access_token used by the application.
+     * OAuth token response containing the the access_token used by the
+     * application.
      * <p>
-     * If there is an authentication failure then {@link #invalidGrant()} is thrown.
+     * If there is an authentication failure then {@link #invalidGrant()} is
+     * thrown.
      *
      * @param refreshToken
      *            the refresh token.
