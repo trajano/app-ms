@@ -7,9 +7,11 @@ This is an example of a microservice oriented application that a typical enterpr
 
 The technology stack used:
 
-- WSO2 Microservices
-  - with Spring
-  - with Spring-Data for persistence
+- Vert.X as the reactive framework
+- Netty (part of Vert.X) as the web server and client technology
+- RESTEasy for JAX-RS
+- Spring for depdency injection
+- Spring-Data for persistence
 - Hazelcast for any caching requirements
 - Docker
 - Docker-Compose
@@ -20,4 +22,6 @@ The technology stack used:
 
 There is a "ms-base" project that every microservice will be deriving from.
 
-There is a "ms-common" project that every microservice will be needing in terms of encryption.
+There is a "ms-engine" project that provides the base microservice engine handlers.
+
+There is a "ms-common" project that every microservice will be needing in terms of encryption.  This will provide an opinionated implementation that provides a higher level API and hides most of the details that are provided by the engine.
