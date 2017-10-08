@@ -33,7 +33,8 @@ install:
 before_script:
 - mvn clean
 script:
-- mvn verify sonar:sonar -Dmaven.test.failure.ignore=true
+- mvn package sonar:sonar -Dmaven.test.failure.ignore=true
+- docker-compose build
 deploy:
 - provider: script
   skip_cleanup: true
