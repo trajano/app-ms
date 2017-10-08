@@ -10,8 +10,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import net.trajano.ms.common.JwtNotRequired;
-import net.trajano.ms.gateway.IdTokenResponse;
-import net.trajano.ms.gateway.OAuthTokenResponse;
+import net.trajano.ms.common.oauth.IdTokenResponse;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 /**
  * This endpoint acts as a OAuth token endpoint that would take an existing JWT

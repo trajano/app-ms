@@ -2,7 +2,8 @@ http:
   port: 8281
 
 authorizationEndpoint: http://localhost:8282
-issuer: https://trajano.net/sample
+issuer: http://localhost:8281
+passwordRequired: password
 
 ---
 
@@ -11,4 +12,5 @@ spring.profiles: docker-compose
 http:
   port: 80
 
+issuer: http://authentication-ms
 authorizationEndpoint: http://authorization-ms

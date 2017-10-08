@@ -1,4 +1,4 @@
-package net.trajano.ms.gateway;
+package net.trajano.ms.common.oauth;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

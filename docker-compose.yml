@@ -3,22 +3,22 @@ services:
   web:
     image: nginx:alpine
     networks:
-    - gateway-web:
-#  gateway:
+    - gateway-web
+#  gateway-ms:
 #    build: ./sample-gw
 #    networks:
 #    - default
 #    - gateway-web
 #    - gateway-auth
-#  authentication:
-#    build: ./sample-authentication
-#    networks:
-#    - gateway-auth
-#  authorization:
-#    build: ./sample-authorization
-#    networks:
-#    - gateway-auth
-#    - authorization
+  authentication-ms:
+    build: ./sample-authn
+    networks:
+    - gateway-auth
+  authorization-ms:
+    build: ./sample-authz
+    networks:
+    - gateway-auth
+    - authorization
   sample-ms:
     build: ./sample-ms
     environment:

@@ -1,8 +1,9 @@
 http:
-  port: 8281
+  port: 8282
 
 authorizationEndpoint: http://localhost:8282
-issuer: https://trajano.net/sample
+allowed_issuers:
+- https://trajano.net/sample
 
 ---
 
@@ -12,3 +13,5 @@ http:
   port: 80
 
 authorizationEndpoint: http://authorization-ms
+
+spring.hazelcast.config: hazelcast.xml
