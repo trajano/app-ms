@@ -19,6 +19,7 @@
     <module>ms-engine</module>
     <module>ms-gateway</module>
     <module>ms-oidc</module>
+    <module>sample-authn</module>
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
@@ -73,6 +74,11 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>sample-ms</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.11</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

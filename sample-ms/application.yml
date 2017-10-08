@@ -1,2 +1,9 @@
 http:
   port: 8280
+
+---
+
+spring.profiles: docker-compose
+  
+http:
+  port: 80

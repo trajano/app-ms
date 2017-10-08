@@ -17,3 +17,7 @@ The application context is laid out as follows
 
 * Configurations <- this is the root
 * Application + Common <- this combines the two
+
+### Samples
+The samples have a `application.yml` that sets the port to `80` when the `docker-compose` profile is active.  However uses unique ports during development for testing outside the compose environment.
+  

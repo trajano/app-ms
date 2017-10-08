@@ -2,13 +2,27 @@ version: '3.2'
 services:
   web:
     image: nginx:alpine
+    networks:
+    - gateway-web:
 #  gateway:
 #    build: ./sample-gw
-#  sample-authorization:
+#    networks:
+#    - default
+#    - gateway-web
+#    - gateway-auth
+#  authentication:
+#    build: ./sample-authentication
+#    networks:
+#    - gateway-auth
 #  authorization:
 #    build: ./sample-authorization
+#    networks:
+#    - gateway-auth
+#    - authorization
   sample-ms:
     build: ./sample-ms
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
     deploy:
       replicas: 2
   security-cache:
@@ -22,4 +36,11 @@ services:
     deploy:
       replicas: 4
 networks:
+  # The default network is used for all the microservices that are not associated with anything infrastructure related.  Primarily where the aplpication specific microservices reside.
+  gateway-web:
+  # This network is used to facilitate the communication between the gateway and the nginx web server.
+  gateway-auth:
+  # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
+  # authorization-ms has it's own network to prevent other microservices from using the cache 
+  
