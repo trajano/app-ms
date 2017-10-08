@@ -31,7 +31,10 @@ import net.trajano.ms.common.JwtNotRequired;
     info = @Info(
         title = "Sample microservice from hello",
         version = "1.0"))
-@Api
+@Api(tags = {
+    "infernal",
+    "doom"
+})
 @Component
 @Path("/hello")
 @JwtNotRequired
@@ -141,7 +144,8 @@ public class Hello {
         }
     }
 
-    @ApiOperation(value = "Cancelling after 1 seconds")
+    @ApiOperation(value = "Cancelling after 1 seconds",
+        tags = "internal")
     @GET
     @Path("/s1")
     @Produces(MediaType.TEXT_PLAIN)

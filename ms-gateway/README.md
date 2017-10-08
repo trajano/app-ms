@@ -39,3 +39,18 @@ SOME.JWT.TOKEN
 ```
 
 The JWT will contain the claims associated with the access token and specifically for the client ID as the `aud`.
+
+## Spring integration
+
+The Gateway does not use the ms-engine itself.  It still uses Spring to provide dependency injection.
+
+### URI processor
+
+/v1/xyz -> local/xyz
+
+The Gateway listens to two ports, one used internally and one for the public.
+
+~~The internal one allows microservices to register themselves into the gateway or internal calls?~~
+
+The gateway is where the microservices are exposed 
+
