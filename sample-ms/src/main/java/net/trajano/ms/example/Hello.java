@@ -43,7 +43,8 @@ public class Hello {
     @Context
     private Client jaxrsClient;
 
-    @ApiOperation(value = "displays openid config of google async")
+    @ApiOperation(value = "displays openid config of google async",
+        hidden = true)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/async")

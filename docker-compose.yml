@@ -1,6 +1,25 @@
 version: '3.3'
 services:
+  web:
+    image: nginx:alpine
+#  gateway:
+#    build: ./sample-gw
+#  sample-authorization:
+#  authorization:
+#    build: ./sample-authorization
+  sample-ms:
+    build: ./sample-ms
+    deploy:
+      replicas: 2
+  security-cache:
+    image: hazelcast/hazelcast:latest
+    deploy:
+      replicas: 2
+    networks:
+    - authorization
   cache:
     image: hazelcast/hazelcast:latest
     deploy:
       replicas: 4
+networks:
+  authorization:

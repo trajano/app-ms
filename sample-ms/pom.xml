@@ -24,4 +24,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <finalName>sample-ms</finalName>
+  </build>
 </project>

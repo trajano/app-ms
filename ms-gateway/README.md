@@ -54,3 +54,13 @@ The Gateway listens to two ports, one used internally and one for the public.
 
 The gateway is where the microservices are exposed 
 
+The gateway takes a swagger endpoint URI and assigns it to a version group builds the routes from there and assigns it a version identifier.  It also assembles a swagger that collects all of the registered swaggers.  It also uses the tag `unprotected` for paths that do not require the `Bearer` token to be present, otherwise it will implicitly add 
+
+     gateway:
+       routes:
+       - basePath: /v1
+         endpoints:
+         - http://sample-ms:8900/
+       - basePath: /v2
+         endpoints:
+         - http://sample-ms:8900/
