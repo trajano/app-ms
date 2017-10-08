@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>app-ms</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3-SNAPSHOT</version>
   </parent>
   <artifactId>ms-common</artifactId>
   <name>Microservice Common</name>
@@ -78,7 +78,7 @@
             <inherited>false</inherited>
             <configuration>
               <rules>
-                <dependencyConvergence/>
+                <dependencyConvergence />
               </rules>
             </configuration>
           </execution>
