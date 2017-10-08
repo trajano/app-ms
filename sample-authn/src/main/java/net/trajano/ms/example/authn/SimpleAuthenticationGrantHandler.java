@@ -11,11 +11,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
-import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -51,9 +50,6 @@ public class SimpleAuthenticationGrantHandler implements
     private URI issuer;
 
     @Autowired
-    private Client jaxRsClient;
-
-    @Autowired
     private JwksProvider jwksProvider;
 
     /**
@@ -69,14 +65,15 @@ public class SimpleAuthenticationGrantHandler implements
     }
 
     @Override
-    public OAuthTokenResponse handler(final ContainerRequestContext requestContext,
+    public OAuthTokenResponse handler(final Client jaxRsClient,
+        final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
-        final String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+        final String authorization = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authorization == null || !authorization.startsWith(BASIC + " ")) {
             throw new NotAuthorizedException("Missing Authorization", BASIC);
         }
-        final String[] decoded = new String(Base64.getDecoder().decode(authorization), StandardCharsets.US_ASCII).split(":");
+        final String[] decoded = new String(Base64.getDecoder().decode(authorization.substring(6)), StandardCharsets.US_ASCII).split(":");
         try {
             final String username = URLDecoder.decode(decoded[0], "UTF-8");
             final String password = URLDecoder.decode(decoded[1], "UTF-8");
@@ -103,7 +100,7 @@ public class SimpleAuthenticationGrantHandler implements
             | InvalidKeySpecException
             | JOSEException
             | ParseException e) {
-            throw new BadRequestException();
+            throw new InternalServerErrorException(e);
         }
     }
 

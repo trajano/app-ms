@@ -19,6 +19,8 @@ public class VertxClientResponse extends ClientResponse {
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxClientResponse.class);
 
+    private Throwable exception;
+
     private final VertxBlockingInputStream is;
 
     private final Semaphore metadataLock = new Semaphore(0);
@@ -37,7 +39,9 @@ public class VertxClientResponse extends ClientResponse {
             LOG.trace("prepared HTTP client response handler");
             metadataLock.release();
         }).exceptionHandler(e -> {
+            LOG.error("exception handling response", e);
             is.error(e);
+            exception = e;
             metadataLock.release();
         });
         LOG.trace("prepared HTTP client request handler");
@@ -47,6 +51,9 @@ public class VertxClientResponse extends ClientResponse {
     @Override
     protected InputStream getInputStream() {
 
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
         LOG.trace("inputStream={}", is);
         return is;
     }
@@ -54,8 +61,14 @@ public class VertxClientResponse extends ClientResponse {
     @Override
     public MediaType getMediaType() {
 
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
         metadataLock.acquireUninterruptibly();
-        return super.getMediaType();
+        final MediaType m = super.getMediaType();
+        metadataLock.release();
+        return m;
     }
 
     @Override

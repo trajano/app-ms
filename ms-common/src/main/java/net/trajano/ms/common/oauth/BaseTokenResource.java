@@ -9,8 +9,9 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -30,6 +31,9 @@ public abstract class BaseTokenResource {
 
     private final Map<String, GrantHandler> grantHandlerMap;
 
+    @Context
+    private Client jaxRsClient;
+
     public BaseTokenResource(final ClientValidator clientValidator,
         final List<GrantHandler> grantHandlers) {
 
@@ -38,8 +42,8 @@ public abstract class BaseTokenResource {
     }
 
     /**
-     * This performs a check whether the given client is authorized. It will
-     * throw a {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will throw a
+     * {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param clientId
@@ -69,14 +73,14 @@ public abstract class BaseTokenResource {
     public Response token(@FormParam("grant_type") final String grantType,
         @FormParam("client_id") final String clientId,
         @FormParam("client_secret") final String clientSecret,
-        @Context final ContainerRequestContext requestContext,
+        @Context final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
         if (!grantHandlerMap.containsKey(grantType)) {
             throw unsupportedGrantType();
         }
         checkClientAuthorized(grantType, clientId, clientSecret);
-        return Response.ok(grantHandlerMap.get(grantType).handler(requestContext, form)).build();
+        return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, httpHeaders, form)).build();
     }
 
     private BadRequestException unsupportedGrantType() {
