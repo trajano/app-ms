@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>ms-base</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>sample-ms</artifactId>
