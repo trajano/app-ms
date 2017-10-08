@@ -4,12 +4,12 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>ms-base</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5-SNAPSHOT</version>
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>ms-gateway</artifactId>
   <name>API Gateway</name>
   <description>A simple configurable and extensible API gateway</description>
-  <dependencies/>
-  <build/>
+  <dependencies />
+  <build />
 </project>
