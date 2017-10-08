@@ -85,6 +85,7 @@ public class SimpleAuthenticationGrantHandler implements
                 .audience(authorizationEndpoint.toASCIIString())
                 .subject(username)
                 .issuer(issuer.toASCIIString())
+                .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().plus(60, ChronoUnit.SECONDS)))
                 .build();
 

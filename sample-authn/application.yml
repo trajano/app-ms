@@ -1,7 +1,7 @@
 http:
   port: 8281
 
-authorizationEndpoint: http://localhost:8282
+authorizationEndpoint: http://localhost:8282/authz
 issuer: http://localhost:8281
 passwordRequired: password
 
@@ -13,4 +13,4 @@ http:
   port: 80
 
 issuer: http://authentication-ms
-authorizationEndpoint: http://authorization-ms
+authorizationEndpoint: http://authorization-ms/authz

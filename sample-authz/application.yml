@@ -1,9 +1,9 @@
 http:
   port: 8282
 
-authorizationEndpoint: http://localhost:8282
-allowed_issuers:
-- https://trajano.net/sample
+issuer: http://localhost:8282
+allowedIssuers:
+- http://localhost:8281
 
 ---
 
@@ -12,6 +12,7 @@ spring.profiles: docker-compose
 http:
   port: 80
 
-authorizationEndpoint: http://authorization-ms
+issuer: http://authorization-ms
 
-spring.hazelcast.config: hazelcast.xml
+allowedIssuers:
+- http://authenticaton-ms
