@@ -39,9 +39,6 @@ public class JwtGrantHandler implements
     @Autowired
     private AllowedIssuers allowedIssuers;
 
-    @Value("${authorizationEndpoint}")
-    private URI authorizationEndpoint;
-
     @Value("${issuer}")
     private URI issuer;
 
