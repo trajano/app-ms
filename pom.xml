@@ -20,6 +20,7 @@
     <module>ms-gateway</module>
     <module>ms-oidc</module>
     <module>sample-authn</module>
+    <module>sample-authz</module>
     <module>sample-gw</module>
     <module>sample-ms</module>
   </modules>
@@ -73,6 +74,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>sample-authn</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>sample-authz</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

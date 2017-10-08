@@ -1,0 +1,14 @@
+http:
+  port: 8281
+
+authorizationEndpoint: http://localhost:8282
+issuer: https://trajano.net/sample
+
+---
+
+spring.profiles: docker-compose
+  
+http:
+  port: 80
+
+authorizationEndpoint: http://authorization-ms

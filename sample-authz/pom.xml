@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.trajano.ms.app</groupId>
+    <artifactId>ms-base</artifactId>
+    <version>0.0.5-SNAPSHOT</version>
+    <relativePath>../ms-base</relativePath>
+  </parent>
+  <artifactId>sample-authz</artifactId>
+  <name>Sample Authorization Microservice</name>
+  <description>This microservice is used to do provide an authorization endpoint.  It acts as an OAuth token handler to handle JWT, access token and refresh token grant types.</description>
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>ms-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <finalName>sample-authn</finalName>
+  </build>
+</project>
