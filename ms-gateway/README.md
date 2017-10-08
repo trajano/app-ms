@@ -26,6 +26,8 @@ POST /token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&access_token=???&client_id=???
+grant_type=authorization_code&access_token=???&client_id=???
+
 ```
 
 and will return 
