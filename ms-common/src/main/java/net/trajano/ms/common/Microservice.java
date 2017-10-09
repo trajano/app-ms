@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +17,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.common.beans.CommonMs;
 import net.trajano.ms.common.beans.JwksRouteHandler;
 import net.trajano.ms.common.internal.config.ConfigurationProvider;
@@ -92,6 +95,9 @@ public class Microservice {
         handlerStack.push(SwaggerHandler.registerToRouter(router, applicationClass));
         handlerStack.push(ManifestHandler.registerToRouter(router));
 
+        Handler<RoutingContext> notFoundHandler = ctx -> ctx.response().setStatusCode(404).setStatusMessage(Status.NOT_FOUND.getReasonPhrase()).end(Status.NOT_FOUND.getReasonPhrase());
+        router.get("/favicon.ico").handler(notFoundHandler);
+
         final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.setParent(baseApplicationContext);
         applicationContext.register(CommonMs.class);
@@ -99,7 +105,8 @@ public class Microservice {
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, applicationClass));
 
         final JwksRouteHandler jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);
-        router.route("/.well-known/jwks").handler(jwksRouteHandler);
+        // Prioritize JWKS higher than default router.
+        router.route("/.well-known/jwks").order(-1).handler(jwksRouteHandler);
 
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
