@@ -14,9 +14,6 @@
   </bannerLeft>
   <body>
     <links>
-      <item href="https://trajano.net/" name="Portfolio"/>
-      <item href="https://trajano.net/blog/" name="Blog"/>
-      <item href="https://site.trajano.net/trajano/" name="Organizational POM"/>
       <item href="https://travis-ci.org/trajano/app-ms" name="CI"/>
       <item href="https://sonarqube.com/dashboard?id=net.trajano.ms.app:app-ms" name="Quality"/>
     </links>

@@ -10,6 +10,6 @@
   <artifactId>ms-gateway</artifactId>
   <name>API Gateway</name>
   <description>A simple configurable and extensible API gateway</description>
-  <dependencies />
-  <build />
+  <dependencies/>
+  <build/>
 </project>
