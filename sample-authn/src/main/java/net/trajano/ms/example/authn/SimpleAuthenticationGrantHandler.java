@@ -1,16 +1,11 @@
 package net.trajano.ms.example.authn;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.Date;
 
 import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
@@ -56,7 +51,7 @@ public class SimpleAuthenticationGrantHandler implements
     @Override
     public String getGrantTypeHandled() {
 
-        return GrantTypes.CLIENT_CREDENTIALS;
+        return GrantTypes.PASSWORD;
     }
 
     @Override
@@ -64,18 +59,13 @@ public class SimpleAuthenticationGrantHandler implements
         final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
-        final String authorization = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
-        if (authorization == null || !authorization.startsWith(BASIC + " ")) {
-            throw new NotAuthorizedException("Missing Authorization", BASIC);
-        }
-        final String[] decoded = new String(Base64.getDecoder().decode(authorization.substring(6)), StandardCharsets.US_ASCII).split(":");
-        try {
-            final String username = URLDecoder.decode(decoded[0], "UTF-8");
-            final String password = URLDecoder.decode(decoded[1], "UTF-8");
+        final String username = form.getFirst("username");
+        final String password = form.getFirst("password");
 
-            if (!password.equals(passwordRequired)) {
-                throw new NotAuthorizedException("Invalid username/password", BASIC);
-            }
+        if (!password.equals(passwordRequired)) {
+            throw OAuthTokenResponse.unauthorized("invalid_grant", "Invalid username/password", BASIC);
+        }
+        try {
             final JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .audience(authorizationEndpoint.toASCIIString())
                 .subject(username)
@@ -83,19 +73,17 @@ public class SimpleAuthenticationGrantHandler implements
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().plus(60, ChronoUnit.SECONDS)))
                 .build();
-
             final String jwt = jwksProvider.sign(claims).serialize();
 
             final Form authorizationForm = new Form();
             authorizationForm.param("grant_type", GrantTypes.JWT_ASSERTION);
-
-            authorizationForm.param("client_id", form.getFirst("client_id"));
-            authorizationForm.param("client_secret", form.getFirst("client_secret"));
             authorizationForm.param("assertion", jwt);
             System.out.println(authorizationForm.asMap());
-            return jaxRsClient.target(authorizationEndpoint).request().accept(MediaType.APPLICATION_JSON).post(Entity.form(authorizationForm), OAuthTokenResponse.class);
-        } catch (final UnsupportedEncodingException
-            | JOSEException e) {
+            return jaxRsClient.target(authorizationEndpoint).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION))
+                .post(Entity.form(authorizationForm), OAuthTokenResponse.class);
+        } catch (final JOSEException e) {
             throw new InternalServerErrorException(e);
         }
     }

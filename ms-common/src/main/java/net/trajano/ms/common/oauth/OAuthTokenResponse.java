@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -11,6 +12,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.jboss.resteasy.spi.InternalServerErrorException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,14 +42,26 @@ public class OAuthTokenResponse implements
             .status(Status.BAD_REQUEST).build());
     }
 
+    public static InternalServerErrorException internalServerError(final Throwable e) {
+
+        final OAuthTokenResponse r = new OAuthTokenResponse();
+        r.setError("server_error");
+        r.setErrorDescription(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        return new InternalServerErrorException(e, Response
+            .ok(r, MediaType.APPLICATION_JSON)
+            .status(Status.INTERNAL_SERVER_ERROR).build());
+    }
+
     public static NotAuthorizedException unauthorized(final String error,
-        final String errorDescription) {
+        final String errorDescription,
+        final String challenge) {
 
         final OAuthTokenResponse r = new OAuthTokenResponse();
         r.setError(error);
         r.setErrorDescription(errorDescription);
         return new NotAuthorizedException(Response
             .ok(r, MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.WWW_AUTHENTICATE, challenge)
             .status(Status.UNAUTHORIZED).build());
     }
 

@@ -7,7 +7,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 
 @SpringBootApplication
 public class Gateway {
@@ -21,11 +20,11 @@ public class Gateway {
     private GatewayVerticle gatewayVerticle;
 
     @Autowired
-    private VertxOptions vertxOptions;
+    private Vertx vertx;
 
     @PostConstruct
     public void start() {
 
-        Vertx.vertx(vertxOptions).deployVerticle(gatewayVerticle);
+        vertx.deployVerticle(gatewayVerticle);
     }
 }

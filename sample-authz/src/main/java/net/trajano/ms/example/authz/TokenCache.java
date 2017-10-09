@@ -5,7 +5,6 @@ import java.time.Instant;
 
 import javax.annotation.PostConstruct;
 
-import org.jboss.resteasy.spi.InternalServerErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -72,7 +71,7 @@ public class TokenCache {
             oauthTokenResponse.setIdToken(jwt);
             return oauthTokenResponse;
         } catch (final JOSEException e) {
-            throw new InternalServerErrorException(e);
+            throw OAuthTokenResponse.internalServerError(e);
         }
     }
 

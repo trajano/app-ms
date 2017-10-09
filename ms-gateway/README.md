@@ -22,23 +22,82 @@ grant_type=refresh_token
 grant_type=refresh_token
 ```
 
+The authorization endpoint must support two grant types and accept the client information from the `Authorization` header.  The gateway does not perform any validation of the client, it simply forwards it to the authorization microservice.  The authorization microservice should not be exposed outside of the gateway.
+
+### authorization_code grant
+
 
 ```
 POST /token
+Authorization: Basic <base64<clientId:clientSecret>>
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&access_token=???&client_id=???
-grant_type=authorization_code&access_token=???&client_id=???
+grant_type=authorization_code&code=<access_token>
+
+```
+
+and will return the following.
+
+```
+Content-Type: application/json
+
+{
+  "access_token": <access token provided>,
+  "token_type": "Bearer",
+  "id_token": <JWT token containing internal claims>
+}
+```
+
+
+### refresh_token grant
+
+```
+POST /token
+Authorization: Basic <base64<clientId:clientSecret>>
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token=<refresh_token>
 
 ```
 
 and will return 
 
 ```
-Content-Type: application/jwt
+Content-Type: application/json
 
-SOME.JWT.TOKEN
+{
+  "access_token": <new access token>,
+  "token_type": "Bearer",
+  "expires_in": <how till the access_token expires>,
+  "refesh_token": <new refresh token>
+}
 ```
+
+### urn:ietf:params:oauth:grant-type:jwt-bearer grant
+
+This grant is not called by the gateway, but by the authentication microservices such as username/password handler or OpenID Connect callback.  It is responsible for transforming a JWT assertion into an internal one that is used by the rest of the application.  It is expected to return an OAuth token without an id_token value. 
+
+```
+POST /token
+Authorization: Basic <base64<clientId:clientSecret>>
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=<jwt assertion>
+```
+and will return 
+
+```
+Content-Type: application/json
+
+{
+  "access_token": <access token>,
+  "token_type": "Bearer",
+  "expires_in": <how till the access_token expires>,
+  "refesh_token": <refresh token>
+}
+```
+
+
 
 The JWT will contain the claims associated with the access token and specifically for the client ID as the `aud`.
 
@@ -66,3 +125,22 @@ The gateway takes a swagger endpoint URI and assigns it to a version group build
        - basePath: /v2
          endpoints:
          - http://sample-ms:8900/
+
+         
+```
+baselines[0].baseline=/v1 
+baselines[0].routes[0].from=/hello 
+baselines[0].routes[0].to=http://localhost:8280/hello 
+baselines[0].routes[1].from=/s 
+baselines[0].routes[1].to=http://localhost:8280/s 
+baselines[0].routes[2].from=/authn 
+baselines[0].routes[2].to=http://localhost:8281/ 
+baselines[1].baseline=/v2 
+baselines[1].routes[0].from=/hello 
+baselines[1].routes[0].to=http://localhost:8280/hello 
+baselines[1].routes[1].from=/s 
+baselines[1].routes[1].to=http://localhost:8280/s 
+baselines[1].routes[2].from=/authn 
+baselines[1].routes[2].to=http://localhost:8281/ 
+authorizationEndpoint=http://localhost:8282/
+```

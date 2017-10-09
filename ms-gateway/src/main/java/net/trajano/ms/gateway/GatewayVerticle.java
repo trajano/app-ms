@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
 
 @Component
@@ -21,19 +20,20 @@ public class GatewayVerticle extends AbstractVerticle {
     private ApplicationContext applicationContext;
 
     @Autowired
-    private HttpServerOptions httpServerOptions;
+    private HttpServer httpServer;
+
+    @Autowired
+    private Router router;
 
     @Override
     public void start() throws Exception {
 
-        final Router router = Router.router(vertx);
-        final HttpServer http = vertx.createHttpServer(httpServerOptions);
-        http.requestHandler(router::accept).listen(res -> {
+        httpServer.requestHandler(router::accept).listen(res -> {
             if (res.failed()) {
                 LOG.error(res.cause().getMessage(), res.cause());
                 SpringApplication.exit(applicationContext, () -> -1);
             } else {
-                LOG.info("Listening on port {}", http.actualPort());
+                LOG.info("Listening on port {}", httpServer.actualPort());
             }
         });
     }

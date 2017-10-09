@@ -1,4 +1,4 @@
-package net.trajano.ms.gateway;
+package net.trajano.ms.gateway.providers;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
