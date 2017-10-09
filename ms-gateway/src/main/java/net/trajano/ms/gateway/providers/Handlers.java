@@ -161,6 +161,7 @@ public class Handlers {
                         .toBuffer());
                 return;
             }
+            contextRequest.setExpectMultipart(true);
             contextRequest.pause();
             LOG.debug("access_token={} client_credentials={}", accessToken, clientCredentials);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
@@ -306,6 +307,7 @@ public class Handlers {
             if (!contextRequest.uri().startsWith(baseUri)) {
                 throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
             }
+            contextRequest.setExpectMultipart(true);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
             final HttpClientRequest c_req = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
                 contextRequest.response().setChunked(true);

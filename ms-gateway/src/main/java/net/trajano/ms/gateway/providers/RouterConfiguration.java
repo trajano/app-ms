@@ -2,6 +2,8 @@ package net.trajano.ms.gateway.providers;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,13 +21,18 @@ import io.vertx.ext.web.Router;
 @Configuration
 public class RouterConfiguration {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RouterConfiguration.class);
+
+    @Value("${http.defaultBodyLimit:-1}")
+    private long defaultBodyLimit;
+
     @Autowired
     private ConfigurableEnvironment env;
 
     @Autowired
     private Handlers handlers;
 
-    @Value("${refreshTokenPath:/refresh}")
+    @Value("${authorization.refreshTokenPath:/refresh}")
     private String refreshTokenPath;
 
     @Bean
@@ -33,19 +40,32 @@ public class RouterConfiguration {
 
         final Router router = Router.router(vertx);
 
-        env.getPropertySources().forEach(x -> System.out.println(x));
-
         router.post(refreshTokenPath)
             .consumes("application/x-www-form-urlencoded")
             .produces("application/json")
             .handler(handlers.refreshHandler());
 
-        router.route("/v1/hello/*")
-            .handler(handlers.unprotectedHandler("/v1/hello", URI.create("http://localhost:8900/hello")))
-            .failureHandler(handlers.failureHandler());
+        int i = 0;
+        while (env.containsProperty(String.format("routes[%d].from", i))) {
 
-        router.route("/v1/secure/*")
-            .handler(handlers.protectedHandler("/v1/secure", URI.create("http://localhost:8900/s")));
+            final String from = env.getProperty(String.format("routes[%d].from", i));
+            final URI to = env.getProperty(String.format("routes[%d].to", i), URI.class);
+            final boolean protectedRoute = env.getProperty(String.format("routes[%d].protected", i), Boolean.class, true);
+            final long limit = env.getProperty(String.format("routes[%d].limit", i), Long.class, defaultBodyLimit);
+
+            if (protectedRoute) {
+                LOG.info("route from={} to={}, protected", from, to);
+                router.route(from + "/*")
+                    .handler(handlers.protectedHandler(from, to))
+                    .failureHandler(handlers.failureHandler());
+            } else {
+                LOG.info("route from={} to={}, unprotected", from, to);
+                router.route(from + "/*")
+                    .handler(handlers.unprotectedHandler(from, to))
+                    .failureHandler(handlers.failureHandler());
+            }
+            ++i;
+        }
 
         return router;
     }

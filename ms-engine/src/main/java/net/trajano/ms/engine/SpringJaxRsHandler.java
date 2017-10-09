@@ -3,9 +3,11 @@ package net.trajano.ms.engine;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
@@ -16,9 +18,11 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.core.ResourceInvoker;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
+import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
@@ -263,6 +267,10 @@ public class SpringJaxRsHandler implements
         final HttpServerRequest serverRequest = context.request();
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.uri(), serverRequest.query(), baseUri.toASCIIString());
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
+
+        if (isMultipartExpected(request)) {
+            context.request().setExpectMultipart(true);
+        }
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
             context.vertx().executeBlocking(
                 future -> {
@@ -274,6 +282,7 @@ public class SpringJaxRsHandler implements
                     ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
                     ResteasyProviderFactory.pushContext(Client.class, client);
                     ResteasyProviderFactory.pushContext(HttpHeaders.class, request.getHttpHeaders());
+
                     try {
                         dispatcher.invokePropagateNotFound(request,
                             response);
@@ -309,6 +318,18 @@ public class SpringJaxRsHandler implements
         } finally {
 
         }
+    }
+
+    private boolean isMultipartExpected(final HttpRequest request) {
+
+        final ResourceInvoker invoker = dispatcher.getInvoker(request);
+        final Consumes consumes = invoker.getMethod().getAnnotation(Consumes.class);
+        if (consumes == null || !Arrays.asList(consumes.value()).contains(MediaType.MULTIPART_FORM_DATA)) {
+            return false;
+        } else {
+            return true;
+        }
+
     }
 
     private Client jaxRsClient(final Vertx vertx) {

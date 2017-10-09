@@ -63,8 +63,8 @@ public class ConfigurationProvider {
     @Bean
     public HttpServerOptions httpServerOptions() {
 
-        final HttpServerOptions options = new HttpServerOptions();
-        options.setPort(httpPort);
+        final HttpServerOptions options = new HttpServerOptions()
+            .setPort(httpPort);
         return options;
     }
 

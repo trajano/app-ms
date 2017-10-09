@@ -2,21 +2,17 @@ authorization:
   endpoint: http://localhost:8282/authz
   refreshTokenPath: /refresh
 
-baselines:
-- baseline: /v1
-  routes:
-  - from: /hello
-    to: http://localhost:8280/hello
-  - from: /s
-    to: http://localhost:8280/s
-  - from: /authn
-    to: http://localhost:8281/authn
-- baseline: /v2
-  routes:
-  - from: /hello
-    to: http://localhost:8280/hello
-  - from: /s
-    to: http://localhost:8280/s
-  - from: /authn
-    to: http://localhost:8281/
+http:
+  defaultBodyLimit: 2048
 
+routes:
+- from: /v1/hello
+  to: http://localhost:8900/hello 
+- from: /v1/secure/upload
+  to: http://localhost:8900/s/upload
+  limit: 10000000 
+- from: /v1/secure
+  to: http://localhost:8900/s 
+- from: /v1/authn
+  to: http://localhost:8281/authn
+  protected: false 

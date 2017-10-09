@@ -21,7 +21,6 @@ public class Gateway {
         application.setBannerMode(Mode.OFF);
         application.setWebEnvironment(false);
         application.run(args);
-        //SpringApplication.run(Gateway.class, args);
 
     }
 

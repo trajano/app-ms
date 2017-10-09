@@ -78,7 +78,7 @@ public class SimpleAuthenticationGrantHandler implements
             final Form authorizationForm = new Form();
             authorizationForm.param("grant_type", GrantTypes.JWT_ASSERTION);
             authorizationForm.param("assertion", jwt);
-            System.out.println(authorizationForm.asMap());
+
             return jaxRsClient.target(authorizationEndpoint).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION))
