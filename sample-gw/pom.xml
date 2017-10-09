@@ -7,14 +7,34 @@
     <version>0.0.6-SNAPSHOT</version>
   </parent>
   <artifactId>sample-gw</artifactId>
+  <packaging>pom</packaging>
   <name>Sample Gateway</name>
+  <description>This is an example of a non-code artifact that is using maven-dependency plugin to get the artifact and to configure docker with it.</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>ms-gateway</artifactId>
     </dependency>
   </dependencies>
-<build>
+  <build>
     <finalName>sample-gw</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>get-application</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifact>${project.groupId}:ms-gateway:${project.version}</artifact>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

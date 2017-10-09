@@ -10,12 +10,20 @@ services:
     - default
     - gateway-web
     - gateway-auth
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+    ports:
+    - "3001:80"
   authentication-ms:
     build: ./sample-authn
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
     networks:
     - gateway-auth
   authorization-ms:
     build: ./sample-authz
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
     networks:
     - gateway-auth
     - authorization

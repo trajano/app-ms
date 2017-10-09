@@ -16,3 +16,32 @@ routes:
 - from: /v1/authn
   to: http://localhost:8281/authn
   protected: false 
+
+---
+
+spring.profiles: docker-compose
+
+authorization:
+  endpoint: http://authorization-ms/authz
+  refreshTokenPath: /refresh
+
+http:
+  port: 80
+  defaultBodyLimit: 2048
+
+routes:
+- from: /v1/hello
+  to: http://sample-ms/hello 
+  protected: false 
+  exact: true
+- from: /v1/hello
+  to: http://sample-ms/hello 
+- from: /v1/secure/upload
+  to: http://sample-ms/s/upload
+  limit: 10000000 
+- from: /v1/secure
+  to: http://sample-ms/s
+  protected: true
+- from: /v1/authn
+  to: http://authentication-ms/authn
+  protected: false 

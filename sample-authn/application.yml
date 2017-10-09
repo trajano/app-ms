@@ -13,4 +13,5 @@ http:
   port: 80
 
 issuer: http://authentication-ms
+
 authorizationEndpoint: http://authorization-ms/authz

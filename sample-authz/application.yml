@@ -15,4 +15,4 @@ http:
 issuer: http://authorization-ms
 
 allowedIssuers:
-- http://authenticaton-ms
+- http://authentication-ms
