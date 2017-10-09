@@ -1,0 +1,54 @@
+# Mappings are provided so that environment specific servers can be mapped more easily
+mappings:
+  sample-ms: http://localhost:8900
+  authn-ms: http://localhost:8281
+  authz-ms: http://localhost:8282 
+
+authorization:
+  endpoint: ${mappings.authz-ms}/authz
+  refreshTokenPath: /refresh
+
+http:
+  defaultBodyLimit: 2048
+
+routes:
+- from: /v1/hello
+  to: ${mappings.sample-ms}/hello
+- from: /v1/secure/upload
+  to: ${mappings.sample-ms}/s/upload
+  limit: 10000000 
+- from: /v1/secure
+  to: ${mappings.sample-ms}/s 
+- from: /v1/authn
+  to: ${mappings.authn-ms}/authn
+  protected: false 
+  
+swagger:
+- path: /v1
+  info:
+    title: Aggregate
+    version: 1.0
+  uris:
+  - swagger: ${mappings.sample-ms}
+    paths:
+    - /hello
+    - from: /s
+      to: /secure
+  - swagger: ${mappings.authn-ms}
+    paths:
+    - /authn
+      
+
+---
+
+spring.profiles: docker-compose
+
+http:
+  port: 80
+  defaultBodyLimit: 2048
+
+mappings:
+  sample-ms: http://sample-ms
+  authn-ms: http://authentication-ms
+  authz-ms: http://authorization-ms
+  

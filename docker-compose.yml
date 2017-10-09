@@ -5,7 +5,7 @@ services:
     networks:
     - gateway-web
   gateway-ms:
-    build: ./sample-gw
+    build: ./ms-gateway
     networks:
     - default
     - gateway-web
