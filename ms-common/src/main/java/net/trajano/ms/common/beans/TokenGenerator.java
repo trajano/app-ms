@@ -21,7 +21,10 @@ public class TokenGenerator {
      */
     private static final char[] ALLOWED_TOKEN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 
-    private static final int TOKEN_LENGTH = 32;
+    /**
+     * This makes the possible combinations higher than a 256-bit key.
+     */
+    private static final int TOKEN_LENGTH = 64;
 
     private Random random;
 

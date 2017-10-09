@@ -103,7 +103,8 @@ public abstract class BaseTokenResource {
         if (!grantHandlerMap.containsKey(grantType)) {
             throw OAuthTokenResponse.badRequest("unsupported_grant_type", "Unsupported grant type");
         }
-        checkClientAuthorized(grantType, httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION));
+        final String basicAuthorizationHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).stream().filter(s -> s.startsWith("Basic ")).collect(Collectors.toList()).get(0);
+        checkClientAuthorized(grantType, basicAuthorizationHeader);
         return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, httpHeaders, form)).build();
     }
 

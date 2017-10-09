@@ -88,9 +88,7 @@ public class JwtGrantHandler implements
             // TODO cache
             final JWKSet issuerJwks = JWKSet.load(UriBuilder.fromUri(claims.getIssuer()).path("/.well-known/jwks").build().toURL());
             final String keyID = jwsObject.getHeader().getKeyID();
-            System.out.println(keyID);
             final RSAKey signingKey = (RSAKey) issuerJwks.getKeyByKeyId(keyID);
-            System.out.println(signingKey);
             if (!jwsObject.verify(new RSASSAVerifier(signingKey))) {
                 throw OAuthTokenResponse.badRequest("access_denied", "Failed signature verification");
             }

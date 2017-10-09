@@ -40,8 +40,12 @@ public class RouterConfiguration {
             .produces("application/json")
             .handler(handlers.refreshHandler());
 
-        router.route("/v1/hello")
-            .handler(handlers.unprotectedHandler("/v1/hello", URI.create("http://localhost:8900/hello")));
+        router.route("/v1/hello/*")
+            .handler(handlers.unprotectedHandler("/v1/hello", URI.create("http://localhost:8900/hello")))
+            .failureHandler(handlers.failureHandler());
+
+        router.route("/v1/secure/*")
+            .handler(handlers.protectedHandler("/v1/secure", URI.create("http://localhost:8900/s")));
 
         return router;
     }
