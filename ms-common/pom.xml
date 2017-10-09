@@ -8,10 +8,6 @@
   </parent>
   <artifactId>ms-common</artifactId>
   <name>Microservice Common</name>
-  <properties>
-    <httpclient.version>4.5.2</httpclient.version>
-    <httpcore.version>4.4.5</httpcore.version>
-  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -20,16 +16,6 @@
         <version>1.5.7.RELEASE</version>
         <type>pom</type>
         <scope>import</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.gemstone.gemfire</groupId>
-            <artifactId>gemfire</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.crashub</groupId>
-            <artifactId>crash.shell</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>

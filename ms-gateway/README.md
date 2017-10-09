@@ -3,6 +3,8 @@ API Gateway
 
 This is an API Gateway implementation using Vert.X to provide similar performance of Netty and Node.JS for asynchronous processing.  This is designed for configuration that is version controlled.
 
+Although this is a Spring Boot application, it does not use the ms-common architecture since it's purpose does not require a JAX-RS stack.
+
 Configuration files are stored in the configuration microservice that provides all the configuration for the system.  
 
 Although spring cloud has a notion of centralized configuration, we're going to forgo that for this scenario.

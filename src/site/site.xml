@@ -19,5 +19,6 @@
     </links>
     <menu ref="parent" inherit="top"/>
     <menu ref="reports" inherit="bottom"/>
+    <menu ref="modules" inherit="bottom"/>
   </body>
 </project>

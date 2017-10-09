@@ -3,13 +3,57 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.trajano.ms.app</groupId>
-    <artifactId>ms-base</artifactId>
+    <artifactId>app-ms</artifactId>
     <version>0.0.6-SNAPSHOT</version>
-    <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>ms-gateway</artifactId>
   <name>API Gateway</name>
   <description>A simple configurable and extensible API gateway</description>
-  <dependencies/>
+  <dependencyManagement>
+  <dependencies><dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>1.5.7.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+  <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-dependencies</artifactId>
+        <version>3.4.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+  </dependencies></dependencyManagement><dependencies><dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
+    </dependency><dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    </dependencies>
   <build/>
 </project>
