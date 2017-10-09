@@ -2,13 +2,24 @@ package net.trajano.ms.common.oauth;
 
 import java.io.Serializable;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class OAuthTokenResponse implements
     Serializable {
 
@@ -16,6 +27,28 @@ public class OAuthTokenResponse implements
      * serialVersionUID.
      */
     private static final long serialVersionUID = -6845634801856757737L;
+
+    public static BadRequestException badRequest(final String error,
+        final String errorDescription) {
+
+        final OAuthTokenResponse r = new OAuthTokenResponse();
+        r.setError(error);
+        r.setErrorDescription(errorDescription);
+        return new BadRequestException(Response
+            .ok(r, MediaType.APPLICATION_JSON)
+            .status(Status.BAD_REQUEST).build());
+    }
+
+    public static NotAuthorizedException unauthorized(final String error,
+        final String errorDescription) {
+
+        final OAuthTokenResponse r = new OAuthTokenResponse();
+        r.setError(error);
+        r.setErrorDescription(errorDescription);
+        return new NotAuthorizedException(Response
+            .ok(r, MediaType.APPLICATION_JSON)
+            .status(Status.UNAUTHORIZED).build());
+    }
 
     @XmlElement(name = "access_token")
     private String accessToken;
@@ -27,7 +60,7 @@ public class OAuthTokenResponse implements
     private String errorDescription;
 
     @XmlElement(name = "expires_in")
-    private int expiresIn;
+    private Integer expiresIn;
 
     @XmlElement(name = "refresh_token")
     private String refreshToken;
@@ -69,6 +102,11 @@ public class OAuthTokenResponse implements
     public boolean isError() {
 
         return error != null;
+    }
+
+    public boolean isExpiring() {
+
+        return expiresIn != null;
     }
 
     public void setAccessToken(final String accessToken) {

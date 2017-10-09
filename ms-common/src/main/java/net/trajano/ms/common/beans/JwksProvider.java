@@ -6,7 +6,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,11 +23,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimsSet;
 
 @Component
 public class JwksProvider {
@@ -90,13 +93,6 @@ public class JwksProvider {
             .privateKey((RSAPrivateKey) keyPair.getPrivate())
             .keyID(tokenGenerator.newToken())
             .build();
-    }
-
-    public JWSSigner getASigner() throws InvalidKeySpecException,
-        ParseException,
-        JOSEException {
-
-        return new RSASSASigner(getASigningKey().toRSAPrivateKey());
     }
 
     /**
@@ -175,5 +171,26 @@ public class JwksProvider {
     public void setTokenGenerator(final TokenGenerator tokenGenerator) {
 
         this.tokenGenerator = tokenGenerator;
+    }
+
+    /**
+     * This will sign a JWT Claims Set and return a JWS object.
+     *
+     * @param claims
+     *            claims to sign
+     * @return JWS Object
+     * @throws JOSEException
+     */
+    public JWSObject sign(final JWTClaimsSet claims) throws JOSEException {
+
+        final RSAKey aSigningKey = getASigningKey();
+
+        final JWSObject jws = new JWSObject(
+            new JWSHeader.Builder(JWSAlgorithm.RS512)
+                .keyID(aSigningKey.getKeyID())
+                .build(),
+            new Payload(claims.toString()));
+        jws.sign(new RSASSASigner(aSigningKey));
+        return jws;
     }
 }

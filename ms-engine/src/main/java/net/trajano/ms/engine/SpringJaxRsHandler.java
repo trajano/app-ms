@@ -50,8 +50,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -67,8 +66,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -98,8 +97,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -114,8 +113,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -288,12 +287,7 @@ public class SpringJaxRsHandler implements
                         final Throwable wae = res.cause();
                         if (wae instanceof NotFoundException) {
                             LOG.debug("uri={} was not found", serverRequest.uri());
-                            context.response().setStatusCode(404);
-                            context.response().setStatusMessage(Status.NOT_FOUND.getReasonPhrase());
-                            if (context.request().method() != HttpMethod.HEAD) {
-                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                                context.response().end(wae.getLocalizedMessage());
-                            }
+                            context.next();
                         } else {
                             LOG.error(wae.getMessage(), wae);
                             context.response().setStatusCode(500);

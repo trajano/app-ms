@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -36,8 +35,6 @@ public class Microservice {
     private static Class<? extends Application> applicationClass;
 
     private static final Logger LOG = LoggerFactory.getLogger(Microservice.class);
-
-    private static ApplicationContext rootApplicationContext;
 
     /**
      * Bootstrap the microservice application.

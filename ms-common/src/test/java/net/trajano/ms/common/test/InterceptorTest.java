@@ -5,10 +5,7 @@ import java.text.ParseException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.beans.CryptoProvider;
@@ -70,8 +67,7 @@ public class InterceptorTest {
         interceptor.init();
 
         final JWTClaimsSet jwtClaims = JWTClaimsSet.parse("{\"typ\":\"https://example.com/register\"}");
-        final JWSObject jws = new JWSObject(new JWSHeader(JWSAlgorithm.RS512), new Payload(jwtClaims.toString()));
-        jws.sign(jwksProvider.getASigner());
+        final JWSObject jws = jwksProvider.sign(jwtClaims);
         final String jwt = jws.serialize();
         System.out.println(jwt);
         //        final Request request = mock(Request.class);

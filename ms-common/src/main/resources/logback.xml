@@ -9,6 +9,7 @@
     </encoder>
   </appender>
   <logger name="net.trajano.ms.engine" level="DEBUG"/>
+  <logger name="net.trajano.ms.common.oauth" level="DEBUG"/>
   <!-- <logger name="net.trajano.ms.engine.internal.resteasy" level="DEBUG"/>-->
   <logger name="net.trajano.ms" level="INFO"/>
   <!-- turn OFF all logging (children can override) -->

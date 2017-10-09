@@ -81,6 +81,12 @@ public class VertxBlockingInputStream extends InputStream {
 
     }
 
+    @Override
+    public boolean markSupported() {
+
+        return false;
+    }
+
     public void populate(final Buffer buffer) {
 
         queue.add(buffer);
@@ -117,6 +123,12 @@ public class VertxBlockingInputStream extends InputStream {
             }
             return b;
         }
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+
+        throw new IOException("reset not supported");
     }
 
     /**

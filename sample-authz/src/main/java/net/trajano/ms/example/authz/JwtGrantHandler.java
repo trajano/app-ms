@@ -6,7 +6,10 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.HttpHeaders;
@@ -14,9 +17,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
@@ -28,7 +34,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.oauth.GrantHandler;
 import net.trajano.ms.common.oauth.GrantTypes;
-import net.trajano.ms.common.oauth.OAuthException;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @Component
@@ -36,8 +41,12 @@ import net.trajano.ms.common.oauth.OAuthTokenResponse;
 public class JwtGrantHandler implements
     GrantHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(JwtGrantHandler.class);
+
+    private final Set<String> allowedIssuers = new HashSet<>();
+
     @Autowired
-    private AllowedIssuers allowedIssuers;
+    private Environment env;
 
     @Value("${issuer}")
     private URI issuer;
@@ -69,7 +78,7 @@ public class JwtGrantHandler implements
 
         final String assertion = form.getFirst("assertion");
         if (assertion == null) {
-            throw new OAuthException("invalid_request", "Missing Assertion");
+            throw OAuthTokenResponse.badRequest("invalid_request", "Missing Assertion");
         }
 
         try {
@@ -78,9 +87,12 @@ public class JwtGrantHandler implements
             validateIssuer(claims);
             // TODO cache
             final JWKSet issuerJwks = JWKSet.load(UriBuilder.fromUri(claims.getIssuer()).path("/.well-known/jwks").build().toURL());
-            final RSAKey signingKey = (RSAKey) issuerJwks.getKeyByKeyId(jwsObject.getHeader().getKeyID());
+            final String keyID = jwsObject.getHeader().getKeyID();
+            System.out.println(keyID);
+            final RSAKey signingKey = (RSAKey) issuerJwks.getKeyByKeyId(keyID);
+            System.out.println(signingKey);
             if (!jwsObject.verify(new RSASSAVerifier(signingKey))) {
-                throw new OAuthException("access_denied", "Failed signature verification");
+                throw OAuthTokenResponse.badRequest("access_denied", "Failed signature verification");
             }
 
             final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims);
@@ -88,7 +100,7 @@ public class JwtGrantHandler implements
             return tokenCache.store(internalClaims);
 
         } catch (final ParseException e) {
-            throw new OAuthException("invalid_request", "Unable to parse assertion");
+            throw OAuthTokenResponse.badRequest("invalid_request", "Unable to parse assertion");
         } catch (final IllegalArgumentException
             | UriBuilderException
             | JOSEException
@@ -99,11 +111,23 @@ public class JwtGrantHandler implements
         }
     }
 
+    /**
+     * Loads the allowed issuers from the environment.
+     */
+    @PostConstruct
+    public void init() {
+
+        int i = 0;
+        while (env.containsProperty(String.format("allowedIssuers[%d]", i))) {
+            allowedIssuers.add(env.getProperty(String.format("allowedIssuers[%d]", i++)));
+        }
+    }
+
     private void validateIssuer(final JWTClaimsSet claims) {
 
         final String issuer = claims.getIssuer();
-        if (!allowedIssuers.isIssuerAllowed(issuer)) {
-            throw new OAuthException("access_denied", "Issuer is not valid");
+        if (!allowedIssuers.contains(issuer)) {
+            throw OAuthTokenResponse.badRequest("access_denied", "Issuer is not valid");
         }
     }
 

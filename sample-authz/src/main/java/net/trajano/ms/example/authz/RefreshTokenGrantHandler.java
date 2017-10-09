@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import net.trajano.ms.common.oauth.GrantHandler;
 import net.trajano.ms.common.oauth.GrantTypes;
-import net.trajano.ms.common.oauth.OAuthException;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @Component
@@ -34,7 +33,7 @@ public class RefreshTokenGrantHandler implements
 
         final String refreshToken = form.getFirst("refresh_token");
         if (refreshToken == null) {
-            throw new OAuthException("invalid_request", "Missing refresh token");
+            throw OAuthTokenResponse.badRequest("invalid_request", "Missing refresh token");
         }
 
         return tokenCache.refresh(refreshToken);

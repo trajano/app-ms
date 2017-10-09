@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import net.trajano.ms.common.oauth.GrantHandler;
 import net.trajano.ms.common.oauth.GrantTypes;
-import net.trajano.ms.common.oauth.OAuthException;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @Component
@@ -34,7 +33,7 @@ public class AuthorizationCodeGrantHandler implements
 
         final String accessToken = form.getFirst("code");
         if (accessToken == null) {
-            throw new OAuthException("invalid_request", "Missing code");
+            throw OAuthTokenResponse.badRequest("invalid_request", "Missing code");
         }
 
         return tokenCache.get(accessToken);

@@ -4,8 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -17,6 +15,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.beans.JwksProvider;
@@ -89,18 +84,18 @@ public class SimpleAuthenticationGrantHandler implements
                 .expirationTime(Date.from(Instant.now().plus(60, ChronoUnit.SECONDS)))
                 .build();
 
-            final JWSObject jws = new JWSObject(new JWSHeader(JWSAlgorithm.RS512), new Payload(claims.toString()));
-            jws.sign(jwksProvider.getASigner());
-            final String jwt = jws.serialize();
+            final String jwt = jwksProvider.sign(claims).serialize();
 
             final Form authorizationForm = new Form();
             authorizationForm.param("grant_type", GrantTypes.JWT_ASSERTION);
+
+            authorizationForm.param("client_id", form.getFirst("client_id"));
+            authorizationForm.param("client_secret", form.getFirst("client_secret"));
             authorizationForm.param("assertion", jwt);
-            return jaxRsClient.target(authorizationEndpoint).request().post(Entity.form(authorizationForm), OAuthTokenResponse.class);
+            System.out.println(authorizationForm.asMap());
+            return jaxRsClient.target(authorizationEndpoint).request().accept(MediaType.APPLICATION_JSON).post(Entity.form(authorizationForm), OAuthTokenResponse.class);
         } catch (final UnsupportedEncodingException
-            | InvalidKeySpecException
-            | JOSEException
-            | ParseException e) {
+            | JOSEException e) {
             throw new InternalServerErrorException(e);
         }
     }

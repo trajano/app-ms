@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
@@ -16,6 +15,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import net.trajano.ms.common.JwtNotRequired;
 
 /**
@@ -42,8 +43,8 @@ public abstract class BaseTokenResource {
     }
 
     /**
-     * This performs a check whether the given client is authorized. It will
-     * throw a {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will throw a
+     * {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param clientId
@@ -54,27 +55,38 @@ public abstract class BaseTokenResource {
         final String clientSecret) {
 
         if (!clientValidator.isValid(grantType, clientId, clientSecret)) {
-            final OAuthTokenResponse r = new OAuthTokenResponse();
-            r.setError("unauthorized_client");
-            throw new BadRequestException(Response.ok(r).build());
+            throw OAuthTokenResponse.unauthorized("unauthorized_client", "Client not authorized");
         }
 
     }
 
-    protected BadRequestException invalidGrant() {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError("invalid_grant");
-        return new BadRequestException(Response.ok(r).build());
-    }
-
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "grant_type",
+            value = "Grant type",
+            required = true,
+            dataType = "java.lang.String",
+            example = GrantTypes.CLIENT_CREDENTIALS,
+            paramType = "form"),
+        @ApiImplicitParam(name = "client_id",
+            value = "Client ID",
+            dataType = "java.lang.String",
+            required = true,
+            paramType = "form"),
+        @ApiImplicitParam(name = "client_secret",
+            value = "Client Secret",
+            dataType = "java.lang.String",
+            required = true,
+            paramType = "form")
+    })
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response token(@FormParam("grant_type") final String grantType,
-        @FormParam("client_id") final String clientId,
-        @FormParam("client_secret") final String clientSecret,
+    public Response token(
         @Context final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
+
+        final String grantType = form.getFirst("grant_type");
+        final String clientId = form.getFirst("client_id");
+        final String clientSecret = form.getFirst("client_secret");
 
         if (!grantHandlerMap.containsKey(grantType)) {
             throw unsupportedGrantType();

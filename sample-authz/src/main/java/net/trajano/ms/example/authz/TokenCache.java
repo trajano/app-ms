@@ -1,7 +1,5 @@
 package net.trajano.ms.example.authz;
 
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -17,16 +15,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.common.oauth.IdTokenResponse;
-import net.trajano.ms.common.oauth.OAuthException;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @Configuration
@@ -65,9 +59,8 @@ public class TokenCache {
     public IdTokenResponse get(final String accessToken) {
 
         final JWTClaimsSet claims = accessTokenToClaims.get(accessToken, JWTClaimsSet.class);
-        final JWSObject jws = new JWSObject(new JWSHeader(JWSAlgorithm.RS512), new Payload(claims.toString()));
         try {
-            jws.sign(jwksProvider.getASigner());
+            final JWSObject jws = jwksProvider.sign(claims);
             final String jwt = jws.serialize();
 
             final IdTokenResponse oauthTokenResponse = new IdTokenResponse();
@@ -78,9 +71,7 @@ public class TokenCache {
             }
             oauthTokenResponse.setIdToken(jwt);
             return oauthTokenResponse;
-        } catch (InvalidKeySpecException
-            | JOSEException
-            | ParseException e) {
+        } catch (final JOSEException e) {
             throw new InternalServerErrorException(e);
         }
     }
@@ -97,7 +88,7 @@ public class TokenCache {
 
         final JWTClaimsSet claims = refreshTokenToClaims.get(oldRefreshToken, JWTClaimsSet.class);
         if (claims == null) {
-            throw new OAuthException("invalid_request", "Refresh token is not valid");
+            throw OAuthTokenResponse.badRequest("invalid_request", "Refresh token is not valid");
         }
         refreshTokenToClaims.evict(oldRefreshToken);
         final String oldAccessToken = refreshTokenToAccessToken.get(oldRefreshToken, String.class);
