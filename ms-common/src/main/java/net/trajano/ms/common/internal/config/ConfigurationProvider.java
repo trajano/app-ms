@@ -46,7 +46,8 @@ public class ConfigurationProvider {
     @Bean
     public HttpClientOptions httpClientOptions() {
 
-        final HttpClientOptions options = new HttpClientOptions();
+        final HttpClientOptions options = new HttpClientOptions()
+            .setPipelining(true);
         if (httpClientProxyHost != null) {
             final ProxyOptions proxyOptions = new ProxyOptions()
                 .setHost(httpClientProxyHost)
