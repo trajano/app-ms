@@ -101,17 +101,10 @@ public abstract class BaseTokenResource {
         final String grantType = form.getFirst("grant_type");
 
         if (!grantHandlerMap.containsKey(grantType)) {
-            throw unsupportedGrantType();
+            throw OAuthTokenResponse.badRequest("unsupported_grant_type", "Unsupported grant type");
         }
         checkClientAuthorized(grantType, httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION));
         return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, httpHeaders, form)).build();
-    }
-
-    private BadRequestException unsupportedGrantType() {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError("unsupported_grant_type");
-        return new BadRequestException(Response.ok(r).build());
     }
 
 }

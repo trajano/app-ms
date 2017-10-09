@@ -16,5 +16,5 @@ baselines:
   - from: /authn
     to: http://localhost:8281/
 
-authorizationEndpoint: http://localhost:8282/
+authorizationEndpoint: http://localhost:8282/authz
 refreshTokenPath: /refresh

@@ -64,7 +64,7 @@ public class TokenCache {
 
             final IdTokenResponse oauthTokenResponse = new IdTokenResponse();
             oauthTokenResponse.setAccessToken(accessToken);
-            oauthTokenResponse.setTokenType("JWT-Assertion");
+            oauthTokenResponse.setTokenType("Bearer");
             if (claims.getExpirationTime() != null) {
                 oauthTokenResponse.setExpiresIn((int) Duration.between(Instant.now(), claims.getExpirationTime().toInstant()).getSeconds());
             }
