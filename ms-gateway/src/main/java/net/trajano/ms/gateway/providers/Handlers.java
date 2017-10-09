@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
@@ -47,7 +48,7 @@ public class Handlers {
     /**
      * This handler deals with refreshing the OAuth token.
      *
-     * @return
+     * @return handler
      */
     public Handler<RoutingContext> refreshHandler() {
 
@@ -110,6 +111,39 @@ public class Handlers {
                         .end("grant_type=refresh_token&refresh_token=" + refreshToken);
                 });
 
+        };
+    }
+
+    /**
+     * This handler passes the data through
+     *
+     * @return handler
+     */
+    public Handler<RoutingContext> unprotectedHandler(final String baseUri,
+        final URI endpoint) {
+
+        return context -> {
+            final HttpServerRequest contextRequest = context.request();
+            if (!contextRequest.uri().startsWith(baseUri)) {
+                throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
+            }
+            final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
+            final HttpClientRequest c_req = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
+                contextRequest.response().setChunked(true);
+                contextRequest.response().setStatusCode(c_res.statusCode());
+                contextRequest.response().headers().setAll(c_res.headers());
+                c_res.handler(data -> {
+                    contextRequest.response().write(data);
+                });
+                c_res.endHandler((v) -> contextRequest.response().end());
+            });
+
+            c_req.setChunked(true);
+            c_req.headers().setAll(contextRequest.headers());
+            contextRequest.handler(data -> {
+                c_req.write(data);
+            });
+            contextRequest.endHandler((v) -> c_req.end());
         };
     }
 }

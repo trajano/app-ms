@@ -28,7 +28,28 @@ public final class Conversions {
 
     }
 
+    /**
+     * Builds the request options suitable for HttpClient from a URI.
+     *
+     * @param uri
+     *            URI
+     * @return request options
+     */
     public static RequestOptions toRequestOptions(final URI uri) {
+
+        return toRequestOptions(uri, "");
+    }
+
+    /**
+     * Builds the request options suitable for HttpClient from a URI and a relative
+     * path.
+     *
+     * @param uri
+     *            URI
+     * @return request options
+     */
+    public static RequestOptions toRequestOptions(final URI uri,
+        final String relativeUri) {
 
         final RequestOptions options = new RequestOptions()
             .setSsl("https".equals(uri.getScheme()))
@@ -40,10 +61,11 @@ public final class Conversions {
         } else {
             options.setPort(80);
         }
+        final String rawPath = uri.getRawPath() + relativeUri;
         if (uri.getRawQuery() == null) {
-            options.setURI(uri.getRawPath());
+            options.setURI(rawPath);
         } else {
-            options.setURI(uri.getRawPath() + "?" + uri.getRawQuery());
+            options.setURI(rawPath + "?" + uri.getRawQuery());
         }
         return options;
     }
