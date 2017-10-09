@@ -13,16 +13,8 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>ms-gateway</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web</artifactId>
-      <version>3.4.2</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web-client</artifactId>
-      <version>3.4.2</version>
-    </dependency>
   </dependencies>
-  <build/>
+<build>
+    <finalName>sample-gw</finalName>
+  </build>
 </project>

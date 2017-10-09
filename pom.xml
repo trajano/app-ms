@@ -102,6 +102,12 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <additionalparam>-sourceclasspath ${basedir}/target/classes</additionalparam>
+          </configuration>
+        </plugin>
+        <plugin>
           <artifactId>maven-release-plugin</artifactId>
           <configuration>
             <goals>deploy</goals>

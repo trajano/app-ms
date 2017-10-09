@@ -4,12 +4,12 @@ services:
     image: nginx:alpine
     networks:
     - gateway-web
-#  gateway-ms:
-#    build: ./sample-gw
-#    networks:
-#    - default
-#    - gateway-web
-#    - gateway-auth
+  gateway-ms:
+    build: ./sample-gw
+    networks:
+    - default
+    - gateway-web
+    - gateway-auth
   authentication-ms:
     build: ./sample-authn
     networks:
