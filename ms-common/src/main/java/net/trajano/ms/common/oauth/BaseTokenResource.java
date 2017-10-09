@@ -55,8 +55,8 @@ public abstract class BaseTokenResource {
     }
 
     /**
-     * This performs a check whether the given client is authorized. It will throw a
-     * {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will
+     * throw a {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param authorization

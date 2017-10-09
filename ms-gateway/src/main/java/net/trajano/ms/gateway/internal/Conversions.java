@@ -41,8 +41,8 @@ public final class Conversions {
     }
 
     /**
-     * Builds the request options suitable for HttpClient from a URI and a relative
-     * path.
+     * Builds the request options suitable for HttpClient from a URI and a
+     * relative path.
      *
      * @param uri
      *            URI

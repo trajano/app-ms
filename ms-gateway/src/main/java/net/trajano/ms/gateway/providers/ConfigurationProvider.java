@@ -1,5 +1,7 @@
 package net.trajano.ms.gateway.providers;
 
+import java.net.URI;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +12,9 @@ import io.vertx.core.http.HttpServerOptions;
 
 @Configuration
 public class ConfigurationProvider {
+
+    @Value("${authorization.endpoint}")
+    private URI authorizationEndpoint;
 
     @Value("${http.client.proxy.host:#{null}}")
     private String httpClientProxyHost;

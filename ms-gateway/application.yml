@@ -1,3 +1,7 @@
+authorization:
+  endpoint: http://localhost:8282/authz
+  refreshTokenPath: /refresh
+
 baselines:
 - baseline: /v1
   routes:
@@ -6,7 +10,7 @@ baselines:
   - from: /s
     to: http://localhost:8280/s
   - from: /authn
-    to: http://localhost:8281/
+    to: http://localhost:8281/authn
 - baseline: /v2
   routes:
   - from: /hello
@@ -16,5 +20,3 @@ baselines:
   - from: /authn
     to: http://localhost:8281/
 
-authorizationEndpoint: http://localhost:8282/authz
-refreshTokenPath: /refresh

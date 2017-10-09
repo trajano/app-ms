@@ -59,6 +59,8 @@ public class Microservice {
             Microservice.class
         };
         final SpringApplication springApplication = new SpringApplication(sources);
+
+        springApplication.setWebEnvironment(false);
         springApplication
             .setBannerMode(Mode.OFF);
         springApplication.run(args);
@@ -95,7 +97,7 @@ public class Microservice {
         handlerStack.push(SwaggerHandler.registerToRouter(router, applicationClass));
         handlerStack.push(ManifestHandler.registerToRouter(router));
 
-        Handler<RoutingContext> notFoundHandler = ctx -> ctx.response().setStatusCode(404).setStatusMessage(Status.NOT_FOUND.getReasonPhrase()).end(Status.NOT_FOUND.getReasonPhrase());
+        final Handler<RoutingContext> notFoundHandler = ctx -> ctx.response().setStatusCode(404).setStatusMessage(Status.NOT_FOUND.getReasonPhrase()).end(Status.NOT_FOUND.getReasonPhrase());
         router.get("/favicon.ico").handler(notFoundHandler);
 
         final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();

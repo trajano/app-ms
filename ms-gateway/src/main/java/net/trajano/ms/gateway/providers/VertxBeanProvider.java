@@ -9,7 +9,6 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.ext.web.client.WebClient;
 
 /**
  * Provides Vertx objects.
@@ -37,13 +36,6 @@ public class VertxBeanProvider {
     public Vertx vertx(final VertxOptions vertxOptions) {
 
         return Vertx.vertx(vertxOptions);
-    }
-
-    @Bean
-    public WebClient webClient(final Vertx vertx,
-        final HttpClient httpClient) {
-
-        return WebClient.wrap(httpClient);
     }
 
 }

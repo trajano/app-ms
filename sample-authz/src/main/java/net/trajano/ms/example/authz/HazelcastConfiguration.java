@@ -24,6 +24,7 @@ public class HazelcastConfiguration {
 
         return new Config()
             .setInstanceName(instanceName)
+            .setProperty("hazelcast.logging.type", "slf4j")
             .addMapConfig(new MapConfig()
                 .setName(TokenCache.ACCESS_TOKEN_TO_CLAIMS)
                 .setTimeToLiveSeconds(accessTokenExpirationInSeconds))
