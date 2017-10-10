@@ -33,6 +33,12 @@ services:
     - SPRING_PROFILES_ACTIVE=docker-compose
     deploy:
       replicas: 2
+  swagger-ms:
+    build: ./swagger-ms
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+    deploy:
+      replicas: 2
   security-cache:
     image: hazelcast/hazelcast:latest
     deploy:

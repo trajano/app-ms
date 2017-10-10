@@ -1,0 +1,34 @@
+# Mappings are provided so that environment specific servers can be mapped more easily
+http:
+  port: 8283
+
+  
+swagger:
+- path: /v1
+  info:
+    title: Aggregate
+    version: 1.0
+  uris:
+  - swagger: ${mappings.sample-ms}
+    paths:
+    - /hello
+    - from: /s
+      to: /secure
+  - swagger: ${mappings.authn-ms}
+    paths:
+    - /authn
+      
+
+---
+
+spring.profiles: docker-compose
+
+http:
+  port: 80
+
+mappings:
+  sample-ms: http://sample-ms
+  authn-ms: http://authentication-ms
+  authz-ms: http://authorization-ms
+  swagger-ms: http://swagger-ms
+  

@@ -3,6 +3,7 @@ mappings:
   sample-ms: http://localhost:8900
   authn-ms: http://localhost:8281
   authz-ms: http://localhost:8282 
+  swagger-ms: http://localhost:8283
 
 authorization:
   endpoint: ${mappings.authz-ms}/authz
@@ -12,6 +13,10 @@ http:
   defaultBodyLimit: 2048
 
 routes:
+- from: /v1
+  to: ${mappings.swagger-ms}/v1
+  exact: true
+  protected: false 
 - from: /v1/hello
   to: ${mappings.sample-ms}/hello
 - from: /v1/secure/upload
@@ -51,4 +56,5 @@ mappings:
   sample-ms: http://sample-ms
   authn-ms: http://authentication-ms
   authz-ms: http://authorization-ms
+  swagger-ms: http://swagger-ms
   

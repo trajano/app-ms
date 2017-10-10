@@ -22,6 +22,7 @@
     <module>sample-authn</module>
     <module>sample-authz</module>
     <module>sample-ms</module>
+    <module>swagger-ms</module>
   </modules>
   <scm>
     <connection>scm:git:https://github.com/trajano/${repo.id}.git</connection>
@@ -68,6 +69,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>ms-gateway</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>ms-swagger</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
