@@ -1,7 +1,10 @@
 package net.trajano.ms.example.authz;
 
+import static java.time.Instant.now;
+
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
@@ -62,6 +65,10 @@ public class TokenCache {
         if (!claims.getAudience().contains(clientId)) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Client ID did not match expected value");
         }
+        if (claims.getExpirationTime().before(Date.from(now()))) {
+            accessTokenToClaims.evict(accessToken);
+            throw OAuthTokenResponse.badRequest("invalid_request", "JWT has exceeded life time");
+        }
         try {
             final JWSObject jws = jwksProvider.sign(claims);
             final String jwt = jws.serialize();
@@ -96,6 +103,10 @@ public class TokenCache {
         }
         if (!claims.getAudience().contains(clientId)) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Client ID does not match");
+        }
+        if (claims.getExpirationTime().before(Date.from(now()))) {
+            refreshTokenToClaims.evict(oldRefreshToken);
+            throw OAuthTokenResponse.badRequest("invalid_request", "JWT has exceeded life time");
         }
         refreshTokenToClaims.evict(oldRefreshToken);
         final String oldAccessToken = refreshTokenToAccessToken.get(oldRefreshToken, String.class);

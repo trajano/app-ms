@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.Arrays;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,33 +49,20 @@ public class JwtGrantHandler implements
     @Autowired
     private Environment env;
 
+    @Autowired
+    private InternalClaimsBuilder internalClaimsBuilder;
+
     @Value("${issuer}")
     private URI issuer;
+
+    @Value("${token.jwtMaximumLifetime:86400}")
+    private int jwtMaximumLifetimeInSeconds;
 
     @Autowired
     private TokenCache tokenCache;
 
     @Autowired
     private TokenGenerator tokenGenerator;
-
-    /**
-     * This is an extension point that allows the assembly of an internal JWT Claims
-     * set based on data from another JWT Claims Set. It must return a builder
-     * rather than a final one as additional framework level claims are required. At
-     * minimum the subject needs to be set and optionally the "roles" claim can be
-     * populated as well.
-     *
-     * @param claims
-     *            claims
-     * @return JWTClaimsSet.Builder
-     */
-    private JWTClaimsSet.Builder buildInternalJWTClaimsSet(final JWTClaimsSet claims) {
-
-        // TODO this should be abstract
-        return new JWTClaimsSet.Builder()
-            .subject("Internal-Subject" + claims.getSubject())
-            .claim("roles", Arrays.asList("user"));
-    }
 
     @Override
     public String getGrantTypeHandled() {
@@ -106,11 +93,12 @@ public class JwtGrantHandler implements
                 throw OAuthTokenResponse.badRequest("access_denied", "Failed signature verification");
             }
 
-            final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims)
+            final JWTClaimsSet internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(claims)
                 .issuer(issuer.toASCIIString())
                 .audience(clientId)
                 .jwtID(tokenGenerator.newToken())
                 .issueTime(Date.from(Instant.now()))
+                .expirationTime(Date.from(Instant.now().plus(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS)))
                 .build();
             if (internalClaims.getSubject() == null) {
                 LOG.error("Subject is missing from {}", internalClaims);
