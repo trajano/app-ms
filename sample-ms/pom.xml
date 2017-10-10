@@ -22,5 +22,15 @@
   </dependencies>
   <build>
     <finalName>sample-ms</finalName>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <additionalparam>-sourceclasspath ${basedir}/target/classes</additionalparam>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

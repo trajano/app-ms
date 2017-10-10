@@ -17,5 +17,16 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <build />
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <additionalparam>-sourceclasspath ${basedir}/target/classes</additionalparam>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
