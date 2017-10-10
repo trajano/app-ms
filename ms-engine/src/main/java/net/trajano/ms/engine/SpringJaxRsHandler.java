@@ -10,6 +10,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
@@ -93,7 +94,32 @@ public class SpringJaxRsHandler implements
             final SpringJaxRsHandler requestHandler = new SpringJaxRsHandler(baseApplicationContext, applicationClass);
             router.route(requestHandler.baseUriRoute())
                 .useNormalisedPath(true)
-                .handler(requestHandler);
+                .handler(requestHandler)
+                .failureHandler(context -> {
+                    final Throwable wae = context.failure();
+                    if (wae instanceof WebApplicationException) {
+                        final WebApplicationException webAppException = (WebApplicationException) wae;
+                        LOG.error(wae.getMessage(), wae);
+                        context.response().setStatusCode(webAppException.getResponse().getStatus());
+                        context.response().setStatusMessage(webAppException.getResponse().getStatusInfo().getReasonPhrase());
+                        if (context.request().method() != HttpMethod.HEAD) {
+                            if (webAppException.getResponse().getMediaType() == null) {
+                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+                            } else {
+                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, webAppException.getResponse().getMediaType().toString());
+                            }
+                            context.response().end(webAppException.getResponse().getStatusInfo().getReasonPhrase());
+                        }
+                    } else {
+                        LOG.error(wae.getMessage(), wae);
+                        context.response().setStatusCode(500);
+                        context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                        if (context.request().method() != HttpMethod.HEAD) {
+                            context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+                            context.response().end(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                        }
+                    }
+                });
             ret[i++] = requestHandler;
             LOG.debug("Route to {} handled by {}", requestHandler.baseUriRoute(), requestHandler);
         }
@@ -299,13 +325,7 @@ public class SpringJaxRsHandler implements
                             LOG.debug("uri={} was not found", serverRequest.uri());
                             context.next();
                         } else {
-                            LOG.error(wae.getMessage(), wae);
-                            context.response().setStatusCode(500);
-                            context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                            if (context.request().method() != HttpMethod.HEAD) {
-                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                                context.response().end(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                            }
+                            context.fail(wae);
                         }
                     } else {
                         if (!context.response().ended()) {

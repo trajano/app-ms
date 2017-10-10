@@ -2,8 +2,13 @@ package net.trajano.ms.example.authn;
 
 import java.util.List;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -40,6 +45,36 @@ public class AuthnResource extends BaseTokenResource {
         final List<GrantHandler> grantHandlers) {
 
         super(new AllowAnyClientValidator(), grantHandlers);
+    }
+
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "grant_type",
+            value = "Grant type",
+            required = true,
+            dataType = "java.lang.String",
+            example = GrantTypes.PASSWORD,
+            paramType = "form"),
+        @ApiImplicitParam(name = "username",
+            value = "Username",
+            dataType = "java.lang.String",
+            required = true,
+            paramType = "form"),
+        @ApiImplicitParam(name = "password",
+            value = "Password",
+            dataType = "java.lang.String",
+            required = true,
+            paramType = "form")
+    })
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response json(@Context final HttpHeaders httpHeaders,
+        final AuthnRequest req) {
+
+        final MultivaluedMap<String, String> form = new MultivaluedHashMap<>();
+        form.putSingle("grant_type", req.getGrantType());
+        form.putSingle("username", req.getUsername());
+        form.putSingle("password", req.getPassword());
+        return super.token(httpHeaders, form);
     }
 
     @ApiImplicitParams({

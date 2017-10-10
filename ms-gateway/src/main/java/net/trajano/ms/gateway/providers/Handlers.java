@@ -174,6 +174,7 @@ public class Handlers {
                         contextResponse.setStatusCode(authorizationResponse.statusCode());
                         contextResponse.setStatusMessage(authorizationResponse.statusMessage());
                         authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
+                        contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
                         contextResponse.end(buffer);
                     } else {
                         final String idToken = new JsonObject(buffer).getString("id_token");
@@ -281,6 +282,7 @@ public class Handlers {
                             contextResponse.setStatusCode(authorizationResponse.statusCode());
                             contextResponse.setStatusMessage(authorizationResponse.statusMessage());
                             authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
+                            contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
                             contextResponse.end(buffer);
                         });
                     });
@@ -313,6 +315,7 @@ public class Handlers {
                 contextRequest.response().setChunked(true);
                 contextRequest.response().setStatusCode(c_res.statusCode());
                 contextRequest.response().headers().setAll(c_res.headers());
+                contextRequest.response().putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
                 c_res.handler(data -> {
                     contextRequest.response().write(data);
                 });

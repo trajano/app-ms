@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.CorsHandler;
 
 /**
  * Provides the router which will act as the gateway.
@@ -42,6 +44,13 @@ public class RouterConfiguration {
     public Router router(final Vertx vertx) {
 
         final Router router = Router.router(vertx);
+
+        router.options().handler(CorsHandler.create("*")
+            .allowedMethod(HttpMethod.GET)
+            .allowedMethod(HttpMethod.POST)
+            .allowedMethod(HttpMethod.OPTIONS)
+            .allowedHeader("Content-Type")
+            .allowedHeader("Authorization"));
 
         router.post(refreshTokenPath)
             .consumes("application/x-www-form-urlencoded")
