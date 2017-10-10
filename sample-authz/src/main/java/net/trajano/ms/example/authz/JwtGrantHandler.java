@@ -32,6 +32,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
+import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.common.oauth.GrantHandler;
 import net.trajano.ms.common.oauth.GrantTypes;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
@@ -54,17 +55,26 @@ public class JwtGrantHandler implements
     @Autowired
     private TokenCache tokenCache;
 
-    private JWTClaimsSet buildInternalJWTClaimsSet(final JWTClaimsSet claims,
-        final String clientId) {
+    @Autowired
+    private TokenGenerator tokenGenerator;
+
+    /**
+     * This is an extension point that allows the assembly of an internal JWT Claims
+     * set based on data from another JWT Claims Set. It must return a builder
+     * rather than a final one as additional framework level claims are required. At
+     * minimum the subject needs to be set and optionally the "roles" claim can be
+     * populated as well.
+     *
+     * @param claims
+     *            claims
+     * @return JWTClaimsSet.Builder
+     */
+    private JWTClaimsSet.Builder buildInternalJWTClaimsSet(final JWTClaimsSet claims) {
 
         // TODO this should be abstract
         return new JWTClaimsSet.Builder()
-            .subject("Internal-Subject")
-            .claim("roles", Arrays.asList("user"))
-            .issuer(issuer.toASCIIString())
-            .audience(clientId)
-            .issueTime(Date.from(Instant.now()))
-            .build();
+            .subject("Internal-Subject" + claims.getSubject())
+            .claim("roles", Arrays.asList("user"));
     }
 
     @Override
@@ -96,7 +106,16 @@ public class JwtGrantHandler implements
                 throw OAuthTokenResponse.badRequest("access_denied", "Failed signature verification");
             }
 
-            final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims, clientId);
+            final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims)
+                .issuer(issuer.toASCIIString())
+                .audience(clientId)
+                .jwtID(tokenGenerator.newToken())
+                .issueTime(Date.from(Instant.now()))
+                .build();
+            if (internalClaims.getSubject() == null) {
+                LOG.error("Subject is missing from {}", internalClaims);
+                throw OAuthTokenResponse.internalServerError("Subject is missing from the resulting claims set.");
+            }
 
             return tokenCache.store(internalClaims);
 

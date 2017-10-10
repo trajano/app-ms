@@ -42,6 +42,16 @@ public class OAuthTokenResponse implements
             .status(Status.BAD_REQUEST).build());
     }
 
+    public static InternalServerErrorException internalServerError(final String message) {
+
+        final OAuthTokenResponse r = new OAuthTokenResponse();
+        r.setError("server_error");
+        r.setErrorDescription(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        return new InternalServerErrorException(message, Response
+            .ok(r, MediaType.APPLICATION_JSON)
+            .status(Status.INTERNAL_SERVER_ERROR).build());
+    }
+
     public static InternalServerErrorException internalServerError(final Throwable e) {
 
         final OAuthTokenResponse r = new OAuthTokenResponse();
