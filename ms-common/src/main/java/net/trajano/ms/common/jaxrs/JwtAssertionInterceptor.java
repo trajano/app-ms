@@ -1,7 +1,6 @@
 package net.trajano.ms.common.jaxrs;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.concurrent.ExecutionException;
@@ -54,6 +53,11 @@ public class JwtAssertionInterceptor implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
+    /**
+     * Maximum number of keys to cache.
+     */
+    private static final long MAX_NUMBER_OF_KEYS = 20;
+
     private JwtAssertionRequiredPredicate assertionRequiredPredicate;
 
     @Autowired(required = false)
@@ -72,11 +76,6 @@ public class JwtAssertionInterceptor implements
      * In-memory public key cache.
      */
     private Cache<String, RSAKey> keyCache;
-
-    /**
-     * Maximum number of keys to cache.
-     */
-    private final long MAX_NUMBER_OF_KEYS = 20;
 
     @Context
     private ResourceInfo resourceInfo;
@@ -200,9 +199,7 @@ public class JwtAssertionInterceptor implements
     }
 
     @PostConstruct
-    public void init() throws MalformedURLException,
-        IOException,
-        ParseException {
+    public void init() {
 
         keyCache = CacheBuilder.newBuilder().maximumSize(MAX_NUMBER_OF_KEYS).build();
 
