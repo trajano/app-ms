@@ -54,13 +54,15 @@ public class JwtGrantHandler implements
     @Autowired
     private TokenCache tokenCache;
 
-    private JWTClaimsSet buildInternalJWTClaimsSet(final JWTClaimsSet claims) {
+    private JWTClaimsSet buildInternalJWTClaimsSet(final JWTClaimsSet claims,
+        final String clientId) {
 
         // TODO this should be abstract
         return new JWTClaimsSet.Builder()
             .subject("Internal-Subject")
             .claim("roles", Arrays.asList("user"))
             .issuer(issuer.toASCIIString())
+            .audience(clientId)
             .issueTime(Date.from(Instant.now()))
             .build();
     }
@@ -73,6 +75,7 @@ public class JwtGrantHandler implements
 
     @Override
     public OAuthTokenResponse handler(final Client jaxRsClient,
+        final String clientId,
         final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
@@ -93,7 +96,7 @@ public class JwtGrantHandler implements
                 throw OAuthTokenResponse.badRequest("access_denied", "Failed signature verification");
             }
 
-            final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims);
+            final JWTClaimsSet internalClaims = buildInternalJWTClaimsSet(claims, clientId);
 
             return tokenCache.store(internalClaims);
 

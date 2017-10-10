@@ -55,14 +55,15 @@ public abstract class BaseTokenResource {
     }
 
     /**
-     * This performs a check whether the given client is authorized. It will
-     * throw a {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will throw a
+     * {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param authorization
      *            contents of the Authorization header
+     * @return client ID
      */
-    private void checkClientAuthorized(final String grantType,
+    private String checkClientAuthorized(final String grantType,
         final String authorization) {
 
         if (authorization == null || !authorization.startsWith("Basic ")) {
@@ -77,6 +78,7 @@ public abstract class BaseTokenResource {
             if (!clientValidator.isValid(grantType, clientId, clientSecret)) {
                 throw OAuthTokenResponse.unauthorized("unauthorized_client", "Client not authorized", "Basic");
             }
+            return clientId;
         } catch (final UnsupportedEncodingException e) {
             throw OAuthTokenResponse.internalServerError(e);
         }
@@ -104,8 +106,8 @@ public abstract class BaseTokenResource {
             throw OAuthTokenResponse.badRequest("unsupported_grant_type", "Unsupported grant type");
         }
         final String basicAuthorizationHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).stream().filter(s -> s.startsWith("Basic ")).collect(Collectors.toList()).get(0);
-        checkClientAuthorized(grantType, basicAuthorizationHeader);
-        return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, httpHeaders, form)).build();
+        final String clientId = checkClientAuthorized(grantType, basicAuthorizationHeader);
+        return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, clientId, httpHeaders, form)).build();
     }
 
 }

@@ -28,6 +28,7 @@ public class AuthorizationCodeGrantHandler implements
 
     @Override
     public OAuthTokenResponse handler(final Client jaxRsClient,
+        final String clientId,
         final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
@@ -36,7 +37,7 @@ public class AuthorizationCodeGrantHandler implements
             throw OAuthTokenResponse.badRequest("invalid_request", "Missing code");
         }
 
-        return tokenCache.get(accessToken);
+        return tokenCache.get(accessToken, clientId);
     }
 
 }

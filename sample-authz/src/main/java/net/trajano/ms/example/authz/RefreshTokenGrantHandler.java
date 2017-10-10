@@ -28,6 +28,7 @@ public class RefreshTokenGrantHandler implements
 
     @Override
     public OAuthTokenResponse handler(final Client jaxRsClient,
+        final String clientId,
         final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 
@@ -36,7 +37,7 @@ public class RefreshTokenGrantHandler implements
             throw OAuthTokenResponse.badRequest("invalid_request", "Missing refresh token");
         }
 
-        return tokenCache.refresh(refreshToken);
+        return tokenCache.refresh(refreshToken, clientId);
     }
 
 }

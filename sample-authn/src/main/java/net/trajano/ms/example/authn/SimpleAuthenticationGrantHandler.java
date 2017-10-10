@@ -56,6 +56,7 @@ public class SimpleAuthenticationGrantHandler implements
 
     @Override
     public OAuthTokenResponse handler(final Client jaxRsClient,
+        final String clientId,
         final HttpHeaders httpHeaders,
         final MultivaluedMap<String, String> form) {
 

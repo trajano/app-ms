@@ -55,9 +55,13 @@ public class TokenCache {
     @Autowired
     private TokenGenerator tokenGenerator;
 
-    public IdTokenResponse get(final String accessToken) {
+    public IdTokenResponse get(final String accessToken,
+        final String clientId) {
 
         final JWTClaimsSet claims = accessTokenToClaims.get(accessToken, JWTClaimsSet.class);
+        if (!claims.getAudience().contains(clientId)) {
+            throw OAuthTokenResponse.badRequest("invalid_request", "Client ID did not match expected value");
+        }
         try {
             final JWSObject jws = jwksProvider.sign(claims);
             final String jwt = jws.serialize();
@@ -83,11 +87,15 @@ public class TokenCache {
         refreshTokenToClaims = cm.getCache(REFRESH_TOKEN_TO_CLAIMS);
     }
 
-    public OAuthTokenResponse refresh(final String oldRefreshToken) {
+    public OAuthTokenResponse refresh(final String oldRefreshToken,
+        final String clientId) {
 
         final JWTClaimsSet claims = refreshTokenToClaims.get(oldRefreshToken, JWTClaimsSet.class);
         if (claims == null) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Refresh token is not valid");
+        }
+        if (!claims.getAudience().contains(clientId)) {
+            throw OAuthTokenResponse.badRequest("invalid_request", "Client ID does not match");
         }
         refreshTokenToClaims.evict(oldRefreshToken);
         final String oldAccessToken = refreshTokenToAccessToken.get(oldRefreshToken, String.class);
