@@ -26,8 +26,8 @@ public class SwaggerHandler implements
     AutoCloseable {
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -53,8 +53,8 @@ public class SwaggerHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -97,10 +97,10 @@ public class SwaggerHandler implements
             final String packageName = applicationClass.getPackage().getName();
             final Reflections reflections = new Reflections(packageName);
             reflections.getTypesAnnotatedWith(Api.class).forEach(clazz -> swaggerReader.read(clazz));
-            reflections.getTypesAnnotatedWith(SwaggerDefinition.class).forEach(clazz -> swaggerReader.read(clazz));
+            reflections.getTypesAnnotatedWith(SwaggerDefinition.class).forEach(swaggerReader::read);
         } else {
             swaggerReader.read(applicationClass);
-            resourceClasses.forEach(clazz -> swaggerReader.read(clazz));
+            resourceClasses.forEach(swaggerReader::read);
         }
 
     }
