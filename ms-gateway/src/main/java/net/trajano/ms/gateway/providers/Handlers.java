@@ -52,10 +52,10 @@ public class Handlers {
     }
 
     /**
-     * Obtains the access token from the request. Since the Authorization header
-     * can have multiple values comma separated, it needs to be broken up first
-     * then we have to locate the Bearer token from the comma separated list.
-     * The bearer token is expected to contain the access token.
+     * Obtains the access token from the request. Since the Authorization header can
+     * have multiple values comma separated, it needs to be broken up first then we
+     * have to locate the Bearer token from the comma separated list. The bearer
+     * token is expected to contain the access token.
      *
      * @param contextRequest
      *            request
@@ -190,32 +190,24 @@ public class Handlers {
                             return;
                         }
 
-                        final HttpClientRequest c_req = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
-                            contextResponse.setChunked(true);
-                            contextResponse.setStatusCode(c_res.statusCode());
+                        final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
+                            contextResponse.setChunked(true)
+                                .setStatusCode(c_res.statusCode());
                             contextResponse.headers().setAll(c_res.headers());
-                            c_res.handler(data -> {
-                                contextResponse.write(data);
-                            });
-                            c_res.endHandler((v) -> contextResponse.end());
+                            c_res.handler(data -> contextResponse.write(data))
+                                .endHandler(v -> contextResponse.end());
                         });
 
-                        c_req.setChunked(true)
+                        clientRequest.setChunked(true)
                             .headers().setAll(contextRequest.headers());
-                        c_req.putHeader("X-JWT-Assertion", idToken);
+                        clientRequest.putHeader("X-JWT-Assertion", idToken);
                         contextRequest.resume();
-                        contextRequest.handler(data -> {
-                            c_req.write(data);
-                        });
-                        contextRequest.endHandler((v) -> c_req.end());
+                        contextRequest.handler(data -> clientRequest.write(data))
+                            .endHandler(v -> clientRequest.end());
 
                     }
-                }).exceptionHandler(e -> {
-                    context.fail(e);
-                });
-            }).exceptionHandler(e -> {
-                context.fail(e);
-            });
+                }).exceptionHandler(context::fail);
+            }).exceptionHandler(context::fail);
 
             authorizationRequest
                 .putHeader(HttpHeaders.AUTHORIZATION, clientCredentials)
@@ -311,7 +303,7 @@ public class Handlers {
             }
             contextRequest.setExpectMultipart(true);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
-            final HttpClientRequest c_req = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
+            final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
                 contextRequest.response().setChunked(true);
                 contextRequest.response().setStatusCode(c_res.statusCode());
                 contextRequest.response().headers().setAll(c_res.headers());
@@ -322,12 +314,12 @@ public class Handlers {
                 c_res.endHandler((v) -> contextRequest.response().end());
             });
 
-            c_req.setChunked(true);
-            c_req.headers().setAll(contextRequest.headers());
+            clientRequest.setChunked(true);
+            clientRequest.headers().setAll(contextRequest.headers());
             contextRequest.handler(data -> {
-                c_req.write(data);
+                clientRequest.write(data);
             });
-            contextRequest.endHandler((v) -> c_req.end());
+            contextRequest.endHandler((v) -> clientRequest.end());
         };
     }
 }
