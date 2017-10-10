@@ -190,11 +190,11 @@ public class Handlers {
                             return;
                         }
 
-                        final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
+                        final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
                             contextResponse.setChunked(true)
-                                .setStatusCode(c_res.statusCode());
-                            contextResponse.headers().setAll(c_res.headers());
-                            c_res.handler(data -> contextResponse.write(data))
+                                .setStatusCode(clientResponse.statusCode());
+                            contextResponse.headers().setAll(clientResponse.headers());
+                            clientResponse.handler(data -> contextResponse.write(data))
                                 .endHandler(v -> contextResponse.end());
                         });
 
@@ -303,15 +303,15 @@ public class Handlers {
             }
             contextRequest.setExpectMultipart(true);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
-            final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, c_res -> {
+            final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
                 contextRequest.response().setChunked(true);
-                contextRequest.response().setStatusCode(c_res.statusCode());
-                contextRequest.response().headers().setAll(c_res.headers());
+                contextRequest.response().setStatusCode(clientResponse.statusCode());
+                contextRequest.response().headers().setAll(clientResponse.headers());
                 contextRequest.response().putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-                c_res.handler(data -> {
+                clientResponse.handler(data -> {
                     contextRequest.response().write(data);
                 });
-                c_res.endHandler((v) -> contextRequest.response().end());
+                clientResponse.endHandler((v) -> contextRequest.response().end());
             });
 
             clientRequest.setChunked(true);
