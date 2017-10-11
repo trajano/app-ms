@@ -12,11 +12,13 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import io.swagger.annotations.Api;
 import io.swagger.util.Json;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.swagger.internal.SwaggerCollator;
 
+@Api
 @Path("/")
 @JwtNotRequired
 public class SwaggerResource {
