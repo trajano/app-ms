@@ -77,6 +77,18 @@ public class SwaggerCollator {
 
     }
 
+    /**
+     * Checks to see if the base path specification exists.
+     * 
+     * @param basePath
+     *            base path
+     * @return true if it is registered.
+     */
+    public boolean isPathExists(final String basePath) {
+
+        return swaggerPaths.containsKey(basePath);
+    }
+
     private void processPaths(final Map<String, Path> swagger,
         final Swagger remoteSwagger,
         final int i,

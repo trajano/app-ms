@@ -1,6 +1,7 @@
 package net.trajano.ms.swagger;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -29,7 +30,11 @@ public class SwaggerResource {
     public Response swagger(@PathParam("version") final String version,
         @Context final RoutingContext routingContext) {
 
-        final StreamingOutput stream = output -> Json.mapper().writeValue(output, collator.getSwagger("/" + version, routingContext));
+        final String basePath = "/" + version;
+        if (!collator.isPathExists(basePath)) {
+            throw new NotFoundException();
+        }
+        final StreamingOutput stream = output -> Json.mapper().writeValue(output, collator.getSwagger(basePath, routingContext));
         return Response.ok(stream).build();
     }
 
