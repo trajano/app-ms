@@ -14,7 +14,7 @@ The technology stack used:
 - Spring-Data for persistence
 - Hazelcast for any caching requirements
 - Docker
-- Docker-Compose
+- Docker-Compose ([local deployment instructions](https://site.trajano.net/app-ms/building.html))
 - Etcd for microservice specific key stores
 - nginx for static content delivery
 - ReactJS for UI
