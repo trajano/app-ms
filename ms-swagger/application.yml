@@ -5,28 +5,9 @@ mappings:
   authz-ms: http://localhost:8282 
   swagger-ms: http://localhost:8283
 
-authorization:
-  endpoint: ${mappings.authz-ms}/authz
-  refreshTokenPath: /refresh
-
 http:
-  defaultBodyLimit: 2048
+  port: 8283
 
-routes:
-- from: /v1
-  to: ${mappings.swagger-ms}/v1
-  exact: true
-  protected: false 
-- from: /v1/hello
-  to: ${mappings.sample-ms}/hello
-- from: /v1/secure/upload
-  to: ${mappings.sample-ms}/s/upload
-  limit: 10000000 
-- from: /v1/secure
-  to: ${mappings.sample-ms}/s 
-- from: /v1/authn
-  to: ${mappings.authn-ms}/authn
-  protected: false 
   
 swagger:
 - path: /v1
@@ -50,7 +31,6 @@ spring.profiles: docker-compose
 
 http:
   port: 80
-  defaultBodyLimit: 2048
 
 mappings:
   sample-ms: http://sample-ms

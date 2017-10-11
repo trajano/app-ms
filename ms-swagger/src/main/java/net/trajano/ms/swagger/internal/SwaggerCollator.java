@@ -1,4 +1,4 @@
-package net.trajano.ms.gateway.providers;
+package net.trajano.ms.swagger.internal;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -18,11 +18,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.stereotype.Component;
 
 import io.swagger.models.Info;
+import io.swagger.models.Path;
 import io.swagger.models.Swagger;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.gateway.internal.ClonableSwagger;
 
 @Component
 public class SwaggerCollator {
@@ -41,7 +39,8 @@ public class SwaggerCollator {
         return swaggerPaths.keySet();
     }
 
-    public ClonableSwagger getSwagger(final String basePath) {
+    public ClonableSwagger getSwagger(final String basePath,
+        final RoutingContext routingContext) {
 
         ClonableSwagger swagger = swaggerMap.get(basePath);
         if (swagger == null) {
@@ -56,23 +55,13 @@ public class SwaggerCollator {
             info.setTitle(title);
             info.setVersion(version);
             swagger.setInfo(info);
-            swagger.setPaths(new TreeMap<>());
-            processUris(swagger, i);
+            final Map<String, Path> pathsMap = new TreeMap<>();
+            processUris(pathsMap, i);
+            swagger.setPaths(pathsMap);
 
             swaggerMap.putIfAbsent(basePath, swagger);
         }
-        return swagger;
-    }
-
-    public Handler<RoutingContext> handler() {
-
-        return context -> {
-            final ClonableSwagger swagger = getSwagger(context.currentRoute().getPath());
-            context.response()
-                .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                .end(io.swagger.util.Json.pretty(swagger.withRoutingContext(context)));
-        };
-
+        return swagger.withRoutingContext(routingContext);
     }
 
     @PostConstruct
@@ -88,7 +77,7 @@ public class SwaggerCollator {
 
     }
 
-    private void processPaths(final Swagger swagger,
+    private void processPaths(final Map<String, Path> swagger,
         final Swagger remoteSwagger,
         final int i,
         final int j) {
@@ -102,20 +91,20 @@ public class SwaggerCollator {
                 LOG.debug("getting path={} from paths={} and transform to={}", from, remoteSwagger.getPaths().keySet(), to);
                 remoteSwagger.getPaths().keySet().parallelStream()
                     .filter(s -> s.startsWith(from))
-                    .forEach(p -> swagger.getPaths().put(to + p.substring(from.length()), remoteSwagger.getPath(p)));
+                    .forEach(p -> swagger.put(to + p.substring(from.length()), remoteSwagger.getPath(p)));
 
             } else {
                 final String path = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d]", i, j, k));
                 LOG.debug("getting path={} from paths={}", path, remoteSwagger.getPaths().keySet());
                 remoteSwagger.getPaths().keySet().parallelStream()
                     .filter(s -> s.startsWith(path))
-                    .forEach(p -> swagger.getPaths().put(p, remoteSwagger.getPath(p)));
+                    .forEach(p -> swagger.put(p, remoteSwagger.getPath(p)));
             }
             ++k;
         }
     }
 
-    private void processUris(final Swagger swagger,
+    private void processUris(final Map<String, Path> swagger,
         final int i) {
 
         int j = 0;

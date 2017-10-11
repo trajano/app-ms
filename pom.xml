@@ -19,6 +19,7 @@
     <module>ms-engine</module>
     <module>ms-gateway</module>
     <module>ms-oidc</module>
+    <module>ms-swagger</module>
     <module>sample-authn</module>
     <module>sample-authz</module>
     <module>sample-ms</module>
@@ -68,6 +69,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>ms-gateway</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>ms-swagger</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

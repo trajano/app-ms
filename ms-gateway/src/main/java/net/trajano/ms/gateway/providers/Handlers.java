@@ -52,10 +52,10 @@ public class Handlers {
     }
 
     /**
-     * Obtains the access token from the request. Since the Authorization header can
-     * have multiple values comma separated, it needs to be broken up first then we
-     * have to locate the Bearer token from the comma separated list. The bearer
-     * token is expected to contain the access token.
+     * Obtains the access token from the request. Since the Authorization header
+     * can have multiple values comma separated, it needs to be broken up first
+     * then we have to locate the Bearer token from the comma separated list.
+     * The bearer token is expected to contain the access token.
      *
      * @param contextRequest
      *            request

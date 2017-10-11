@@ -37,9 +37,6 @@ public class RouterConfiguration {
     @Value("${authorization.refreshTokenPath:/refresh}")
     private String refreshTokenPath;
 
-    @Autowired
-    private SwaggerCollator swaggerCollator;
-
     @Bean
     public Router router(final Vertx vertx) {
 
@@ -56,12 +53,6 @@ public class RouterConfiguration {
             .consumes("application/x-www-form-urlencoded")
             .produces("application/json")
             .handler(handlers.refreshHandler());
-
-        for (final String path : swaggerCollator.getPaths()) {
-            router.get(path)
-                .produces("application/json")
-                .handler(swaggerCollator.handler());
-        }
 
         int i = 0;
         while (env.containsProperty(String.format("routes[%d].from", i))) {
