@@ -11,10 +11,10 @@ import net.trajano.ms.common.Microservice;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
-public class SampleAuthz extends Application {
+public class SampleAuthzMS extends Application {
 
     public static void main(final String[] args) {
 
-        Microservice.run(SampleAuthz.class, args);
+        Microservice.run(SampleAuthzMS.class, args);
     }
 }

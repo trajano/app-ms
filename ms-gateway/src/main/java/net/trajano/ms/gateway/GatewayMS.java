@@ -12,12 +12,12 @@ import io.vertx.core.Vertx;
 
 @SpringBootApplication
 @EnableAutoConfiguration
-public class Gateway {
+public class GatewayMS {
 
     public static void main(final String[] args) {
 
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
-        final SpringApplication application = new SpringApplication(Gateway.class);
+        final SpringApplication application = new SpringApplication(GatewayMS.class);
         application.setBannerMode(Mode.OFF);
         application.setWebEnvironment(false);
         application.run(args);

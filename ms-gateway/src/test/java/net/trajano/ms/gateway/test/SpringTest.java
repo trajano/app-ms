@@ -8,10 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import io.vertx.core.Vertx;
-import net.trajano.ms.gateway.Gateway;
+import net.trajano.ms.gateway.GatewayMS;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Gateway.class)
+@SpringBootTest(classes = GatewayMS.class)
 public class SpringTest {
 
     @Autowired

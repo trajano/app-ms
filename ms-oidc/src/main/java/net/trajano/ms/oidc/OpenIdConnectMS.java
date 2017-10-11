@@ -1,4 +1,4 @@
-package net.trajano.ms.example.authn;
+package net.trajano.ms.oidc;
 
 import javax.ws.rs.core.Application;
 
@@ -9,10 +9,11 @@ import net.trajano.ms.common.Microservice;
 
 @SpringBootApplication
 @EnableScheduling
-public class SampleAuthn extends Application {
+public class OpenIdConnectMS extends Application {
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
 
-        Microservice.run(SampleAuthn.class, args);
+        Microservice.run(OpenIdConnectMS.class, args);
+
     }
 }
