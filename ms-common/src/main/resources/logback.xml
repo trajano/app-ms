@@ -1,19 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration>
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+  <property name="pattern" value="%d{yyyy-MM-dd' 'HH:mm:ss.SSSZ} %.-1level [%.-10thread] %logger{40} - %msg%n"/>
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>DENY</onMatch>
+    </filter>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>WARN</level>
+      <onMatch>DENY</onMatch>
+    </filter>
+    <target>System.out</target>
+    <immediateFlush>true</immediateFlush>
     <encoder>
-      <pattern>
-        %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} [%thread] %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>${pattern}</pattern>
     </encoder>
   </appender>
-  <logger name="net.trajano.ms.engine" level="DEBUG"/>
-  <logger name="net.trajano.ms.common.oauth" level="DEBUG"/>
-  <!-- <logger name="net.trajano.ms.engine.internal.resteasy" level="DEBUG"/>-->
+  <appender name="stderr" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+    <target>System.err</target>
+    <immediateFlush>true</immediateFlush>
+    <encoder>
+      <pattern>${pattern}</pattern>
+    </encoder>
+  </appender>
   <logger name="net.trajano.ms" level="INFO"/>
   <!-- turn OFF all logging (children can override) -->
   <root level="WARN">
-    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="stderr"/>
+  </root>
+  <root level="TRACE">
+    <appender-ref ref="stdout"/>
   </root>
 </configuration>
