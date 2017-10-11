@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
@@ -97,19 +98,15 @@ public class SpringJaxRsHandler implements
                 .handler(requestHandler)
                 .failureHandler(context -> {
                     final Throwable wae = context.failure();
-                    if (wae instanceof WebApplicationException) {
+                    if (wae instanceof ClientErrorException) {
+                        // Use a lower level of logging when it is a client error exception
+                        final WebApplicationException webAppException = (WebApplicationException) wae;
+                        LOG.debug(wae.getMessage(), wae);
+                        sendErrorResponse(context, webAppException);
+                    } else if (wae instanceof WebApplicationException) {
                         final WebApplicationException webAppException = (WebApplicationException) wae;
                         LOG.error(wae.getMessage(), wae);
-                        context.response().setStatusCode(webAppException.getResponse().getStatus());
-                        context.response().setStatusMessage(webAppException.getResponse().getStatusInfo().getReasonPhrase());
-                        if (context.request().method() != HttpMethod.HEAD) {
-                            if (webAppException.getResponse().getMediaType() == null) {
-                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                            } else {
-                                context.response().putHeader(HttpHeaders.CONTENT_TYPE, webAppException.getResponse().getMediaType().toString());
-                            }
-                            context.response().end(webAppException.getResponse().getStatusInfo().getReasonPhrase());
-                        }
+                        sendErrorResponse(context, webAppException);
                     } else {
                         LOG.error(wae.getMessage(), wae);
                         context.response().setStatusCode(500);
@@ -162,6 +159,21 @@ public class SpringJaxRsHandler implements
         final Class<? extends Application> applicationClass) {
 
         return multipleRegisterToRouter(router, applicationContext, applicationClass)[0];
+    }
+
+    private static void sendErrorResponse(final RoutingContext context,
+        final WebApplicationException webAppException) {
+
+        context.response().setStatusCode(webAppException.getResponse().getStatus());
+        context.response().setStatusMessage(webAppException.getResponse().getStatusInfo().getReasonPhrase());
+        if (context.request().method() != HttpMethod.HEAD) {
+            if (webAppException.getResponse().getMediaType() == null) {
+                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+            } else {
+                context.response().putHeader(HttpHeaders.CONTENT_TYPE, webAppException.getResponse().getMediaType().toString());
+            }
+            context.response().end(webAppException.getResponse().getStatusInfo().getReasonPhrase());
+        }
     }
 
     private final AnnotationConfigApplicationContext applicationContext;
