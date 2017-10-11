@@ -8,6 +8,8 @@
   </parent>
   <artifactId>ms-base</artifactId>
   <packaging>pom</packaging>
+  <name>Microservices Base</name>
+  <description>This provides a parent project POM used to quickly bootstrap microservice development.</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -71,6 +73,25 @@
             <goals>
               <goal>repackage</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-finalName</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <evaluateBeanshell>
+                  <condition>"${project.artifactId}" == "ms-base" || "${project.build.finalName}" != "${project.artifactId}-${project.version}"</condition>
+                </evaluateBeanshell>
+              </rules>
+              <fail>true</fail>
+            </configuration>
           </execution>
         </executions>
       </plugin>
