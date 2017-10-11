@@ -19,10 +19,10 @@
     <module>ms-engine</module>
     <module>ms-gateway</module>
     <module>ms-oidc</module>
+    <module>ms-swagger</module>
     <module>sample-authn</module>
     <module>sample-authz</module>
     <module>sample-ms</module>
-    <module>swagger-ms</module>
   </modules>
   <scm>
     <connection>scm:git:https://github.com/trajano/${repo.id}.git</connection>

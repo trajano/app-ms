@@ -19,6 +19,7 @@ services:
     environment:
     - SPRING_PROFILES_ACTIVE=docker-compose
     networks:
+    - default
     - gateway-auth
   authorization-ms:
     build: ./sample-authz
@@ -34,7 +35,7 @@ services:
     deploy:
       replicas: 2
   swagger-ms:
-    build: ./swagger-ms
+    build: ./ms-swagger
     environment:
     - SPRING_PROFILES_ACTIVE=docker-compose
     deploy:

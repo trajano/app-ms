@@ -1,4 +1,10 @@
 # Mappings are provided so that environment specific servers can be mapped more easily
+mappings:
+  sample-ms: http://localhost:8900
+  authn-ms: http://localhost:8281
+  authz-ms: http://localhost:8282 
+  swagger-ms: http://localhost:8283
+
 http:
   port: 8283
 

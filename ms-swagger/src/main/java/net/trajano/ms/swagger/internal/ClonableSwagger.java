@@ -26,7 +26,7 @@ public class ClonableSwagger extends Swagger {
         copy.swagger = swagger;
         copy.info = info;
         copy.host = context.request().host();
-        copy.basePath = context.currentRoute().getPath();
+        copy.basePath = basePath;
         copy.tags = tags;
 
         copy.schemes = Collections.singletonList(Scheme.forValue(context.request().scheme()));
