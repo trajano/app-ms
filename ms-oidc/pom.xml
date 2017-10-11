@@ -18,6 +18,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>ms-oidc</finalName>
     <pluginManagement>
       <plugins>
         <plugin>
