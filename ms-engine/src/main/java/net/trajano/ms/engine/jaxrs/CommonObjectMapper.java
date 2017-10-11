@@ -1,5 +1,7 @@
 package net.trajano.ms.engine.jaxrs;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
@@ -19,6 +21,7 @@ import io.vertx.core.json.Json;
  */
 @Component
 @Provider
+@Priority(Priorities.ENTITY_CODER)
 public class CommonObjectMapper implements
     ContextResolver<ObjectMapper> {
 
