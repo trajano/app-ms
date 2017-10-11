@@ -47,24 +47,6 @@ public class AuthnResource extends BaseTokenResource {
         super(new AllowAnyClientValidator(), grantHandlers);
     }
 
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "grant_type",
-            value = "Grant type",
-            required = true,
-            dataType = "java.lang.String",
-            example = GrantTypes.PASSWORD,
-            paramType = "form"),
-        @ApiImplicitParam(name = "username",
-            value = "Username",
-            dataType = "java.lang.String",
-            required = true,
-            paramType = "form"),
-        @ApiImplicitParam(name = "password",
-            value = "Password",
-            dataType = "java.lang.String",
-            required = true,
-            paramType = "form")
-    })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response json(@Context final HttpHeaders httpHeaders,
