@@ -62,9 +62,9 @@ public class RouterConfiguration {
 
         // Route JWKS path
         router.get(jwksPath)
-                .produces("application/json")
-                .handler(handlers.unprotectedHandler(jwksPath, jwksSourceURI))
-                .failureHandler(handlers.failureHandler());
+            .produces("application/json")
+            .handler(handlers.unprotectedHandler(jwksPath, jwksSourceURI))
+            .failureHandler(handlers.failureHandler());
 
         int i = 0;
         while (env.containsProperty(String.format("routes[%d].from", i))) {

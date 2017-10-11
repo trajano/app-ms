@@ -13,7 +13,7 @@ authorization:
 jwks:
   path: /jwks
   source: ${mappings.authz-ms}/.well-known/jwks
-  uri: $gateway-ms}/jwks
+  uri: ${mappings.gateway-ms}/jwks
 
 http:
   defaultBodyLimit: 2048

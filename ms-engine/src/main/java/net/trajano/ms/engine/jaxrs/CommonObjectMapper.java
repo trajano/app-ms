@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
+import io.swagger.jackson.SwaggerModule;
 import io.vertx.core.json.Json;
 
 /**
@@ -27,8 +29,10 @@ public class CommonObjectMapper implements
 
     private static final ObjectMapper MAPPER;
     static {
-        MAPPER = Json.mapper.copy();
-        MAPPER.setSerializationInclusion(Include.NON_NULL);
+        MAPPER = Json.mapper.copy()
+            .registerModule(new SwaggerModule())
+            .registerModule(new JaxbAnnotationModule())
+            .setSerializationInclusion(Include.NON_NULL);
     }
 
     @Override

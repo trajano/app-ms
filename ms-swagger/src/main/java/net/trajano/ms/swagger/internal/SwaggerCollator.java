@@ -112,7 +112,7 @@ public class SwaggerCollator {
                 System.out.println(remoteSwagger.getDefinitions());
 
                 remoteSwagger.getDefinitions().entrySet().parallelStream()
-                        .forEach(e -> definitionsMap.put(e.getKey(),e.getValue()));
+                    .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
             } else {
                 final String path = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d]", i, j, k));
                 LOG.debug("getting path={} from paths={}", path, remoteSwagger.getPaths().keySet());
@@ -122,7 +122,7 @@ public class SwaggerCollator {
 
                 System.out.println(remoteSwagger.getDefinitions());
                 remoteSwagger.getDefinitions().entrySet().parallelStream()
-                        .forEach(e -> definitionsMap.put(e.getKey(),e.getValue()));
+                    .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
             }
             ++k;
         }

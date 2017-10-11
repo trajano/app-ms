@@ -184,7 +184,8 @@ public class JwtAssertionInterceptor implements
      * @return RSAKey with public key.
      * @throws ExecutionException
      */
-    private RSAKey getSigningKey(final String keyId, URI signatureJwksUri) throws ExecutionException {
+    private RSAKey getSigningKey(final String keyId,
+        URI signatureJwksUri) throws ExecutionException {
 
         final RSAKey key = keyCache.get(keyId, () -> {
 

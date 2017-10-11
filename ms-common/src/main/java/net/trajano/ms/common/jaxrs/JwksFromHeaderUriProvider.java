@@ -12,15 +12,18 @@ import java.net.URI;
 
 @Component
 @Configuration
-public class JwksFromHeaderUriProvider implements JwksUriProvider {
+public class JwksFromHeaderUriProvider implements
+    JwksUriProvider {
 
     @Autowired(required = false)
     @Qualifier("authz.signature.jwks.uri")
     private URI signatureJwksUri;
+
     private static final Logger LOG = LoggerFactory.getLogger(JwksFromHeaderUriProvider.class);
 
     @Override
     public URI getUri(ContainerRequestContext requestContext) {
+
         if (signatureJwksUri != null) {
             return signatureJwksUri;
         }
