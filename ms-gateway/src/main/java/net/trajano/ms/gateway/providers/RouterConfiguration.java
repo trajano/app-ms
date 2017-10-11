@@ -28,6 +28,12 @@ public class RouterConfiguration {
     @Value("${http.defaultBodyLimit:-1}")
     private long defaultBodyLimit;
 
+    @Value("${jwks.path}")
+    private String jwksPath;
+
+    @Value("${jwks.source}")
+    private URI jwksSourceURI;
+
     @Autowired
     private ConfigurableEnvironment env;
 
@@ -53,6 +59,12 @@ public class RouterConfiguration {
             .consumes("application/x-www-form-urlencoded")
             .produces("application/json")
             .handler(handlers.refreshHandler());
+
+        // Route JWKS path
+        router.get(jwksPath)
+                .produces("application/json")
+                .handler(handlers.unprotectedHandler(jwksPath, jwksSourceURI))
+                .failureHandler(handlers.failureHandler());
 
         int i = 0;
         while (env.containsProperty(String.format("routes[%d].from", i))) {

@@ -4,20 +4,21 @@ mappings:
   authn-ms: http://localhost:8281
   authz-ms: http://localhost:8282 
   swagger-ms: http://localhost:8283
+  gateway-ms: http://localhost:8910
 
 authorization:
   endpoint: ${mappings.authz-ms}/authz
   refreshTokenPath: /refresh
 
+jwks:
+  path: /jwks
+  source: ${mappings.authz-ms}/.well-known/jwks
+  uri: $gateway-ms}/jwks
+
 http:
   defaultBodyLimit: 2048
 
 routes:
-- from: /jwks
-  to: ${mappings.authz-ms}/.well-known/jwks
-  exact: true
-  protected: false 
-  onlyGetJson: true
 - from: /v1
   to: ${mappings.swagger-ms}/v1
   exact: true
@@ -67,4 +68,5 @@ mappings:
   authn-ms: http://authentication-ms
   authz-ms: http://authorization-ms
   swagger-ms: http://swagger-ms
-  
+  gateway-ms: http://gateway-ms
+

@@ -32,8 +32,14 @@ public class Handlers {
     @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
 
+    @Value("${jwks.path}")
+    private String jwksPath;
+
     @Autowired
     private HttpClient httpClient;
+
+    @Value("${jwks.uri}")
+    private URI jwksUri;
 
     public Handler<RoutingContext> failureHandler() {
 
@@ -214,6 +220,7 @@ public class Handlers {
                         clientRequest.setChunked(true)
                             .headers().setAll(contextRequest.headers());
                         clientRequest.putHeader("X-JWT-Assertion", idToken);
+                        clientRequest.putHeader("X-JWKS-URI", jwksUri.toASCIIString());
                         contextRequest.resume();
                         contextRequest.handler(clientRequest::write)
                             .endHandler(v -> clientRequest.end())

@@ -80,9 +80,8 @@ public class JwtAssertionInterceptor implements
     @Context
     private ResourceInfo resourceInfo;
 
-    @Autowired(required = false)
-    @Qualifier("authz.signature.jwks.uri")
-    private URI signatureJwksUri;
+    @Autowired
+    private JwksUriProvider jwksUriProvider;
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
@@ -114,8 +113,9 @@ public class JwtAssertionInterceptor implements
             if (joseObject instanceof JWSObject) {
                 final JWSObject jws = (JWSObject) joseObject;
 
+                URI signatureJwksUri = jwksUriProvider.getUri(requestContext);
                 if (signatureJwksUri != null) {
-                    final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID()));
+                    final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID(), signatureJwksUri));
                     if (!jws.verify(verifier)) {
                         LOG.warn("JWT verification failed for {}", requestContext.getUriInfo());
                         requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
@@ -184,7 +184,7 @@ public class JwtAssertionInterceptor implements
      * @return RSAKey with public key.
      * @throws ExecutionException
      */
-    private RSAKey getSigningKey(final String keyId) throws ExecutionException {
+    private RSAKey getSigningKey(final String keyId, URI signatureJwksUri) throws ExecutionException {
 
         final RSAKey key = keyCache.get(keyId, () -> {
 
@@ -203,9 +203,6 @@ public class JwtAssertionInterceptor implements
 
         keyCache = CacheBuilder.newBuilder().maximumSize(MAX_NUMBER_OF_KEYS).build();
 
-        if (signatureJwksUri == null) {
-            LOG.warn("authz.signature.jwks.uri not specified, no signature verification will be performed");
-        }
         if (audience == null) {
             LOG.warn("`authz.audience` was not specified, will accept any audience");
         }
