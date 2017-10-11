@@ -25,6 +25,10 @@ routes:
   onlyGetJson: true
 - from: /v1/hello
   to: ${mappings.sample-ms}/hello
+  exact: true
+  protected: false
+- from: /v1/hello
+  to: ${mappings.sample-ms}/hello
 - from: /v1/secure/upload
   to: ${mappings.sample-ms}/s/upload
   limit: 10000000 

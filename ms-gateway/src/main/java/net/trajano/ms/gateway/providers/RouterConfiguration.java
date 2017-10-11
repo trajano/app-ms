@@ -61,7 +61,7 @@ public class RouterConfiguration {
             final URI to = env.getProperty(String.format("routes[%d].to", i), URI.class);
             final boolean protectedRoute = env.getProperty(String.format("routes[%d].protected", i), Boolean.class, true);
             final long limit = env.getProperty(String.format("routes[%d].limit", i), Long.class, defaultBodyLimit);
-            final boolean exact = env.getProperty(String.format("routes[%d].protected", i), Boolean.class, false);
+            final boolean exact = env.getProperty(String.format("routes[%d].exact", i), Boolean.class, false);
             final boolean onlyGetJson = env.getProperty(String.format("routes[%d].onlyGetGson", i), Boolean.class, false);
 
             String wildcard = "/*";

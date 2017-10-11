@@ -1,5 +1,6 @@
 package net.trajano.ms.gateway.providers;
 
+import java.net.ConnectException;
 import java.net.URI;
 
 import org.slf4j.Logger;
@@ -39,13 +40,23 @@ public class Handlers {
         return context -> {
             LOG.error("Unhandled server exception", context.failure());
             if (!context.response().ended()) {
-                context.response().setStatusCode(500)
-                    .setStatusMessage("Internal Server Error")
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(new JsonObject()
-                        .put("error", "server_error")
-                        .put("error_description", "Internal Server Error")
-                        .toBuffer());
+                if (context.failure() instanceof ConnectException) {
+                    context.response().setStatusCode(503)
+                        .setStatusMessage("Service Unavailable")
+                        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .end(new JsonObject()
+                            .put("error", "server_error")
+                            .put("error_description", "Service Unavailable")
+                            .toBuffer());
+                } else {
+                    context.response().setStatusCode(500)
+                        .setStatusMessage("Internal Server Error")
+                        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .end(new JsonObject()
+                            .put("error", "server_error")
+                            .put("error_description", "Internal Server Error")
+                            .toBuffer());
+                }
             }
         };
 
@@ -125,6 +136,7 @@ public class Handlers {
             final String accessToken = getAccessToken(contextRequest, contextResponse);
 
             if (accessToken == null) {
+                LOG.debug("missing access token");
                 contextResponse
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized")
@@ -137,6 +149,7 @@ public class Handlers {
                 return;
             }
             if (!accessToken.matches(TOKEN_PATTERN)) {
+                LOG.debug("invalid token={}", accessToken);
                 contextResponse
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
@@ -161,7 +174,7 @@ public class Handlers {
                         .toBuffer());
                 return;
             }
-            contextRequest.setExpectMultipart(true);
+            contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
             contextRequest.pause();
             LOG.debug("access_token={} client_credentials={}", accessToken, clientCredentials);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
@@ -181,7 +194,7 @@ public class Handlers {
                         if (idToken == null) {
                             LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                             context.response().setStatusCode(500)
-                                .setStatusMessage("Internal Server Errorr")
+                                .setStatusMessage("Internal Server Error")
                                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                                 .end(new JsonObject()
                                     .put("error", "server_error")
@@ -194,17 +207,17 @@ public class Handlers {
                             contextResponse.setChunked(true)
                                 .setStatusCode(clientResponse.statusCode());
                             contextResponse.headers().setAll(clientResponse.headers());
-                            clientResponse.handler(data -> contextResponse.write(data))
+                            clientResponse.handler(contextResponse::write)
                                 .endHandler(v -> contextResponse.end());
-                        });
+                        }).exceptionHandler(context::fail);
 
                         clientRequest.setChunked(true)
                             .headers().setAll(contextRequest.headers());
                         clientRequest.putHeader("X-JWT-Assertion", idToken);
                         contextRequest.resume();
-                        contextRequest.handler(data -> clientRequest.write(data))
-                            .endHandler(v -> clientRequest.end());
-
+                        contextRequest.handler(clientRequest::write)
+                            .endHandler(v -> clientRequest.end())
+                            .exceptionHandler(context::fail);
                     }
                 }).exceptionHandler(context::fail);
             }).exceptionHandler(context::fail);
@@ -230,7 +243,6 @@ public class Handlers {
             final HttpServerResponse contextResponse = context.response();
 
             contextRequest
-                .setExpectMultipart(true)
                 .handler(buf -> {
                 })
                 .endHandler(v -> {
@@ -301,25 +313,23 @@ public class Handlers {
             if (!contextRequest.uri().startsWith(baseUri)) {
                 throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
             }
-            contextRequest.setExpectMultipart(true);
+            contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
             final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
-                contextRequest.response().setChunked(true);
-                contextRequest.response().setStatusCode(clientResponse.statusCode());
-                contextRequest.response().headers().setAll(clientResponse.headers());
+                contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
+                    .setStatusCode(clientResponse.statusCode())
+                    .headers().setAll(clientResponse.headers());
                 contextRequest.response().putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-                clientResponse.handler(data -> {
-                    contextRequest.response().write(data);
-                });
-                clientResponse.endHandler((v) -> contextRequest.response().end());
-            });
-
-            clientRequest.setChunked(true);
+                clientResponse.handler(contextRequest.response()::write)
+                    .endHandler((v) -> contextRequest.response().end());
+            }).exceptionHandler(context::fail)
+                .setChunked(true);
             clientRequest.headers().setAll(contextRequest.headers());
             contextRequest.handler(data -> {
                 clientRequest.write(data);
-            });
-            contextRequest.endHandler((v) -> clientRequest.end());
+            })
+                .endHandler((v) -> clientRequest.end());
+
         };
     }
 }
