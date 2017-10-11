@@ -13,10 +13,16 @@ http:
   defaultBodyLimit: 2048
 
 routes:
+- from: /jwks
+  to: ${mappings.authz-ms}/.well-known/jwks
+  exact: true
+  protected: false 
+  onlyGetJson: true
 - from: /v1
   to: ${mappings.swagger-ms}/v1
   exact: true
   protected: false 
+  onlyGetJson: true
 - from: /v1/hello
   to: ${mappings.sample-ms}/hello
 - from: /v1/secure/upload

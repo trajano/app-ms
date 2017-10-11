@@ -62,21 +62,40 @@ public class RouterConfiguration {
             final boolean protectedRoute = env.getProperty(String.format("routes[%d].protected", i), Boolean.class, true);
             final long limit = env.getProperty(String.format("routes[%d].limit", i), Long.class, defaultBodyLimit);
             final boolean exact = env.getProperty(String.format("routes[%d].protected", i), Boolean.class, false);
+            final boolean onlyGetJson = env.getProperty(String.format("routes[%d].onlyGetGson", i), Boolean.class, false);
 
             String wildcard = "/*";
             if (exact) {
                 wildcard = "";
             }
-            if (protectedRoute) {
-                LOG.info("route from={} to={}, protected, exact={}", from, to, exact);
-                router.route(from + wildcard)
-                    .handler(handlers.protectedHandler(from, to))
-                    .failureHandler(handlers.failureHandler());
+
+            if (onlyGetJson) {
+                // Special case when only JSON is wanted.  Primarily for reference requests.
+                if (protectedRoute) {
+                    LOG.info("get JSON from={} to={}, protected, exact={}", from, to, exact);
+                    router.get(from + wildcard)
+                        .produces("application/json")
+                        .handler(handlers.protectedHandler(from, to))
+                        .failureHandler(handlers.failureHandler());
+                } else {
+                    LOG.info("get JSON from={} to={}, unprotected, exact={}", from, to, exact);
+                    router.get(from + wildcard)
+                        .produces("application/json")
+                        .handler(handlers.unprotectedHandler(from, to))
+                        .failureHandler(handlers.failureHandler());
+                }
             } else {
-                LOG.info("route from={} to={}, unprotected, exact={}", from, to, exact);
-                router.route(from + wildcard)
-                    .handler(handlers.unprotectedHandler(from, to))
-                    .failureHandler(handlers.failureHandler());
+                if (protectedRoute) {
+                    LOG.info("route from={} to={}, protected, exact={}", from, to, exact);
+                    router.route(from + wildcard)
+                        .handler(handlers.protectedHandler(from, to))
+                        .failureHandler(handlers.failureHandler());
+                } else {
+                    LOG.info("route from={} to={}, unprotected, exact={}", from, to, exact);
+                    router.route(from + wildcard)
+                        .handler(handlers.unprotectedHandler(from, to))
+                        .failureHandler(handlers.failureHandler());
+                }
             }
             ++i;
         }

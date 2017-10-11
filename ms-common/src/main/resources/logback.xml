@@ -3,26 +3,6 @@
 <configuration>
   <property name="pattern" value="%d{yyyy-MM-dd' 'HH:mm:ss.SSSZ} %.-1level [%.-10thread] %logger{40} - %msg%n"/>
   <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-    <filter class="ch.qos.logback.classic.filter.LevelFilter">
-      <level>ERROR</level>
-      <onMatch>DENY</onMatch>
-    </filter>
-    <filter class="ch.qos.logback.classic.filter.LevelFilter">
-      <level>WARN</level>
-      <onMatch>DENY</onMatch>
-    </filter>
-    <target>System.out</target>
-    <immediateFlush>true</immediateFlush>
-    <encoder>
-      <pattern>${pattern}</pattern>
-    </encoder>
-  </appender>
-  <appender name="stderr" class="ch.qos.logback.core.ConsoleAppender">
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>WARN</level>
-    </filter>
-    <target>System.err</target>
-    <immediateFlush>true</immediateFlush>
     <encoder>
       <pattern>${pattern}</pattern>
     </encoder>
@@ -30,9 +10,6 @@
   <logger name="net.trajano.ms" level="INFO"/>
   <!-- turn OFF all logging (children can override) -->
   <root level="WARN">
-    <appender-ref ref="stderr"/>
-  </root>
-  <root level="TRACE">
     <appender-ref ref="stdout"/>
   </root>
 </configuration>
