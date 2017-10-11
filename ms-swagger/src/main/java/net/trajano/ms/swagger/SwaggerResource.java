@@ -7,13 +7,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.swagger.annotations.Api;
-import io.swagger.util.Json;
+import io.swagger.models.Swagger;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.swagger.internal.SwaggerCollator;
@@ -29,15 +27,13 @@ public class SwaggerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{version}")
-    public Response swagger(@PathParam("version") final String version,
+    public Swagger swagger(@PathParam("version") final String version,
         @Context final RoutingContext routingContext) {
 
         final String basePath = "/" + version;
         if (!collator.isPathExists(basePath)) {
             throw new NotFoundException();
         }
-        final StreamingOutput stream = output -> Json.mapper().writeValue(output, collator.getSwagger(basePath, routingContext));
-        return Response.ok(stream).build();
+        return collator.getSwagger(basePath, routingContext);
     }
-
 }

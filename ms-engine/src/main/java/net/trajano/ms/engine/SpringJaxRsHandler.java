@@ -47,7 +47,7 @@ import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
-import net.trajano.ms.engine.jaxrs.VertxJsonProvider;
+import net.trajano.ms.engine.jaxrs.CommonObjectMapper;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -56,8 +56,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -73,8 +72,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -127,8 +126,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -143,8 +142,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -213,7 +212,7 @@ public class SpringJaxRsHandler implements
             LOG.debug("baseApplicationContext={} is not active, will reuse.");
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
-        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, VertxJsonProvider.class);
+        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapper.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
