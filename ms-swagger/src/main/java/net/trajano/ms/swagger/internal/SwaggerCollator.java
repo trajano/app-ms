@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
-import io.swagger.models.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,10 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.stereotype.Component;
 
 import io.swagger.models.Info;
+import io.swagger.models.Model;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.vertx.ext.web.RoutingContext;
 
 @Component
@@ -58,9 +59,11 @@ public class SwaggerCollator {
             swagger.setInfo(info);
             final Map<String, Path> pathsMap = new TreeMap<>();
             final Map<String, Model> definitionsMap = new TreeMap<>();
-            processUris(pathsMap, definitionsMap, i);
+            final Map<String, SecuritySchemeDefinition> securityDefinitionsMap = new TreeMap<>();
+            processUris(pathsMap, definitionsMap, securityDefinitionsMap, i);
             swagger.setPaths(pathsMap);
             swagger.setDefinitions(definitionsMap);
+            swagger.setSecurityDefinitions(securityDefinitionsMap);
 
             swaggerMap.putIfAbsent(basePath, swagger);
         }
@@ -82,7 +85,7 @@ public class SwaggerCollator {
 
     /**
      * Checks to see if the base path specification exists.
-     * 
+     *
      * @param basePath
      *            base path
      * @return true if it is registered.
@@ -94,6 +97,7 @@ public class SwaggerCollator {
 
     private void processPaths(final Map<String, Path> swagger,
         final Map<String, Model> definitionsMap,
+        final Map<String, SecuritySchemeDefinition> securityDefinitionsMap,
         final Swagger remoteSwagger,
         final int i,
         final int j) {
@@ -109,10 +113,10 @@ public class SwaggerCollator {
                     .filter(s -> s.startsWith(from))
                     .forEach(p -> swagger.put(to + p.substring(from.length()), remoteSwagger.getPath(p)));
 
-                System.out.println(remoteSwagger.getDefinitions());
-
                 remoteSwagger.getDefinitions().entrySet().parallelStream()
                     .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
+                remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
+                    .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
             } else {
                 final String path = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d]", i, j, k));
                 LOG.debug("getting path={} from paths={}", path, remoteSwagger.getPaths().keySet());
@@ -120,9 +124,10 @@ public class SwaggerCollator {
                     .filter(s -> s.startsWith(path))
                     .forEach(p -> swagger.put(p, remoteSwagger.getPath(p)));
 
-                System.out.println(remoteSwagger.getDefinitions());
                 remoteSwagger.getDefinitions().entrySet().parallelStream()
                     .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
+                remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
+                    .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
             }
             ++k;
         }
@@ -130,6 +135,7 @@ public class SwaggerCollator {
 
     private void processUris(final Map<String, Path> swagger,
         final Map<String, Model> definitionsMap,
+        final Map<String, SecuritySchemeDefinition> securityDefinitionsMap,
         final int i) {
 
         int j = 0;
@@ -139,7 +145,7 @@ public class SwaggerCollator {
 
                 final Swagger remoteSwagger = io.swagger.util.Json.mapper().readerFor(Swagger.class).readValue(swaggerUrl.openConnection().getInputStream());
 
-                processPaths(swagger, definitionsMap, remoteSwagger, i, j);
+                processPaths(swagger, definitionsMap, securityDefinitionsMap, remoteSwagger, i, j);
                 ++j;
             } catch (final IOException e) {
                 throw new UncheckedIOException(e);
