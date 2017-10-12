@@ -36,11 +36,23 @@ public class VertxOutputHeaders extends AbstractMultivaluedMap<String, Object> {
         }
 
         @Override
+        public boolean equals(final Object o) {
+
+            return super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return super.hashCode();
+        }
+
+        @Override
         public List<Object> put(final String key,
             final List<Object> values) {
 
             final List<Object> prev = vertxResponse.headers().getAll(key).stream().map(v -> v).collect(Collectors.toList());
-            List<String> collect = values.stream().map(o -> String.valueOf(o)).collect(Collectors.toList());
+            final List<String> collect = values.stream().map(o -> String.valueOf(o)).collect(Collectors.toList());
             vertxResponse.putHeader(key, collect);
             return prev;
         }
