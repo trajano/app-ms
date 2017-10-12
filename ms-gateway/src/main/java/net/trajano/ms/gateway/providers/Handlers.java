@@ -47,12 +47,12 @@ public class Handlers {
             LOG.error("Unhandled server exception", context.failure());
             if (!context.response().ended()) {
                 if (context.failure() instanceof ConnectException) {
-                    context.response().setStatusCode(503)
-                        .setStatusMessage("Service Unavailable")
+                    context.response().setStatusCode(504)
+                        .setStatusMessage("Gateway Timeout")
                         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                         .end(new JsonObject()
                             .put("error", "server_error")
-                            .put("error_description", "Service Unavailable")
+                            .put("error_description", "Gateway Timeout")
                             .toBuffer());
                 } else {
                     context.response().setStatusCode(500)
@@ -126,7 +126,7 @@ public class Handlers {
      * This handler goes through the authorization to prepopulate the
      * X-JWT-Assertion header.
      *
-     * @return
+     * @return handler
      */
     public Handler<RoutingContext> protectedHandler(final String baseUri,
         final URI endpoint) {
@@ -332,9 +332,7 @@ public class Handlers {
             }).exceptionHandler(context::fail)
                 .setChunked(true);
             clientRequest.headers().setAll(contextRequest.headers());
-            contextRequest.handler(data -> {
-                clientRequest.write(data);
-            })
+            contextRequest.handler(clientRequest::write)
                 .endHandler((v) -> clientRequest.end());
 
         };
