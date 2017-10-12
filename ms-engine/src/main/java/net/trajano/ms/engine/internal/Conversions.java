@@ -102,4 +102,8 @@ public final class Conversions {
         vertxCookie.setSecure(cookie.isSecure());
         return vertxCookie;
     }
+
+    private Conversions() {
+
+    }
 }
