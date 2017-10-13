@@ -17,7 +17,7 @@ The purpose of the cluster was to enable pushing the load across multiple nodes,
 
 ### Spring
 
-Spring is used for dependency injection by the users so we can utilize the other stuff that spring has to offer such as scheduling and JPA Repositories.
+Spring is used for dependency injection by the users so we can utilize the other stuff that spring has to offer such as scheduling and JPA Repositories.  Only the core Spring framework is used at this level, Spring-Boot and others are not used.
 
 ### Jersey
 
