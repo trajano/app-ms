@@ -28,17 +28,17 @@ public class RouterConfiguration {
     @Value("${http.defaultBodyLimit:-1}")
     private long defaultBodyLimit;
 
-    @Value("${jwks.path}")
-    private String jwksPath;
-
-    @Value("${jwks.source}")
-    private URI jwksSourceURI;
-
     @Autowired
     private ConfigurableEnvironment env;
 
     @Autowired
     private Handlers handlers;
+
+    @Value("${jwks.path}")
+    private String jwksPath;
+
+    @Value("${jwks.source}")
+    private URI jwksSourceURI;
 
     @Value("${authorization.refreshTokenPath:/refresh}")
     private String refreshTokenPath;

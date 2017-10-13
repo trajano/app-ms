@@ -2,7 +2,6 @@ package net.trajano.ms.gateway.providers;
 
 import java.net.ConnectException;
 import java.net.URI;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +42,9 @@ public class Handlers {
 
     @Value("${jwks.uri}")
     private URI jwksUri;
+
+    @Autowired
+    private RequestIDProvider requestIDProvider;
 
     public Handler<RoutingContext> failureHandler() {
 
@@ -144,7 +146,7 @@ public class Handlers {
 
             final String accessToken = getAccessToken(contextRequest, contextResponse);
 
-            final String requestID = UUID.randomUUID().toString();
+            final String requestID = requestIDProvider.newRequestID();
 
             if (accessToken == null) {
                 LOG.debug("missing access token");
@@ -261,7 +263,7 @@ public class Handlers {
             final HttpServerRequest contextRequest = context.request();
             final HttpServerResponse contextResponse = context.response();
 
-            final String requestID = UUID.randomUUID().toString();
+            final String requestID = requestIDProvider.newRequestID();
 
             contextRequest
                 .handler(buf -> {
@@ -339,7 +341,7 @@ public class Handlers {
             if (!contextRequest.uri().startsWith(baseUri)) {
                 throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
             }
-            final String requestID = UUID.randomUUID().toString();
+            final String requestID = requestIDProvider.newRequestID();
             contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
             final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
