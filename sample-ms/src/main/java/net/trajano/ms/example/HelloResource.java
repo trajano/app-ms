@@ -35,6 +35,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.engine.internal.Conversions;
+import net.trajano.ms.example.domain.MyType;
 
 @SwaggerDefinition(
     info = @Info(
@@ -47,7 +48,7 @@ import net.trajano.ms.engine.internal.Conversions;
 @Component
 @Path("/hello")
 @JwtNotRequired
-public class Hello {
+public class HelloResource {
 
     @Context
     private Client jaxrsClient;

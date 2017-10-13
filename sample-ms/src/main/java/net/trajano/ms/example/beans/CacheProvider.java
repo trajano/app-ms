@@ -1,4 +1,4 @@
-package net.trajano.ms.example;
+package net.trajano.ms.example.beans;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;

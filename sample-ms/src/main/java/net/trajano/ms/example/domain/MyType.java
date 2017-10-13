@@ -1,4 +1,4 @@
-package net.trajano.ms.example;
+package net.trajano.ms.example.domain;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

@@ -33,6 +33,7 @@ import io.swagger.annotations.ApiOperation;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import net.trajano.ms.engine.internal.Conversions;
+import net.trajano.ms.example.domain.MyType;
 
 @Api(tags = {
     "infernal",
@@ -40,7 +41,7 @@ import net.trajano.ms.engine.internal.Conversions;
 })
 @Component
 @Path("/s")
-public class SecureHello {
+public class SecureHelloResource {
 
     @Context
     private Client jaxrsClient;

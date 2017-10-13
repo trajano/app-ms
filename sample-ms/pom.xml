@@ -15,10 +15,12 @@
       <artifactId>ms-common</artifactId>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <version>1.5.7.RELEASE</version>
       <scope>test</scope>
     </dependency>
+    
   </dependencies>
   <build>
     <finalName>sample-ms</finalName>
