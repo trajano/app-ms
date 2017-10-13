@@ -180,9 +180,7 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
                 }
             }
             final long millis = unit.toMillis(time);
-            timeoutTimerID = routingContext.vertx().setTimer(millis, timerId -> {
-                handleTimeout();
-            });
+            timeoutTimerID = routingContext.vertx().setTimer(millis, timerId -> handleTimeout());
             LOG.debug("New timeout handler created timeoutTimerId={} for {} ms", timeoutTimerID, millis);
             return true;
         } catch (final InterruptedException e) {
