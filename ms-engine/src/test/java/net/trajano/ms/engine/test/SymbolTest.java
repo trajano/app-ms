@@ -6,11 +6,23 @@ import static org.junit.Assert.assertFalse;
 import java.util.Objects;
 
 import org.junit.Test;
+import org.springframework.context.support.AbstractApplicationContext;
 
 import io.vertx.core.buffer.Buffer;
 import net.trajano.ms.engine.internal.Symbol;
 
 public class SymbolTest {
+
+    /**
+     * Since Symbol was only used for interface classes, the code to support
+     * non-interfaces was removed.
+     */
+    @Test(expected = ExceptionInInitializerError.class)
+    public void testNonInterface() {
+
+        Symbol.newSymbol(AbstractApplicationContext.class);
+
+    }
 
     @Test
     public void testSymbol() {
