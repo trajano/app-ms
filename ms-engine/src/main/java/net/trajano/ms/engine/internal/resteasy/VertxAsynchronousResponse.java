@@ -186,8 +186,9 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
             LOG.debug("New timeout handler created timeoutTimerId={} for {} ms", timeoutTimerID, millis);
             return true;
         } catch (final InterruptedException e) {
+            routingContext.fail(e);
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            return false;
         } finally {
             writeLock.release();
         }
