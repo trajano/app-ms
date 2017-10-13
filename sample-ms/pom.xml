@@ -20,7 +20,6 @@
       <version>1.5.7.RELEASE</version>
       <scope>test</scope>
     </dependency>
-    
   </dependencies>
   <build>
     <finalName>sample-ms</finalName>

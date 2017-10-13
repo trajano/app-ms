@@ -77,7 +77,10 @@ public class SwaggerCollator {
         while (env.containsProperty(String.format("swagger[%d].path", i))) {
 
             final String basePath = env.getProperty(String.format("swagger[%d].path", i));
-            swaggerPaths.put(basePath, i);
+            if (!basePath.startsWith("/")) {
+                throw new IllegalArgumentException("Paths must begin with /");
+            }
+            swaggerPaths.put(basePath.substring(1), i);
             ++i;
         }
 
@@ -113,10 +116,14 @@ public class SwaggerCollator {
                     .filter(s -> s.startsWith(from))
                     .forEach(p -> swagger.put(to + p.substring(from.length()), remoteSwagger.getPath(p)));
 
-                remoteSwagger.getDefinitions().entrySet().parallelStream()
-                    .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
-                remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
-                    .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
+                if (remoteSwagger.getDefinitions() != null) {
+                    remoteSwagger.getDefinitions().entrySet().parallelStream()
+                        .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
+                }
+                if (remoteSwagger.getSecurityDefinitions() != null) {
+                    remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
+                        .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
+                }
             } else {
                 final String path = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d]", i, j, k));
                 LOG.debug("getting path={} from paths={}", path, remoteSwagger.getPaths().keySet());
@@ -124,10 +131,15 @@ public class SwaggerCollator {
                     .filter(s -> s.startsWith(path))
                     .forEach(p -> swagger.put(p, remoteSwagger.getPath(p)));
 
-                remoteSwagger.getDefinitions().entrySet().parallelStream()
-                    .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
-                remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
-                    .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
+                if (remoteSwagger.getDefinitions() != null) {
+                    remoteSwagger.getDefinitions().entrySet().parallelStream()
+                        .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
+                }
+
+                if (remoteSwagger.getSecurityDefinitions() != null) {
+                    remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
+                        .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
+                }
             }
             ++k;
         }

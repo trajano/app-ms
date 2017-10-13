@@ -30,10 +30,9 @@ public class SwaggerResource {
     public Swagger swagger(@PathParam("version") final String version,
         @Context final RoutingContext routingContext) {
 
-        final String basePath = "/" + version;
-        if (!collator.isPathExists(basePath)) {
+        if (!collator.isPathExists(version)) {
             throw new NotFoundException();
         }
-        return collator.getSwagger(basePath, routingContext);
+        return collator.getSwagger(version, routingContext);
     }
 }
