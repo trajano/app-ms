@@ -1,4 +1,4 @@
-package net.trajano.ms.engine.internal;
+package net.trajano.ms.engine.jaxrs;
 
 import java.security.Principal;
 
