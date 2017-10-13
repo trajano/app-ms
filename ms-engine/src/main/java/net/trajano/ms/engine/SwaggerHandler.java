@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
+import io.swagger.models.Swagger;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
@@ -26,8 +27,8 @@ public class SwaggerHandler implements
     AutoCloseable {
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -53,8 +54,8 @@ public class SwaggerHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -128,6 +129,11 @@ public class SwaggerHandler implements
     @Override
     public void close() {
 
+    }
+
+    public Swagger getSwagger() {
+
+        return swagger;
     }
 
     @Override
