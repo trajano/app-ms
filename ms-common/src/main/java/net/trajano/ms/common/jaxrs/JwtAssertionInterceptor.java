@@ -6,7 +6,9 @@ import java.text.ParseException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -48,6 +50,7 @@ import net.trajano.ms.common.beans.JwtClaimsProcessor;
  */
 @Component
 @Provider
+@Priority(Priorities.AUTHORIZATION)
 public class JwtAssertionInterceptor implements
     ContainerRequestFilter {
 
@@ -72,6 +75,9 @@ public class JwtAssertionInterceptor implements
 
     private JwksProvider jwksProvider;
 
+    @Autowired
+    private JwksUriProvider jwksUriProvider;
+
     /**
      * In-memory public key cache.
      */
@@ -79,9 +85,6 @@ public class JwtAssertionInterceptor implements
 
     @Context
     private ResourceInfo resourceInfo;
-
-    @Autowired
-    private JwksUriProvider jwksUriProvider;
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
@@ -113,7 +116,7 @@ public class JwtAssertionInterceptor implements
             if (joseObject instanceof JWSObject) {
                 final JWSObject jws = (JWSObject) joseObject;
 
-                URI signatureJwksUri = jwksUriProvider.getUri(requestContext);
+                final URI signatureJwksUri = jwksUriProvider.getUri(requestContext);
                 if (signatureJwksUri != null) {
                     final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID(), signatureJwksUri));
                     if (!jws.verify(verifier)) {
@@ -185,7 +188,7 @@ public class JwtAssertionInterceptor implements
      * @throws ExecutionException
      */
     private RSAKey getSigningKey(final String keyId,
-        URI signatureJwksUri) throws ExecutionException {
+        final URI signatureJwksUri) throws ExecutionException {
 
         final RSAKey key = keyCache.get(keyId, () -> {
 

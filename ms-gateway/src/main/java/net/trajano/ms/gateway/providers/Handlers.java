@@ -27,19 +27,24 @@ public class Handlers {
 
     private static final Logger LOG = LoggerFactory.getLogger(Handlers.class);
 
+    private static final String REQUEST_ID = "X-Request-ID";
+
     private static final String TOKEN_PATTERN = "^[A-Za-z0-9]{64}$";
 
     @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
 
-    @Value("${jwks.path}")
-    private String jwksPath;
-
     @Autowired
     private HttpClient httpClient;
 
+    @Value("${jwks.path}")
+    private String jwksPath;
+
     @Value("${jwks.uri}")
     private URI jwksUri;
+
+    @Autowired
+    private RequestIDProvider requestIDProvider;
 
     public Handler<RoutingContext> failureHandler() {
 
@@ -141,12 +146,15 @@ public class Handlers {
 
             final String accessToken = getAccessToken(contextRequest, contextResponse);
 
+            final String requestID = requestIDProvider.newRequestID();
+
             if (accessToken == null) {
                 LOG.debug("missing access token");
                 contextResponse
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized")
                     .putHeader("WWW-Authenticate", "Bearer")
+                    .putHeader(REQUEST_ID, requestID)
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .end(new JsonObject()
                         .put("error", "invalid_request")
@@ -160,6 +168,7 @@ public class Handlers {
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .putHeader(REQUEST_ID, requestID)
                     .end(new JsonObject()
                         .put("error", "invalid_request")
                         .put("error_description", "Token not valid")
@@ -173,6 +182,7 @@ public class Handlers {
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized")
                     .putHeader("WWW-Authenticate", "Basic")
+                    .putHeader(REQUEST_ID, requestID)
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .end(new JsonObject()
                         .put("error", "invalid_request")
@@ -202,6 +212,7 @@ public class Handlers {
                             context.response().setStatusCode(500)
                                 .setStatusMessage("Internal Server Error")
                                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                                .putHeader(REQUEST_ID, requestID)
                                 .end(new JsonObject()
                                     .put("error", "server_error")
                                     .put("error_description", "Unable to get assertion from authorization endpoint")
@@ -213,14 +224,16 @@ public class Handlers {
                             contextResponse.setChunked(true)
                                 .setStatusCode(clientResponse.statusCode());
                             contextResponse.headers().setAll(clientResponse.headers());
+                            contextResponse.putHeader(REQUEST_ID, requestID);
                             clientResponse.handler(contextResponse::write)
                                 .endHandler(v -> contextResponse.end());
                         }).exceptionHandler(context::fail);
 
                         clientRequest.setChunked(true)
                             .headers().setAll(contextRequest.headers());
-                        clientRequest.putHeader("X-JWT-Assertion", idToken);
-                        clientRequest.putHeader("X-JWKS-URI", jwksUri.toASCIIString());
+                        clientRequest.putHeader("X-JWT-Assertion", idToken)
+                            .putHeader("X-JWKS-URI", jwksUri.toASCIIString())
+                            .putHeader(REQUEST_ID, requestID);
                         contextRequest.resume();
                         contextRequest.handler(clientRequest::write)
                             .endHandler(v -> clientRequest.end())
@@ -233,6 +246,7 @@ public class Handlers {
                 .putHeader(HttpHeaders.AUTHORIZATION, clientCredentials)
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .putHeader(HttpHeaders.ACCEPT, "application/json")
+                .putHeader(REQUEST_ID, requestID)
                 .end("grant_type=authorization_code&code=" + accessToken);
 
         };
@@ -249,6 +263,8 @@ public class Handlers {
             final HttpServerRequest contextRequest = context.request();
             final HttpServerResponse contextResponse = context.response();
 
+            final String requestID = requestIDProvider.newRequestID();
+
             contextRequest
                 .handler(buf -> {
                 })
@@ -258,6 +274,7 @@ public class Handlers {
                         contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                             .setStatusCode(400)
                             .setStatusMessage("Bad Request")
+                            .putHeader(REQUEST_ID, requestID)
                             .end(new JsonObject()
                                 .put("error", "invalid_grant")
                                 .put("error_description", "Missing grant type")
@@ -269,6 +286,7 @@ public class Handlers {
                         contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                             .setStatusCode(400)
                             .setStatusMessage("Bad Request")
+                            .putHeader(REQUEST_ID, requestID)
                             .end(new JsonObject()
                                 .put("error", "unsupported_grant_type")
                                 .put("error_description", "Unsupported grant type")
@@ -280,6 +298,7 @@ public class Handlers {
                         contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                             .setStatusCode(400)
                             .setStatusMessage("Bad Request")
+                            .putHeader(REQUEST_ID, requestID)
                             .end(new JsonObject()
                                 .put("error", "invalid_request")
                                 .put("error_description", "Missing grant")
@@ -293,7 +312,8 @@ public class Handlers {
                             contextResponse.setStatusCode(authorizationResponse.statusCode());
                             contextResponse.setStatusMessage(authorizationResponse.statusMessage());
                             authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                            contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+                            contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                                .putHeader(REQUEST_ID, requestID);
                             contextResponse.end(buffer);
                         });
                     });
@@ -301,6 +321,7 @@ public class Handlers {
                         .putHeader(HttpHeaders.AUTHORIZATION, contextRequest.getHeader(HttpHeaders.AUTHORIZATION))
                         .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                         .putHeader(HttpHeaders.ACCEPT, "application/json")
+                        .putHeader(REQUEST_ID, requestID)
                         .end("grant_type=refresh_token&refresh_token=" + refreshToken);
                 });
 
@@ -320,18 +341,22 @@ public class Handlers {
             if (!contextRequest.uri().startsWith(baseUri)) {
                 throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
             }
+            final String requestID = requestIDProvider.newRequestID();
             contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
             final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
                 contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
                     .setStatusCode(clientResponse.statusCode())
                     .headers().setAll(clientResponse.headers());
-                contextRequest.response().putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+                contextRequest.response()
+                    .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                    .putHeader(REQUEST_ID, requestID);
                 clientResponse.handler(contextRequest.response()::write)
                     .endHandler((v) -> contextRequest.response().end());
             }).exceptionHandler(context::fail)
                 .setChunked(true);
             clientRequest.headers().setAll(contextRequest.headers());
+            clientRequest.putHeader(REQUEST_ID, requestID);
             contextRequest.handler(clientRequest::write)
                 .endHandler((v) -> clientRequest.end());
 
