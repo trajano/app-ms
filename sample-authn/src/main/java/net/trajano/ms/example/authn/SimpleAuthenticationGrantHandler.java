@@ -33,6 +33,8 @@ public class SimpleAuthenticationGrantHandler implements
 
     private static final String BASIC = "Basic";
 
+    private static final String REQUEST_ID = "X-Request-ID";
+
     @Value("${authorizationEndpoint}")
     private URI authorizationEndpoint;
 
@@ -83,6 +85,7 @@ public class SimpleAuthenticationGrantHandler implements
             return jaxRsClient.target(authorizationEndpoint).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION))
+                .header(REQUEST_ID, httpHeaders.getHeaderString(REQUEST_ID))
                 .post(Entity.form(authorizationForm), OAuthTokenResponse.class);
         } catch (final JOSEException e) {
             throw new InternalServerErrorException(e);
