@@ -6,6 +6,9 @@ services:
     - gateway-web
   gateway-ms:
     build: ./ms-gateway
+    depends_on:
+    - log-elasticsearch
+    - authorization-ms
     networks:
     - default
     - gateway-web
@@ -44,12 +47,51 @@ services:
     image: hazelcast/hazelcast:latest
     deploy:
       replicas: 2
+    environment:
+    - "MAX_HEAP_SIZE=512m"
     networks:
     - authorization
   cache:
     image: hazelcast/hazelcast:latest
+    environment:
+    - "MAX_HEAP_SIZE=512m"
     deploy:
       replicas: 4
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.6.3
+    ports:
+    - "3002:5601" 
+    environment:
+    - xpack.monitoring.ui.container.elasticsearch.enabled=false
+#      SERVER_NAME: kibana.example.org
+#      ELASTICSEARCH_URL: http://elasticsearch.example.org
+    links:
+    - log-elasticsearch:elasticsearch
+    networks:
+    - logging
+  log-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+    volumes:
+    - logging:/usr/share/elasticsearch/data
+    networks:
+    - logging
+    environment:
+    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+  logstash-ms:
+    build: ./src/docker/logstash-ms
+    depends_on:
+    - log-elasticsearch
+    links:
+    - log-elasticsearch:elasticsearch
+    networks:
+    - default
+    - logging
+
 networks:
   # The default network is used for all the microservices that are not associated with anything infrastructure related.  Primarily where the aplpication specific microservices reside.
   gateway-web:
@@ -58,4 +100,8 @@ networks:
   # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
   # authorization-ms has it's own network to prevent other microservices from using the cache 
-  
+  logging:
+  # Internal services used for logging are put into this network, but the entry point for logging is exposed.   
+volumes:
+  logging:
+    driver: local
