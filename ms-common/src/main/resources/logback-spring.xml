@@ -25,7 +25,7 @@
         <includeMdcData>true</includeMdcData>
         <includeRootCauseData>true</includeRootCauseData>
         <includeLevelName>true</includeLevelName>
-        <staticField>request_id:{X-Request-ID}</staticField>
+        <staticField>request_id:%{X-Request-ID}</staticField>
       </layout>
     </appender>
     <logger name="stdout" level="WARN">

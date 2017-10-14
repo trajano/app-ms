@@ -57,20 +57,9 @@ services:
     - "MAX_HEAP_SIZE=512m"
     deploy:
       replicas: 4
-  kibana:
-    image: docker.elastic.co/kibana/kibana:5.6.3
-    ports:
-    - "3002:5601" 
-    environment:
-    - xpack.monitoring.ui.container.elasticsearch.enabled=false
-#      SERVER_NAME: kibana.example.org
-#      ELASTICSEARCH_URL: http://elasticsearch.example.org
-    links:
-    - log-elasticsearch:elasticsearch
-    networks:
-    - logging
-  log-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+  
+  log-mongo:
+    image: mongo:3
     volumes:
     - logging:/usr/share/elasticsearch/data
     networks:
@@ -82,12 +71,36 @@ services:
       memlock:
         soft: -1
         hard: -1
+  log-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+    volumes:
+    - logging:/usr/share/elasticsearch/data
+    networks:
+    - logging
+    environment:
+    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    - cluster.name=graylog
+    - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
   logstash-ms:
-    build: ./src/docker/logstash-ms
+    image: graylog/graylog:2.3.1-1
+    environment:
+      # CHANGE ME!
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      # Password: admin
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_WEB_ENDPOINT_URI=http://127.0.0.1:9000/api
+    ports:
+    - "9000:9000"
     depends_on:
     - log-elasticsearch
+    - log-mongo
     links:
     - log-elasticsearch:elasticsearch
+    - log-mongo:mongo
     networks:
     - default
     - logging
