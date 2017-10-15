@@ -18,6 +18,8 @@ jwks:
 http:
   defaultBodyLimit: 2048
 
+allowedOrigins: "*"
+
 routes:
 - from: /v1
   to: ${mappings.swagger-ms}/v1
@@ -39,22 +41,6 @@ routes:
   to: ${mappings.authn-ms}/authn
   protected: false 
   
-swagger:
-- path: /v1
-  info:
-    title: Aggregate
-    version: 1.0
-  uris:
-  - swagger: ${mappings.sample-ms}
-    paths:
-    - /hello
-    - from: /s
-      to: /secure
-  - swagger: ${mappings.authn-ms}
-    paths:
-    - /authn
-      
-
 ---
 
 spring.profiles: docker-compose
