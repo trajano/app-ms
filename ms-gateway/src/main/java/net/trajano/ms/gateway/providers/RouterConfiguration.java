@@ -62,6 +62,8 @@ public class RouterConfiguration {
             .allowedMethod(HttpMethod.DELETE)
             .allowedMethod(HttpMethod.OPTIONS)
             .allowedHeader("Content-Type")
+            .allowedHeader("Accept")
+            .allowedHeader("Accept-Language")
             .allowedHeader("Authorization"));
 
         router.post(refreshTokenPath)
