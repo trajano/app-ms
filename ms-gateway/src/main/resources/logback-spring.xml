@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<configuration>
+  <!-- 
+  <property name="pattern" value="%d{yyyy-MM-dd' 'HH:mm:ss.SSSZ} %.-1level [%.-10thread] [%X{X-Request-ID}] %logger{40} - %msg%n"/>
+ -->
+  <property name="pattern" value="%d{yyyy-MM-dd' 'HH:mm:ss.SSSZ} [%8.8X{X-Request-ID}] %40.40logger{40} %.-1level %msg%n"/>
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${pattern}</pattern>
+    </encoder>
+  </appender>
+  <logger name="net.trajano.ms" level="INFO"/>
+  <!-- turn OFF all logging (children can override) -->
+  <root level="WARN">
+    <appender-ref ref="stdout"/>
+  </root>
+  <springProfile name="docker-compose">
+    <!-- use gelf logger -->
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
+      <graylogHost>logstash-ms</graylogHost>
+      <graylogPort>12201</graylogPort>
+      <layout class="de.siegmar.logbackgelf.GelfLayout">
+        <includeMarker>true</includeMarker>
+        <includeMdcData>true</includeMdcData>
+        <includeRootCauseData>true</includeRootCauseData>
+        <includeLevelName>true</includeLevelName>
+        <staticField>request_id:%{X-Request-ID}</staticField>
+      </layout>
+    </appender>
+    <logger name="net.trajano.ms" level="DEBUG">
+      <appender-ref ref="GELF"/>
+    </logger>
+    <root level="WARN">
+      <appender-ref ref="GELF"/>
+    </root>
+  </springProfile>
+</configuration>
