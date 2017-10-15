@@ -10,6 +10,9 @@
   <artifactId>ms-swagger</artifactId>
   <name>Swagger Microservice</name>
   <description>This provides a collated version of the swagger API JSON</description>
+  <properties>
+    <microservice.mainClass>net.trajano.ms.swagger.SwaggerMS</microservice.mainClass>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>io.swagger</groupId>

@@ -10,6 +10,9 @@
   <artifactId>sample-authz</artifactId>
   <name>Sample Authorization Microservice</name>
   <description>This microservice is used to do provide an authorization endpoint.  It acts as an OAuth token handler to handle JWT, access token and refresh token grant types.</description>
+  <properties>
+    <microservice.mainClass>net.trajano.ms.example.authz.SampleAuthzMS</microservice.mainClass>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

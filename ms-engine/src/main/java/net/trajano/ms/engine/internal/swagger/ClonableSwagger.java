@@ -16,8 +16,8 @@ public class ClonableSwagger extends Swagger {
      * Creates a shallow copy of the swagger but set the schemes, host and base
      * path based on {@link RoutingContext}.
      *
-     * @param baseUri
-     *            base URI
+     * @param context
+     *            routing context
      * @return shallow copy
      */
     public ClonableSwagger withRoutingContext(final RoutingContext context) {
