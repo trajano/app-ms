@@ -9,6 +9,10 @@
   <artifactId>ms-engine</artifactId>
   <name>Microservice Engine</name>
   <description>This is an implementation of a RESTful microservice engine</description>
+  <properties>
+    <resteasy.version>3.1.4.Final</resteasy.version>
+    <slf4j.version>1.7.25</slf4j.version>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -22,13 +26,6 @@
         <groupId>io.vertx</groupId>
         <artifactId>vertx-dependencies</artifactId>
         <version>3.4.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.jboss.resteasy</groupId>
-        <artifactId>resteasy-bom</artifactId>
-        <version>3.1.4.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -76,12 +73,19 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>javax.enterprise</groupId>
+      <artifactId>cdi-api</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-jackson2-provider</artifactId>
+      <version>${resteasy.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-jaxb-provider</artifactId>
+      <version>${resteasy.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.sun.xml.bind</groupId>
@@ -92,6 +96,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-multipart-provider</artifactId>
+      <version>${resteasy.version}</version>
       <exclusions>
         <exclusion>
           <groupId>javax.activation</groupId>
@@ -102,6 +107,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-spring</artifactId>
+      <version>${resteasy.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -112,6 +118,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -126,6 +133,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
+      <version>${slf4j.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

@@ -6,6 +6,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Set;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
@@ -45,6 +47,7 @@ import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
+import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapper;
@@ -56,8 +59,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -73,8 +75,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -127,8 +129,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -143,8 +145,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -198,7 +200,7 @@ public class SpringJaxRsHandler implements
         final Class<? extends Application> applicationClass) {
 
         if (baseApplicationContext == null) {
-            LOG.debug("baseApplicationContext={} is null, a new application context will be created.");
+            LOG.debug("baseApplicationContext is null, a new application context will be created.");
             applicationContext = new AnnotationConfigApplicationContext();
         } else if (baseApplicationContext.isActive()) {
             LOG.debug("baseApplicationContext={} is active, will use as parent.");
@@ -213,6 +215,7 @@ public class SpringJaxRsHandler implements
             LOG.debug("baseApplicationContext={} is not active, will reuse.");
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
+        applicationContext.setScopeMetadataResolver(new CdiScopeMetadataResolver());
         applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapper.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
@@ -239,11 +242,14 @@ public class SpringJaxRsHandler implements
                 LOG.debug("{} => @Path {}", baseUri + clazz.getAnnotation(Path.class).value(), clazz);
                 applicationContext.register(clazz);
             });
-            reflections.getTypesAnnotatedWith(Provider.class).forEach(clazz -> applicationContext.register(clazz));
+            reflections.getTypesAnnotatedWith(Provider.class).forEach(applicationContext::register);
+            reflections.getTypesAnnotatedWith(RequestScoped.class).forEach(applicationContext::register);
+            reflections.getTypesAnnotatedWith(ApplicationScoped.class).forEach(applicationContext::register);
         } else {
             LOG.debug("getClasses() = {}, not performing any scan", resourceClasses);
-            resourceClasses.forEach(clazz -> applicationContext.register(clazz));
+            resourceClasses.forEach(applicationContext::register);
         }
+
         deployment = new ResteasyDeployment();
         deployment.setApplication(application);
         deployment.start();
