@@ -98,7 +98,7 @@ public class ErrorResponse {
     private final String requestId;
 
     @XmlElement(name = "stack_trace")
-    private final List<LocalStackTraceElement> stackTrace = new LinkedList<>();
+    private final List<LocalStackTraceElement> stackTrace;
 
     @XmlElement(name = "thread_id")
     private final String threadId;
@@ -109,6 +109,7 @@ public class ErrorResponse {
         error = null;
         errorClass = null;
         errorDescription = null;
+        stackTrace = null;
         threadId = null;
         requestId = null;
     }
@@ -126,6 +127,7 @@ public class ErrorResponse {
         } else {
             cause = null;
         }
+        stackTrace = new LinkedList<>();
         for (final StackTraceElement ste : e.getStackTrace()) {
             if (!isInternalClass(ste.getClassName())) {
                 stackTrace.add(new LocalStackTraceElement(ste));
@@ -139,20 +141,27 @@ public class ErrorResponse {
     }
 
     public ErrorResponse(final Throwable e,
-        final HttpHeaders headers) {
+        final HttpHeaders headers,
+        final boolean showStackTrace) {
 
         error = "server_error";
         errorDescription = e.getLocalizedMessage();
         errorClass = e.getClass().getName();
         threadId = Thread.currentThread().getName();
-        for (final StackTraceElement ste : e.getStackTrace()) {
-            if (!isInternalClass(ste.getClassName())) {
-                stackTrace.add(new LocalStackTraceElement(ste));
+        if (showStackTrace) {
+            stackTrace = new LinkedList<>();
+            for (final StackTraceElement ste : e.getStackTrace()) {
+                if (!isInternalClass(ste.getClassName())) {
+                    stackTrace.add(new LocalStackTraceElement(ste));
+                }
             }
-        }
-        if (e.getCause() != null) {
-            cause = new ErrorResponse(e.getCause());
+            if (e.getCause() != null) {
+                cause = new ErrorResponse(e.getCause());
+            } else {
+                cause = null;
+            }
         } else {
+            stackTrace = null;
             cause = null;
         }
         requestId = headers.getHeaderString(REQUEST_ID);

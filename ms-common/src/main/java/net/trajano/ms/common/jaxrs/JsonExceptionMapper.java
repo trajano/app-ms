@@ -9,8 +9,11 @@ import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+@Configuration
 @Component
 @Provider
 public class JsonExceptionMapper implements
@@ -21,11 +24,14 @@ public class JsonExceptionMapper implements
     @Context
     private HttpHeaders headers;
 
+    @Value("${error.stackTrace:true}")
+    private boolean showStackTrace;
+
     @Override
     public Response toResponse(final Throwable exception) {
 
         LOG.error(exception.getMessage(), exception);
-        return Response.ok(new ErrorResponse(exception, headers)).status(Status.INTERNAL_SERVER_ERROR).build();
+        return Response.ok(new ErrorResponse(exception, headers, showStackTrace)).status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
 }

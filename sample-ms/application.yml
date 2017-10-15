@@ -1,6 +1,8 @@
 http:
   port: 8900
 
+error:
+  stackTrace: false
 ---
 
 spring.profiles: docker-compose
