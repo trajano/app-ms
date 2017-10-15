@@ -1,5 +1,7 @@
 package net.trajano.ms.common.jaxrs;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -16,11 +18,14 @@ public class JsonExceptionMapper implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonExceptionMapper.class);
 
+    @Context
+    private HttpHeaders headers;
+
     @Override
     public Response toResponse(final Throwable exception) {
 
         LOG.error(exception.getMessage(), exception);
-        return Response.ok(new ErrorResponse(exception)).status(Status.INTERNAL_SERVER_ERROR).build();
+        return Response.ok(new ErrorResponse(exception, headers)).status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
 }

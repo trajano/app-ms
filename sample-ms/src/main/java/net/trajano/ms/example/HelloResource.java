@@ -93,7 +93,7 @@ public class HelloResource {
     @Path("/cough")
     public Response cough() {
 
-        throw new RuntimeException("ahem");
+        throw new RuntimeException("ahem", new IOException("burp"));
     }
 
     private String getFileName(final MultivaluedMap<String, String> header) {
