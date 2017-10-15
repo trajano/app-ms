@@ -28,10 +28,10 @@
         <staticField>request_id:%{X-Request-ID}</staticField>
       </layout>
     </appender>
-    <logger name="stdout" level="WARN">
-      <appender-ref ref="stdout"/>
+    <logger name="net.trajano.ms" level="DEBUG">
+      <appender-ref ref="GELF"/>
     </logger>
-    <root level="debug">
+    <root level="WARN">
       <appender-ref ref="GELF"/>
     </root>
   </springProfile>
