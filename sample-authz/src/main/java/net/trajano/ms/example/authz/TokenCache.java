@@ -62,6 +62,9 @@ public class TokenCache {
         final String clientId) {
 
         final JWTClaimsSet claims = accessTokenToClaims.get(accessToken, JWTClaimsSet.class);
+        if (claims == null) {
+            throw OAuthTokenResponse.unauthorized("token_rejected", "Token rejected", "Bearer");
+        }
         if (!claims.getAudience().contains(clientId)) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Client ID did not match expected value");
         }
