@@ -12,12 +12,12 @@ import javax.ws.rs.core.UriInfo;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.IdTokenPrincipal;
+import net.trajano.ms.common.JwtClaimsSetPrincipal;
 
 public class JwtSecurityContext implements
     SecurityContext {
 
-    private final IdTokenPrincipal principal;
+    private final JwtClaimsSetPrincipal principal;
 
     /**
      * Roles.
@@ -29,7 +29,7 @@ public class JwtSecurityContext implements
     public JwtSecurityContext(final JWTClaimsSet claimsSet,
         final UriInfo uriInfo) {
 
-        principal = new IdTokenPrincipal(claimsSet);
+        principal = new JwtClaimsSetPrincipal(claimsSet);
         secure = "https".equals(uriInfo.getRequestUri().getScheme());
 
         try {
