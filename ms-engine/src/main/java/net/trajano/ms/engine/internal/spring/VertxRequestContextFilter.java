@@ -9,24 +9,21 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
-import org.springframework.web.context.request.AbstractRequestAttributes;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-
+/**
+ * This is used to set the request scoped objects.
+ *
+ * @author Archimedes Trajano
+ */
 @Provider
 @PreMatching
 public final class VertxRequestContextFilter implements
     ContainerRequestFilter,
     ContainerResponseFilter {
 
-    private static final String REQUEST_ATTRIBUTES_PROPERTY = VertxRequestContextFilter.class.getName() + ".REQUEST_ATTRIBUTES";
-
     @Override
-    public void filter(final ContainerRequestContext requestContext) throws IOException {
+    public void filter(final ContainerRequestContext containerRequest) throws IOException {
 
-        final RequestAttributes attributes = new VertxHttpRequestAttributes(requestContext);
-        requestContext.setProperty(REQUEST_ATTRIBUTES_PROPERTY, attributes);
-        RequestContextHolder.setRequestAttributes(attributes);
+        ContainerRequestScope.setRequestContext(containerRequest);
     }
 
     @Override
@@ -34,8 +31,6 @@ public final class VertxRequestContextFilter implements
         final ContainerResponseContext responseContext)
         throws IOException {
 
-        final AbstractRequestAttributes attributes = (AbstractRequestAttributes) requestContext.getProperty(REQUEST_ATTRIBUTES_PROPERTY);
-        RequestContextHolder.resetRequestAttributes();
-        attributes.requestCompleted();
+        ContainerRequestScope.resetRequestContext();
     }
 }

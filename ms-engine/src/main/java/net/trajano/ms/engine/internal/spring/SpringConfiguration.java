@@ -5,13 +5,12 @@ import java.util.Collections;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.context.request.RequestScope;
 
 @Configuration
 public class SpringConfiguration {
 
     @Bean
-    public static CustomScopeConfigurer customScopeConfigurer(final RequestScope scope) {
+    public static CustomScopeConfigurer customScopeConfigurer(final ContainerRequestScope scope) {
 
         final CustomScopeConfigurer configurer = new CustomScopeConfigurer();
 
@@ -20,9 +19,9 @@ public class SpringConfiguration {
     }
 
     @Bean
-    public static RequestScope requestScope() {
+    public static ContainerRequestScope requestScope() {
 
-        return new RequestScope();
+        return new ContainerRequestScope();
     }
 
 }

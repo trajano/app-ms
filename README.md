@@ -20,8 +20,28 @@ The technology stack used:
 - ReactJS for UI
 - Google would be the identity provider
 
-There is a "ms-base" project that every microservice will be deriving from.
+## Modules
+
+*ms-common* project that every microservice will be deriving from that will provide the base API
+*ms-common-impl* project that every microservice will be deriving from that will provide the base API
+*ms-base* project that every microservice will be deriving from to provide Maven setup.
 
 There is a "ms-engine" project that provides the base microservice engine handlers.
 
 There is a "ms-common" project that every microservice will be needing in terms of encryption.  This will provide an opinionated implementation that provides a higher level API and hides most of the details that are provided by the engine.
+
+## Base API
+
+The API will consist of the following API
+
+* SLF4J
+* JAX-RS
+* Spring Boot AutoConfiguration annotations
+* Spring Context annotations
+* Swagger annotations
+* Jackson Annotations
+* CDI 1.2
+
+The ones that are custom to this implementation are, the API will consist of 
+
+* `net.trajano.ms.common.Microservice`

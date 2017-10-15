@@ -4,14 +4,12 @@ import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
 
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.AnnotationScopeMetadataResolver;
 import org.springframework.context.annotation.ScopeMetadata;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.web.context.WebApplicationContext;
 
 public class CdiScopeMetadataResolver extends AnnotationScopeMetadataResolver {
 
@@ -25,16 +23,12 @@ public class CdiScopeMetadataResolver extends AnnotationScopeMetadataResolver {
 
             if (annotationTypes.contains(RequestScoped.class
                 .getName())) {
-                metadata.setScopeName(WebApplicationContext.SCOPE_REQUEST);
+                metadata.setScopeName("request");
                 metadata.setScopedProxyMode(ScopedProxyMode.TARGET_CLASS);
             } else if (annotationTypes
-                .contains(SessionScoped.class.getName())) {
-                metadata.setScopeName(WebApplicationContext.SCOPE_SESSION);
-            } else if (annotationTypes
                 .contains(ApplicationScoped.class.getName())) {
-                metadata.setScopeName(WebApplicationContext.SCOPE_APPLICATION);
+                metadata.setScopeName("singleton");
             } else {
-                // do the regular Spring stuff..
                 return super.resolveScopeMetadata(definition);
             }
             return metadata;
