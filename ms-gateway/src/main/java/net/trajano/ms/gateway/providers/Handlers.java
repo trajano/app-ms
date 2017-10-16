@@ -2,6 +2,10 @@ package net.trajano.ms.gateway.providers;
 
 import static io.vertx.core.http.HttpHeaders.AUTHORIZATION;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.vertx.core.http.HttpHeaders.DATE;
+import static java.time.ZoneOffset.UTC;
+import static java.time.ZonedDateTime.now;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.ConnectException;
@@ -44,7 +48,7 @@ public class Handlers {
     private static final String X_JWT_ASSERTION = "X-JWT-Assertion";
 
     static {
-        RESTRICTED_HEADERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(X_JWKS_URI, X_JWT_ASSERTION, REQUEST_ID, AUTHORIZATION)));
+        RESTRICTED_HEADERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(X_JWKS_URI, X_JWT_ASSERTION, REQUEST_ID, AUTHORIZATION, DATE)));
     }
 
     /**
@@ -96,10 +100,10 @@ public class Handlers {
     }
 
     /**
-     * Obtains the access token from the request. Since the Authorization header
-     * can have multiple values comma separated, it needs to be broken up first
-     * then we have to locate the Bearer token from the comma separated list.
-     * The bearer token is expected to contain the access token.
+     * Obtains the access token from the request. Since the Authorization header can
+     * have multiple values comma separated, it needs to be broken up first then we
+     * have to locate the Bearer token from the comma separated list. The bearer
+     * token is expected to contain the access token.
      *
      * @param contextRequest
      *            request
@@ -227,59 +231,60 @@ public class Handlers {
             LOG.debug("access_token={} client_credentials={}", accessToken, clientCredentials);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
 
-            final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
-                // Trust the authorization endpoint
-                authorizationResponse.bodyHandler(buffer -> {
+            final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse ->
+            // Trust the authorization endpoint
+            authorizationResponse.bodyHandler(buffer -> {
 
-                    if (authorizationResponse.statusCode() != 200) {
-                        contextResponse.setStatusCode(authorizationResponse.statusCode());
-                        contextResponse.setStatusMessage(authorizationResponse.statusMessage());
-                        authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                        contextResponse.end(buffer);
-                        contextRequest.resume();
-                    } else {
-                        final String idToken = new JsonObject(buffer).getString("id_token");
-                        if (idToken == null) {
-                            LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
-                            context.response().setStatusCode(500)
-                                .setStatusMessage("Internal Server Error")
-                                .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                                .end(new JsonObject()
-                                    .put("error", "server_error")
-                                    .put("error_description", "Unable to get assertion from authorization endpoint")
-                                    .toBuffer());
-                            return;
-                        }
-
-                        final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
-                            contextResponse.setChunked(true)
-                                .setStatusCode(clientResponse.statusCode());
-                            clientResponse.headers().forEach(e -> contextResponse.putHeader(e.getKey(), e.getValue()));
-                            clientResponse.handler(contextResponse::write)
-                                .endHandler(v -> contextResponse.end());
-                        }).exceptionHandler(context::fail);
-
-                        contextRequest.headers().forEach(e -> {
-                            if (isHeaderFowardable(e.getKey())) {
-                                clientRequest.putHeader(e.getKey(), e.getValue());
-                            }
-                        });
-                        clientRequest.putHeader(X_JWT_ASSERTION, idToken)
-                            .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
-                            .putHeader(REQUEST_ID, requestID);
-                        contextRequest.resume();
-                        contextRequest.handler(clientRequest::write)
-                            .endHandler(v -> clientRequest.end())
-                            .exceptionHandler(context::fail);
+                if (authorizationResponse.statusCode() != 200) {
+                    contextResponse.setStatusCode(authorizationResponse.statusCode());
+                    contextResponse.setStatusMessage(authorizationResponse.statusMessage());
+                    authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
+                    contextResponse.end(buffer);
+                    contextRequest.resume();
+                } else {
+                    final String idToken = new JsonObject(buffer).getString("id_token");
+                    if (idToken == null) {
+                        LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
+                        context.response().setStatusCode(500)
+                            .setStatusMessage("Internal Server Error")
+                            .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .end(new JsonObject()
+                                .put("error", "server_error")
+                                .put("error_description", "Unable to get assertion from authorization endpoint")
+                                .toBuffer());
+                        return;
                     }
-                }).exceptionHandler(context::fail);
-            }).exceptionHandler(context::fail);
+
+                    final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
+                        contextResponse.setChunked(true)
+                            .setStatusCode(clientResponse.statusCode());
+                        clientResponse.headers().forEach(e -> contextResponse.putHeader(e.getKey(), e.getValue()));
+                        clientResponse.handler(contextResponse::write)
+                            .endHandler(v -> contextResponse.end());
+                    }).exceptionHandler(context::fail);
+
+                    contextRequest.headers().forEach(e -> {
+                        if (isHeaderFowardable(e.getKey())) {
+                            clientRequest.putHeader(e.getKey(), e.getValue());
+                        }
+                    });
+                    clientRequest.putHeader(X_JWT_ASSERTION, idToken)
+                        .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
+                        .putHeader(REQUEST_ID, requestID)
+                        .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));
+                    contextRequest.resume();
+                    contextRequest.handler(clientRequest::write)
+                        .endHandler(v -> clientRequest.end())
+                        .exceptionHandler(context::fail);
+                }
+            }).exceptionHandler(context::fail)).exceptionHandler(context::fail);
 
             authorizationRequest
                 .putHeader(HttpHeaders.AUTHORIZATION, clientCredentials)
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .putHeader(HttpHeaders.ACCEPT, "application/json")
                 .putHeader(REQUEST_ID, requestID)
+                .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
                 .end("grant_type=authorization_code&code=" + accessToken);
 
         };
@@ -351,6 +356,7 @@ public class Handlers {
                         .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                         .putHeader(HttpHeaders.ACCEPT, "application/json")
                         .putHeader(REQUEST_ID, requestID)
+                        .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
                         .end("grant_type=refresh_token&refresh_token=" + refreshToken);
                 });
 
@@ -391,6 +397,7 @@ public class Handlers {
             });
 
             clientRequest.putHeader(REQUEST_ID, requestID);
+            clientRequest.putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));
             contextRequest.handler(clientRequest::write)
                 .endHandler((v) -> clientRequest.end());
 
