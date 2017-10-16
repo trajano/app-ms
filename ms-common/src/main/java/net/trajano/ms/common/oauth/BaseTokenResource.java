@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -26,7 +27,6 @@ import io.swagger.annotations.Authorization;
 import io.swagger.annotations.BasicAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.common.JwtNotRequired;
 
 /**
  * This endpoint routes to specified grant handlers and acts as a OAuth 2.0
@@ -37,7 +37,7 @@ import net.trajano.ms.common.JwtNotRequired;
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(basicAuthDefinitions = @BasicAuthDefinition(key = "client",
         description = "Client ID/Secret")))
-@JwtNotRequired
+@PermitAll
 public abstract class BaseTokenResource {
 
     private final ClientValidator clientValidator;

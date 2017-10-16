@@ -2,6 +2,7 @@ package net.trajano.ms.example.authz;
 
 import java.util.List;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.Path;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.common.oauth.AllowAnyClientValidator;
 import net.trajano.ms.common.oauth.BaseTokenResource;
 import net.trajano.ms.common.oauth.GrantHandler;
@@ -22,7 +22,7 @@ import net.trajano.ms.common.oauth.GrantHandler;
 @Api
 @Component
 @Path("/authz")
-@JwtNotRequired
+@PermitAll
 public class AuthzResource extends BaseTokenResource {
 
     @Autowired

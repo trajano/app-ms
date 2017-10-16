@@ -51,8 +51,13 @@ The API will consist of the following API
 * Swagger annotations
 * Jackson Annotations
 * CDI 1.2
+* Annotations 1.2 (for `@PermitAll` and `@RolesRequired` annotations)
 
 The ones that are custom to this implementation are, the API will consist of 
 
 * `net.trajano.ms.Microservice`
-* `net.trajano.ms.common.IdTokenPrincipal`
+* `net.trajano.ms.common.JwtClaimsSetPrincipal`
+
+## JOSE support
+
+The common API will hide the use of JOSE the implementation will perform the necessary validations 

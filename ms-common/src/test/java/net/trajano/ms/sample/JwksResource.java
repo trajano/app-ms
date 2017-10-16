@@ -1,5 +1,6 @@
 package net.trajano.ms.sample;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.common.beans.JwksProvider;
 
 /**
@@ -23,7 +23,7 @@ import net.trajano.ms.common.beans.JwksProvider;
 @Component
 @Api
 @Path("/jwks")
-@JwtNotRequired
+@PermitAll
 public class JwksResource {
 
     /**

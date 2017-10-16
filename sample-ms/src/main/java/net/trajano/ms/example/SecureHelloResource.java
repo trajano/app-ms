@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import net.trajano.ms.engine.internal.Conversions;
@@ -38,7 +39,8 @@ import net.trajano.ms.example.domain.MyType;
 @Api(tags = {
     "infernal",
     "doom"
-})
+},
+    authorizations = @Authorization("Bearer"))
 @Component
 @Path("/s")
 public class SecureHelloResource {
