@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -26,7 +27,6 @@ import io.swagger.annotations.Authorization;
 import io.swagger.annotations.BasicAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.common.JwtNotRequired;
 
 /**
  * This endpoint routes to specified grant handlers and acts as a OAuth 2.0
@@ -37,7 +37,7 @@ import net.trajano.ms.common.JwtNotRequired;
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(basicAuthDefinitions = @BasicAuthDefinition(key = "client",
         description = "Client ID/Secret")))
-@JwtNotRequired
+@PermitAll
 public abstract class BaseTokenResource {
 
     private final ClientValidator clientValidator;
@@ -55,8 +55,8 @@ public abstract class BaseTokenResource {
     }
 
     /**
-     * This performs a check whether the given client is authorized. It will
-     * throw a {@link BadRequestException} with unauthorized_client if it fails.
+     * This performs a check whether the given client is authorized. It will throw a
+     * {@link BadRequestException} with unauthorized_client if it fails.
      *
      * @param grantType
      * @param authorization
@@ -102,10 +102,15 @@ public abstract class BaseTokenResource {
 
         final String grantType = form.getFirst("grant_type");
 
-        if (!grantHandlerMap.containsKey(grantType)) {
+        if (grantType == null || !grantHandlerMap.containsKey(grantType)) {
             throw OAuthTokenResponse.badRequest("unsupported_grant_type", "Unsupported grant type");
         }
-        final String basicAuthorizationHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).stream().filter(s -> s.startsWith("Basic ")).collect(Collectors.toList()).get(0);
+
+        final List<String> authorization = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization.isEmpty()) {
+            throw OAuthTokenResponse.unauthorized("unauthorized_client", "Client not authorized", "Basic");
+        }
+        final String basicAuthorizationHeader = authorization.stream().filter(s -> s.startsWith("Basic ")).collect(Collectors.toList()).get(0);
         final String clientId = checkClientAuthorized(grantType, basicAuthorizationHeader);
         return Response.ok(grantHandlerMap.get(grantType).handler(jaxRsClient, clientId, httpHeaders, form)).build();
     }

@@ -2,10 +2,11 @@ package net.trajano.ms.engine.sample;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import javax.enterprise.context.ApplicationScoped;
 
-@Component
+import org.springframework.scheduling.annotation.Scheduled;
+
+@ApplicationScoped
 public class SomeAppScope implements
     ISomeAppScope {
 

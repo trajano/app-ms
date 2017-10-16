@@ -20,8 +20,44 @@ The technology stack used:
 - ReactJS for UI
 - Google would be the identity provider
 
-There is a "ms-base" project that every microservice will be deriving from.
+## Modules
 
-There is a "ms-engine" project that provides the base microservice engine handlers.
+The public facing ones are:
 
-There is a "ms-common" project that every microservice will be needing in terms of encryption.  This will provide an opinionated implementation that provides a higher level API and hides most of the details that are provided by the engine.
+* *ms-common* project that every microservice will be deriving from that will provide the base API
+* *ms-base* project that every microservice will be deriving from to provide Maven setup.
+* *ms-common-auth* project that extends common to provide things that are needed to implement the token endpoint.
+
+The ones that provide a microservice itself are:
+* *ms-gateway* API Gateway
+* *ms-swagger* a swagger aggregator
+* *ms-resource* An i18n resource provider
+
+The internal support modules are:
+* *ms-common-impl* project will provide an opinionated rendition of the API.
+* *ms-engine* provides common lower level constructs that help build common and the gateway.
+* *ms-engine-manifest* project the .well-known/manifest route
+* *ms-engine-jaxrs* provides the JAX-RS handling route
+* *ms-engine-swagger* provides the Swagger generation route
+
+## Base API
+
+The API will consist of the following API
+
+* SLF4J
+* JAX-RS
+* Spring Boot AutoConfiguration annotations
+* Spring Context annotations
+* Swagger annotations
+* Jackson Annotations
+* CDI 1.2
+* Annotations 1.2 (for `@PermitAll` and `@RolesRequired` annotations)
+
+The ones that are custom to this implementation are, the API will consist of 
+
+* `net.trajano.ms.Microservice`
+* `net.trajano.ms.common.JwtClaimsSetPrincipal`
+
+## JOSE support
+
+The common API will hide the use of JOSE the implementation will perform the necessary validations 

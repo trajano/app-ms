@@ -10,6 +10,9 @@
   <artifactId>sample-authn</artifactId>
   <name>Sample Authentication Microservice</name>
   <description>This microservice is used to do a username password authentication using an OAuth endpoint that uses client_credentials grant and Basic authorization.</description>
+  <properties>
+    <microservice.mainClass>net.trajano.ms.example.authn.SampleAuthnMS</microservice.mainClass>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

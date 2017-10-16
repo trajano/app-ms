@@ -2,6 +2,7 @@ package net.trajano.ms.example.authn;
 
 import java.util.List;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -22,7 +23,6 @@ import io.swagger.annotations.BasicAuthDefinition;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.common.oauth.AllowAnyClientValidator;
 import net.trajano.ms.common.oauth.BaseTokenResource;
 import net.trajano.ms.common.oauth.GrantHandler;
@@ -37,7 +37,7 @@ import net.trajano.ms.common.oauth.GrantTypes;
 @Api(tags = "unprotected")
 @Component
 @Path("/authn")
-@JwtNotRequired
+@PermitAll
 public class AuthnResource extends BaseTokenResource {
 
     @Autowired

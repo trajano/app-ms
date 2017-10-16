@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -33,7 +34,6 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.example.domain.MyType;
 
@@ -47,7 +47,7 @@ import net.trajano.ms.example.domain.MyType;
 })
 @Component
 @Path("/hello")
-@JwtNotRequired
+@PermitAll
 public class HelloResource {
 
     @Context
@@ -93,7 +93,7 @@ public class HelloResource {
     @Path("/cough")
     public Response cough() {
 
-        throw new RuntimeException("ahem");
+        throw new RuntimeException("ahem", new IOException("burp"));
     }
 
     private String getFileName(final MultivaluedMap<String, String> header) {

@@ -52,7 +52,7 @@ public class SwaggerCollator {
             final String title = env.getProperty(String.format("swagger[%d].info.title", i));
             final String version = env.getProperty(String.format("swagger[%d].info.version", i));
 
-            swagger.setBasePath(basePath);
+            swagger.setBasePath('/' + basePath);
             final Info info = new Info();
             info.setTitle(title);
             info.setVersion(version);

@@ -1,14 +1,19 @@
 package net.trajano.ms.common.jaxrs;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+@Configuration
 @Component
 @Provider
 public class JsonExceptionMapper implements
@@ -16,11 +21,21 @@ public class JsonExceptionMapper implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonExceptionMapper.class);
 
+    @Context
+    private HttpHeaders headers;
+
+    @Value("${error.stackTrace:true}")
+    private boolean showStackTrace;
+
     @Override
     public Response toResponse(final Throwable exception) {
 
         LOG.error(exception.getMessage(), exception);
-        return Response.ok(new ErrorResponse(exception)).status(Status.INTERNAL_SERVER_ERROR).build();
+        MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
+        if (headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE) && !headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE)) {
+            mediaType = MediaType.APPLICATION_XML_TYPE;
+        }
+        return Response.serverError().entity(new ErrorResponse(exception, headers, showStackTrace)).type(mediaType).build();
     }
 
 }

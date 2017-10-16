@@ -1,5 +1,6 @@
 package net.trajano.ms.swagger;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
@@ -13,12 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.annotations.Api;
 import io.swagger.models.Swagger;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.common.JwtNotRequired;
 import net.trajano.ms.swagger.internal.SwaggerCollator;
 
 @Api
 @Path("/")
-@JwtNotRequired
+@PermitAll
 public class SwaggerResource {
 
     @Autowired

@@ -7,14 +7,19 @@ import javax.ws.rs.core.UriBuilder;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-public class IdTokenPrincipal implements
+/**
+ * This wraps a JWT claims set as a Principal for use with the Security Context.
+ *
+ * @author Archimedes Trajano
+ */
+public class JwtClaimsSetPrincipal implements
     Principal {
 
     private final String authority;
 
     private final JWTClaimsSet claimsSet;
 
-    public IdTokenPrincipal(final JWTClaimsSet claimsSet) {
+    public JwtClaimsSetPrincipal(final JWTClaimsSet claimsSet) {
 
         this.claimsSet = claimsSet;
         final URI build = UriBuilder.fromUri(claimsSet.getIssuer()).userInfo(claimsSet.getSubject()).build();

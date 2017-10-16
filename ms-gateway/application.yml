@@ -30,6 +30,10 @@ routes:
   to: ${mappings.sample-ms}/hello
   exact: true
   protected: false
+- from: /v1/cough
+  to: ${mappings.sample-ms}/hello/cough
+  exact: true
+  protected: false
 - from: /v1/hello
   to: ${mappings.sample-ms}/hello
 - from: /v1/secure/upload

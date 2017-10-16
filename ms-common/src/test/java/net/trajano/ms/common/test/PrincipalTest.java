@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.IdTokenPrincipal;
+import net.trajano.ms.common.JwtClaimsSetPrincipal;
 
 public class PrincipalTest {
 
@@ -14,7 +14,7 @@ public class PrincipalTest {
     public void testAuthority() {
 
         final JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().issuer("https://accounts.trajano.net").subject("archie").build();
-        final IdTokenPrincipal idTokenPrincipal = new IdTokenPrincipal(claimsSet);
+        final JwtClaimsSetPrincipal idTokenPrincipal = new JwtClaimsSetPrincipal(claimsSet);
         assertEquals("archie", idTokenPrincipal.getName());
         assertEquals("archie@accounts.trajano.net", idTokenPrincipal.getAuthority());
         assertEquals(claimsSet, idTokenPrincipal.getClaimsSet());

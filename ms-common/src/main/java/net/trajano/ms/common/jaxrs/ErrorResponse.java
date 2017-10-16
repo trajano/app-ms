@@ -1,8 +1,11 @@
 package net.trajano.ms.common.jaxrs;
 
+import static net.trajano.ms.common.jaxrs.RequestIdContextInterceptor.REQUEST_ID;
+
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -15,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
     "error",
     "errorDescription",
     "errorClass",
+    "requestId",
     "threadId",
     "stackTrace",
     "cause"
@@ -90,8 +94,11 @@ public class ErrorResponse {
     @XmlElement(name = "error_description")
     private final String errorDescription;
 
+    @XmlElement(name = "request_id")
+    private final String requestId;
+
     @XmlElement(name = "stack_trace")
-    private final List<LocalStackTraceElement> stackTrace = new LinkedList<>();
+    private final List<LocalStackTraceElement> stackTrace;
 
     @XmlElement(name = "thread_id")
     private final String threadId;
@@ -102,25 +109,62 @@ public class ErrorResponse {
         error = null;
         errorClass = null;
         errorDescription = null;
+        stackTrace = null;
         threadId = null;
+        requestId = null;
     }
 
-    public ErrorResponse(final Throwable e) {
+    /**
+     * Constructs ErrorResponse to chain the cause.
+     *
+     * @param e
+     *            cause
+     */
+    protected ErrorResponse(final Throwable e) {
 
-        error = "server_error";
-        errorDescription = e.getLocalizedMessage();
-        errorClass = e.getClass().getName();
-        threadId = Thread.currentThread().getName();
-        for (final StackTraceElement ste : e.getStackTrace()) {
-            if (!isInternalClass(ste.getClassName())) {
-                stackTrace.add(new LocalStackTraceElement(ste));
-            }
-        }
         if (e.getCause() != null) {
             cause = new ErrorResponse(e.getCause());
         } else {
             cause = null;
         }
+        stackTrace = new LinkedList<>();
+        for (final StackTraceElement ste : e.getStackTrace()) {
+            if (!isInternalClass(ste.getClassName())) {
+                stackTrace.add(new LocalStackTraceElement(ste));
+            }
+        }
+        error = null;
+        errorClass = e.getClass().getName();
+        errorDescription = e.getMessage();
+        threadId = null;
+        requestId = null;
+    }
+
+    public ErrorResponse(final Throwable e,
+        final HttpHeaders headers,
+        final boolean showStackTrace) {
+
+        error = "server_error";
+        errorDescription = e.getLocalizedMessage();
+        errorClass = e.getClass().getName();
+        threadId = Thread.currentThread().getName();
+        if (showStackTrace) {
+            stackTrace = new LinkedList<>();
+            for (final StackTraceElement ste : e.getStackTrace()) {
+                if (!isInternalClass(ste.getClassName())) {
+                    stackTrace.add(new LocalStackTraceElement(ste));
+                }
+            }
+            if (e.getCause() != null) {
+                cause = new ErrorResponse(e.getCause());
+            } else {
+                cause = null;
+            }
+        } else {
+            stackTrace = null;
+            cause = null;
+        }
+        requestId = headers.getHeaderString(REQUEST_ID);
 
     }
 
@@ -142,6 +186,11 @@ public class ErrorResponse {
     public String getErrorDescription() {
 
         return errorDescription;
+    }
+
+    public String getRequestId() {
+
+        return requestId;
     }
 
     public List<LocalStackTraceElement> getStackTrace() {

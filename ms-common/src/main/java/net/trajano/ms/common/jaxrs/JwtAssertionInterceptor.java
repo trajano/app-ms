@@ -41,10 +41,11 @@ import net.trajano.ms.common.beans.DefaultAssertionRequiredFunction;
 import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.common.beans.JwtClaimsProcessor;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 /**
  * This performs assertion check on the header data. It ignores the /jwks and
- * /swagger URLs which should be publically accessible.
+ * /swagger URLs which should be publicly accessible.
  *
  * @author Archimedes Trajano
  */
@@ -139,30 +140,21 @@ public class JwtAssertionInterceptor implements
 
             if (!claims.getAudience().contains(audience.toASCIIString())) {
                 LOG.warn("Audience {} did not match {} for {}", claims.getAudience(), audience, requestContext.getUriInfo());
-                requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
-                    .header(HttpHeaders.WWW_AUTHENTICATE, "JWT")
-                    .entity("audience vertification failed")
-                    .build());
+                requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_audience", "Audience validation failed", "Bearer").getResponse());
                 return;
             }
         }
         if (issuer != null) {
             if (!claims.getIssuer().equals(issuer.toASCIIString())) {
                 LOG.warn("Issuer {} did not match {} for {}", claims.getIssuer(), issuer, requestContext.getUriInfo());
-                requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
-                    .header(HttpHeaders.WWW_AUTHENTICATE, "JWT")
-                    .entity("issuer vertification failed")
-                    .build());
+                requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_issuer", "Issuer validation failed", "Bearer").getResponse());
                 return;
             }
         }
 
-        if (claims.getExpirationTime() != null && claims.getExpirationTime().after(requestContext.getDate())) {
+        if (claims.getExpirationTime() != null && claims.getExpirationTime().before(requestContext.getDate())) {
             LOG.warn("Claims expired for {}", requestContext.getUriInfo());
-            requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
-                .header(HttpHeaders.WWW_AUTHENTICATE, "JWT")
-                .entity("claims expired")
-                .build());
+            requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_claims", "Claims expired", "Bearer").getResponse());
             return;
         }
 
