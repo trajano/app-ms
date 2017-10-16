@@ -37,7 +37,7 @@ The internal support modules are:
 * *ms-common-impl* project will provide an opinionated rendition of the API.
 * *ms-engine* provides common lower level constructs that help build common and the gateway.
 * *ms-engine-manifest* project the .well-known/manifest route
-* *ms-engine-jaxrs* provides the JAX-RS handling route
+* *ms-engine-spring-jaxrs* provides the JAX-RS with Spring handling route
 * *ms-engine-swagger* provides the Swagger generation route
 
 ## Base API
