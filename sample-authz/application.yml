@@ -5,6 +5,8 @@ issuer: http://localhost:8282
 allowedIssuers:
 - http://localhost:8281
 
+token.accessTokenExpiration: 60
+
 ---
 
 spring.profiles: docker-compose

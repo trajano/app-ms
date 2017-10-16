@@ -8,6 +8,7 @@ import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
+import com.hazelcast.core.HazelcastInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -92,6 +93,7 @@ public class TokenCache {
     @PostConstruct
     public void init() {
 
+        System.out.println("Using cache manager: " + cm.getClass().getName());
         accessTokenToClaims = cm.getCache(ACCESS_TOKEN_TO_CLAIMS);
         refreshTokenToAccessToken = cm.getCache(REFRESH_TOKEN_TO_ACCESS_TOKEN);
         refreshTokenToClaims = cm.getCache(REFRESH_TOKEN_TO_CLAIMS);

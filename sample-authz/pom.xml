@@ -20,8 +20,13 @@
     </dependency>
     <dependency>
       <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast</artifactId>
+      <artifactId>hazelcast-spring</artifactId>
       <version>3.8.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+      <version>1.5.7.RELEASE</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
