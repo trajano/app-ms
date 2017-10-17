@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,8 @@ public class Handlers {
     private static final Set<CharSequence> RESTRICTED_HEADERS;
 
     private static final String TOKEN_PATTERN = "^[A-Za-z0-9]{64}$";
+
+    private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
 
     private static final String X_JWKS_URI = "X-JWKS-URI";
 
@@ -100,10 +104,9 @@ public class Handlers {
     }
 
     /**
-     * Obtains the access token from the request. Since the Authorization header
-     * can have multiple values comma separated, it needs to be broken up first
-     * then we have to locate the Bearer token from the comma separated list.
-     * The bearer token is expected to contain the access token.
+     * Obtains the access token from the request. It is expected to be the
+     * Authorization with a bearer tag. The authentication code is expected to
+     * be a given pattern.
      *
      * @param contextRequest
      *            request
@@ -116,14 +119,12 @@ public class Handlers {
         if (authorizationHeader == null) {
             return null;
         }
-
-        for (final String authorization : authorizationHeader.split(",")) {
-            final String cleanedAuthorization = authorization.trim();
-            if (cleanedAuthorization.startsWith("Bearer ")) {
-                return cleanedAuthorization.substring(7);
-            }
+        Matcher m = Pattern.compile(BEARER_TOKEN_PATTERN).matcher(authorizationHeader);
+        if (!m.matches()) {
+            return null;
+        } else {
+            return m.group(1);
         }
-        return null;
     }
 
     /**
@@ -188,7 +189,7 @@ public class Handlers {
             final String requestID = requestIDProvider.newRequestID(context);
 
             if (accessToken == null) {
-                LOG.debug("missing access token");
+                LOG.debug("missing or invalid access token");
                 contextResponse
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized")
@@ -196,7 +197,7 @@ public class Handlers {
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .end(new JsonObject()
                         .put("error", "invalid_request")
-                        .put("error_description", "Missing access authorization")
+                        .put("error_description", "Missing or invalid access authorization")
                         .toBuffer());
                 return;
             }
@@ -213,22 +214,9 @@ public class Handlers {
                 return;
             }
 
-            final String clientCredentials = getClientCredentials(contextRequest, contextResponse);
-            if (clientCredentials == null) {
-                contextResponse
-                    .setStatusCode(401)
-                    .setStatusMessage("Unauthorized")
-                    .putHeader("WWW-Authenticate", "Basic")
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(new JsonObject()
-                        .put("error", "invalid_request")
-                        .put("error_description", "Missing client authorization")
-                        .toBuffer());
-                return;
-            }
             contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
             contextRequest.pause();
-            LOG.debug("access_token={} client_credentials={}", accessToken, clientCredentials);
+            LOG.debug("access_token={}", accessToken);
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
 
             final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse ->
@@ -280,7 +268,6 @@ public class Handlers {
             }).exceptionHandler(context::fail)).exceptionHandler(context::fail);
 
             authorizationRequest
-                .putHeader(HttpHeaders.AUTHORIZATION, clientCredentials)
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .putHeader(HttpHeaders.ACCEPT, "application/json")
                 .putHeader(REQUEST_ID, requestID)

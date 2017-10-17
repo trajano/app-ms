@@ -50,6 +50,9 @@ public class Microservice {
     public static void run(final Class<? extends Application> applicationClass,
         final String... args) {
 
+        System.setProperty("vertx.disableDnsResolver", "true");
+        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
+
         if (Microservice.applicationClass != null) {
             throw new IllegalStateException("Another Application class has already been registered in this JVM.");
         }
