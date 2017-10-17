@@ -6,9 +6,11 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 
 public class HeadersTest {
+
     @Test
     public void testAuthorization() {
-        String authorization ="Basic YXNkZjphc2Rm";
+
+        String authorization = "Basic YXNkZjphc2Rm";
         String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
         assertNotNull(clientCredentials);
     }

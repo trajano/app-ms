@@ -10,12 +10,16 @@ import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +43,13 @@ import net.trajano.ms.gateway.internal.Conversions;
 @Component
 public class Handlers {
 
+    private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
+
     private static final Logger LOG = LoggerFactory.getLogger(Handlers.class);
 
     private static final Set<CharSequence> RESTRICTED_HEADERS;
 
     private static final String TOKEN_PATTERN = "^[A-Za-z0-9]{64}$";
-
-    private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
 
     private static final String X_JWKS_URI = "X-JWKS-URI";
 
@@ -63,6 +67,26 @@ public class Handlers {
 
     @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
+
+    /**
+     * This is the Authorization header value for the gateway when requesting
+     * the JWT data from the authorization server.
+     */
+    private String gatewayClientAuthorization;
+
+    /**
+     * Gateway client ID. The gateway has it's own client ID because it is the
+     * only one that should be authorized to get the id_token from an
+     * authorization_code request to the authorization server token endpoint.
+     */
+    @Value("${authorization.client_id}")
+    private String gatewayClientId;
+
+    /**
+     * Gateway client secret
+     */
+    @Value("${authorization.client_secret}")
+    private String gatewayClientSecret;
 
     @Autowired
     private HttpClient httpClient;
@@ -119,7 +143,7 @@ public class Handlers {
         if (authorizationHeader == null) {
             return null;
         }
-        Matcher m = Pattern.compile(BEARER_TOKEN_PATTERN).matcher(authorizationHeader);
+        final Matcher m = Pattern.compile(BEARER_TOKEN_PATTERN).matcher(authorizationHeader);
         if (!m.matches()) {
             return null;
         } else {
@@ -127,31 +151,10 @@ public class Handlers {
         }
     }
 
-    /**
-     * Obtains the client credentials from the request. Since the Authorization
-     * header can have multiple values comma separated, it needs to be broken up
-     * first then we have to locate the Basic authorization value from the comma
-     * separated list.
-     *
-     * @param contextRequest
-     *            request
-     * @return basic authorization (including "Basic")
-     */
-    private String getClientCredentials(final HttpServerRequest contextRequest,
-        final HttpServerResponse contextResponse) {
+    @PostConstruct
+    public void init() {
 
-        final String authorizationHeader = contextRequest.getHeader(AUTHORIZATION);
-        if (authorizationHeader == null) {
-            return null;
-        }
-
-        for (final String authorization : authorizationHeader.split(",")) {
-            final String cleanedAuthorization = authorization.trim();
-            if (cleanedAuthorization.startsWith("Basic ")) {
-                return cleanedAuthorization;
-            }
-        }
-        return null;
+        gatewayClientAuthorization = "Basic " + Base64.getEncoder().encodeToString((gatewayClientId + ":" + gatewayClientSecret).getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -187,6 +190,7 @@ public class Handlers {
             final String accessToken = getAccessToken(contextRequest, contextResponse);
 
             final String requestID = requestIDProvider.newRequestID(context);
+            final String now = RFC_1123_DATE_TIME.format(now(UTC));
 
             if (accessToken == null) {
                 LOG.debug("missing or invalid access token");
@@ -259,7 +263,7 @@ public class Handlers {
                     clientRequest.putHeader(X_JWT_ASSERTION, idToken)
                         .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
                         .putHeader(REQUEST_ID, requestID)
-                        .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));
+                        .putHeader(DATE, now);
                     contextRequest.resume();
                     contextRequest.handler(clientRequest::write)
                         .endHandler(v -> clientRequest.end())
@@ -268,10 +272,11 @@ public class Handlers {
             }).exceptionHandler(context::fail)).exceptionHandler(context::fail);
 
             authorizationRequest
+                .putHeader(AUTHORIZATION, gatewayClientAuthorization)
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .putHeader(HttpHeaders.ACCEPT, "application/json")
                 .putHeader(REQUEST_ID, requestID)
-                .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
+                .putHeader(DATE, now)
                 .end("grant_type=authorization_code&code=" + accessToken);
 
         };

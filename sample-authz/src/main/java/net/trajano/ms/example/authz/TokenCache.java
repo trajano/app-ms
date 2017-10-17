@@ -1,12 +1,13 @@
 package net.trajano.ms.example.authz;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jwt.JWTClaimsSet;
-import net.trajano.ms.common.beans.JwksProvider;
-import net.trajano.ms.common.beans.TokenGenerator;
-import net.trajano.ms.common.oauth.IdTokenResponse;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import static java.time.Instant.now;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
+
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +18,14 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jwt.JWTClaimsSet;
 
-import static java.time.Instant.now;
+import net.trajano.ms.common.beans.JwksProvider;
+import net.trajano.ms.common.beans.TokenGenerator;
+import net.trajano.ms.common.oauth.IdTokenResponse;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @Configuration
 @Component
@@ -68,9 +71,6 @@ public class TokenCache {
         final JWTClaimsSet claims = accessTokenToClaims.get(accessToken, JWTClaimsSet.class);
         if (claims == null) {
             throw OAuthTokenResponse.unauthorized("token_rejected", "Token rejected", "Bearer");
-        }
-        if (!claims.getAudience().contains(clientId)) {
-            throw OAuthTokenResponse.badRequest("invalid_request", "Client ID did not match expected value");
         }
         if (claims.getExpirationTime().before(Date.from(now()))) {
             accessTokenToClaims.evict(accessToken);

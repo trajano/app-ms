@@ -12,5 +12,4 @@ http:
 
 issuer: http://authorization-ms
 
-allowedIssuers:
-- http://authentication-ms
+clientsFile: clients-docker.json

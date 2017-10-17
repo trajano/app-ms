@@ -9,6 +9,8 @@ mappings:
 authorization:
   endpoint: ${mappings.authz-ms}/token
   refreshTokenPath: /refresh
+  client_id: gateway
+  client_secret: gateway_secret
 
 jwks:
   path: /jwks
