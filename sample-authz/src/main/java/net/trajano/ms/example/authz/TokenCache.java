@@ -8,7 +8,8 @@ import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
-import com.hazelcast.core.HazelcastInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -36,6 +37,11 @@ import net.trajano.ms.common.oauth.OAuthTokenResponse;
 public class TokenCache {
 
     static final String ACCESS_TOKEN_TO_CLAIMS = "accessTokenToClaims";
+
+    /**
+     * Logger for TokenCache
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(TokenCache.class);
 
     static final String REFRESH_TOKEN_TO_ACCESS_TOKEN = "refreshTokenToAccessToken";
 
@@ -93,7 +99,7 @@ public class TokenCache {
     @PostConstruct
     public void init() {
 
-        System.out.println("Using cache manager: " + cm.getClass().getName());
+        LOG.debug("cache manager={}", cm);
         accessTokenToClaims = cm.getCache(ACCESS_TOKEN_TO_CLAIMS);
         refreshTokenToAccessToken = cm.getCache(REFRESH_TOKEN_TO_ACCESS_TOKEN);
         refreshTokenToClaims = cm.getCache(REFRESH_TOKEN_TO_CLAIMS);

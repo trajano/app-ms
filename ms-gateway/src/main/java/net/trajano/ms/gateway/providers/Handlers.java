@@ -303,62 +303,70 @@ public class Handlers {
 
             final String requestID = requestIDProvider.newRequestID(context);
 
-            contextRequest
-                .handler(buf -> {
-                })
-                .endHandler(v -> {
-                    final String grantType = contextRequest.getFormAttribute("grant_type");
-                    if (grantType == null) {
-                        contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .setStatusCode(400)
-                            .setStatusMessage("Bad Request")
-                            .end(new JsonObject()
-                                .put("error", "invalid_grant")
-                                .put("error_description", "Missing grant type")
-                                .toBuffer());
-                        return;
-                    }
+            final String grantType = contextRequest.getFormAttribute("grant_type");
+            if (grantType == null) {
+                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .setStatusCode(400)
+                    .setStatusMessage("Bad Request")
+                    .end(new JsonObject()
+                        .put("error", "invalid_grant")
+                        .put("error_description", "Missing grant type")
+                        .toBuffer());
+                return;
+            }
 
-                    if (!"refresh_token".equals(grantType)) {
-                        contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .setStatusCode(400)
-                            .setStatusMessage("Bad Request")
-                            .end(new JsonObject()
-                                .put("error", "unsupported_grant_type")
-                                .put("error_description", "Unsupported grant type")
-                                .toBuffer());
-                        return;
-                    }
-                    final String refreshToken = contextRequest.getFormAttribute("refresh_token");
-                    if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
-                        contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .setStatusCode(400)
-                            .setStatusMessage("Bad Request")
-                            .end(new JsonObject()
-                                .put("error", "invalid_request")
-                                .put("error_description", "Missing grant")
-                                .toBuffer());
-                        return;
-                    }
+            final String authorization = contextRequest.getHeader(HttpHeaders.AUTHORIZATION);
+            if (authorization == null) {
+                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .setStatusCode(401)
+                    .setStatusMessage("Unauthorized Client")
+                    .putHeader("WWW-Authenticate", "Basic")
+                    .end(new JsonObject()
+                        .put("error", "invalid_grant")
+                        .put("error_description", "Missing authorization")
+                        .toBuffer());
+                return;
+            }
 
-                    final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
-                        // Trust the authorization endpoint
-                        authorizationResponse.bodyHandler(buffer -> {
-                            contextResponse.setStatusCode(authorizationResponse.statusCode());
-                            contextResponse.setStatusMessage(authorizationResponse.statusMessage());
-                            authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                            contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
-                            contextResponse.end(buffer);
-                        });
-                    });
-                    authorizationRequest
-                        .putHeader(HttpHeaders.AUTHORIZATION, contextRequest.getHeader(HttpHeaders.AUTHORIZATION))
-                        .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
-                        .putHeader(HttpHeaders.ACCEPT, "application/json")
-                        .putHeader(REQUEST_ID, requestID)
-                        .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
-                        .end("grant_type=refresh_token&refresh_token=" + refreshToken);
+            if (!"refresh_token".equals(grantType)) {
+                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .setStatusCode(400)
+                    .setStatusMessage("Bad Request")
+                    .end(new JsonObject()
+                        .put("error", "unsupported_grant_type")
+                        .put("error_description", "Unsupported grant type")
+                        .toBuffer());
+                return;
+            }
+            final String refreshToken = contextRequest.getFormAttribute("refresh_token");
+            if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
+                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .setStatusCode(400)
+                    .setStatusMessage("Bad Request")
+                    .end(new JsonObject()
+                        .put("error", "invalid_request")
+                        .put("error_description", "Missing grant")
+                        .toBuffer());
+                return;
+            }
+
+            final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
+                // Trust the authorization endpoint
+                authorizationResponse.bodyHandler(buffer -> {
+                    contextResponse.setStatusCode(authorizationResponse.statusCode());
+                    contextResponse.setStatusMessage(authorizationResponse.statusMessage());
+                    authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
+                    contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
+                    contextResponse.end(buffer);
                 });
+            });
+            authorizationRequest
+                .putHeader(HttpHeaders.AUTHORIZATION, authorization)
+                .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+                .putHeader(HttpHeaders.ACCEPT, "application/json")
+                .putHeader(REQUEST_ID, requestID)
+                .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
+                .end("grant_type=refresh_token&refresh_token=" + refreshToken);
 
         };
     }
