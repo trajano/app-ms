@@ -1,5 +1,8 @@
 package net.trajano.ms.common.beans;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 
 import javax.annotation.security.PermitAll;
@@ -19,8 +22,10 @@ import javax.ws.rs.container.ResourceInfo;
  *
  * @author Archimedes Trajano
  */
-public class DefaultAssertionRequiredFunction implements
+public class DefaultAssertionRequiredPredicate implements
     JwtAssertionRequiredPredicate {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultAssertionRequiredPredicate.class);
 
     @Override
     public boolean test(final ResourceInfo resourceInfo) {
@@ -33,6 +38,11 @@ public class DefaultAssertionRequiredFunction implements
 
         final boolean resourceMethodHasPermitAll = resourceMethod.getAnnotation(PermitAll.class) != null;
         final boolean resourceClassHasPermitAll = resourceClass.getAnnotation(PermitAll.class) != null;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("resourceMethod={} PermitAll={} RolesAllowed={}", resourceMethod, resourceMethodHasPermitAll, resourceMethodHasRolesAllowed);
+            LOG.debug("resourceClass={} PermitAll={} RolesAllowed={}", resourceClass, resourceClassHasPermitAll, resourceClassHasRolesAllowed);
+        }
 
         if (resourceMethodHasRolesAllowed && resourceMethodHasPermitAll) {
             throw new IllegalArgumentException("The resource method " + resourceMethod + " may not have both @RolesAllowed and @PermitAll annotations.");

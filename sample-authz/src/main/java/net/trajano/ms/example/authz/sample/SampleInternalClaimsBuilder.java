@@ -1,12 +1,10 @@
 package net.trajano.ms.example.authz.sample;
 
-import java.util.Arrays;
-
+import com.nimbusds.jwt.JWTClaimsSet;
+import net.trajano.ms.example.authz.InternalClaimsBuilder;
 import org.springframework.stereotype.Component;
 
-import com.nimbusds.jwt.JWTClaimsSet;
-
-import net.trajano.ms.example.authz.InternalClaimsBuilder;
+import java.util.Arrays;
 
 @Component
 public class SampleInternalClaimsBuilder implements

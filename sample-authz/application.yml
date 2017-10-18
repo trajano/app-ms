@@ -2,8 +2,6 @@ http:
   port: 8282
 
 issuer: http://localhost:8282
-allowedIssuers:
-- http://localhost:8281
 
 ---
 

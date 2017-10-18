@@ -7,7 +7,7 @@ mappings:
   gateway-ms: http://localhost:8910
 
 authorization:
-  endpoint: ${mappings.authz-ms}/authz
+  endpoint: ${mappings.authz-ms}/token
   refreshTokenPath: /refresh
 
 jwks:
