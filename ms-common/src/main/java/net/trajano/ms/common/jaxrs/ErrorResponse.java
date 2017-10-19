@@ -97,7 +97,8 @@ public class ErrorResponse {
     @XmlElement(name = "request_id")
     private final String requestId;
 
-    @XmlElement(name = "stack_trace")
+    @XmlElement(name = "stack_trace",
+        type = LocalStackTraceElement.class)
     private final List<LocalStackTraceElement> stackTrace;
 
     @XmlElement(name = "thread_id")
