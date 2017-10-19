@@ -1,8 +1,6 @@
 package net.trajano.ms.common;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -56,9 +54,9 @@ public class Microservice {
         System.setProperty("vertx.disableDnsResolver", "true");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
 
-        final Path path = Paths.get("logback.xml");
-        if (Files.exists(path)) {
-            System.setProperty("logging.config", path.toAbsolutePath().toString());
+        final File logbackFile = new File("logback.xml");
+        if (logbackFile.exists()) {
+            System.setProperty("logging.config", logbackFile.getAbsolutePath());
         }
 
         if (Microservice.applicationClass != null) {
