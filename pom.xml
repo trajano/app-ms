@@ -71,7 +71,8 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>ms-common-auth</artifactId>
         <version>${project.version}</version>
-      </dependency><dependency>
+      </dependency>
+      <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>ms-common-impl</artifactId>
         <version>${project.version}</version>

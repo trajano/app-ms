@@ -1,10 +1,7 @@
 package net.trajano.ms.example;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +13,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
@@ -26,18 +22,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
-import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.example.domain.MyType;
 
 @SwaggerDefinition(
@@ -69,23 +60,6 @@ public class HelloResource {
         try {
             final String object = responseFromClient.readEntity(String.class);
             asyncResponse.resume(object);
-        } finally {
-            responseFromClient.close();
-        }
-    }
-
-    @ApiOperation(value = "displays openid config of google async")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/async2")
-    public Response async2() throws Exception {
-
-        final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").accept(MediaType.APPLICATION_JSON).async().get();
-
-        final Response responseFromClient = futureResponseFromClient.get();
-        try {
-            final JsonObject object = responseFromClient.readEntity(JsonObject.class);
-            return Response.ok(object.toString()).build();
         } finally {
             responseFromClient.close();
         }
@@ -155,20 +129,6 @@ public class HelloResource {
         return myType;
     }
 
-    @ApiOperation(value = "displays hello world")
-    @GET
-    @Path("/j")
-    @Produces({
-        MediaType.APPLICATION_JSON
-    })
-    public JsonObject json(@QueryParam("who") final String who,
-        @Context final io.vertx.core.Vertx vertx) {
-
-        return new JsonObject()
-            .put("context", vertx.getOrCreateContext().toString())
-            .put("who", who);
-    }
-
     @ApiOperation(value = "displays openid config of google")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -217,37 +177,4 @@ public class HelloResource {
         asyncResponse.resume(Response.ok("hello").build());
     }
 
-    @ApiOperation(value = "upload a file")
-    @POST
-    @Path("/upload")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void upload(
-        final MultipartFormDataInput input,
-        @Suspended final AsyncResponse asyncResponse) throws IOException {
-
-        final JsonObject json = new JsonObject();
-        final Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
-        final List<InputPart> inputParts = uploadForm.get("uploadedFile");
-
-        for (final InputPart inputPart : inputParts) {
-
-            final MultivaluedMap<String, String> header = inputPart.getHeaders();
-            final String fileName = getFileName(header);
-
-            //convert the uploaded file to inputstream
-            final InputStream inputStream = inputPart.getBody(InputStream.class, null);
-            final Buffer buf = Conversions.toBuffer(inputStream);
-            //   byte [] bytes = IOUtils.toByteArray(inputStream);
-
-            json.put(fileName, buf.length());
-            //constructs upload file path
-            //fileName = UPLOADED_FILE_PATH + fileName;
-
-            // writeFile(bytes,fileName);
-
-            // System.out.println("Done");
-        }
-        asyncResponse.resume(json);
-    }
 }

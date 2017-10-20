@@ -1,6 +1,6 @@
 package net.trajano.ms.vertx.beans;
 
-import static net.trajano.ms.vertx.beans.CommonMs.JWKS_CACHE;
+import static net.trajano.ms.core.Qualifiers.JWKS_CACHE;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
