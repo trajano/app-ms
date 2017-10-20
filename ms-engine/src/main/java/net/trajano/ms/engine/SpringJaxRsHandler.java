@@ -1,20 +1,26 @@
 package net.trajano.ms.engine;
 
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
-import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
-import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
-import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
-import net.trajano.ms.engine.internal.spring.SpringConfiguration;
-import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
-import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Set;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.Provider;
+
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.core.ResourceInvoker;
 import org.jboss.resteasy.core.SynchronousDispatcher;
@@ -30,20 +36,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Set;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
+import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
+import net.trajano.ms.engine.internal.spring.SpringConfiguration;
+import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
+import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -52,8 +59,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -69,8 +75,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -123,8 +129,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -139,8 +145,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -305,7 +311,7 @@ public class SpringJaxRsHandler implements
 
         final Client client = jaxRsClient(context.vertx());
         final HttpServerRequest serverRequest = context.request();
-        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.uri(), serverRequest.query(), baseUri.toASCIIString());
+        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
 
         if (isMultipartExpected(request)) {

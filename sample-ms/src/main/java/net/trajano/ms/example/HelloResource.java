@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.security.PermitAll;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -34,6 +36,7 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
 import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.example.domain.MyType;
 
@@ -88,7 +91,17 @@ public class HelloResource {
         }
     }
 
-    @ApiOperation(value = "throws an exception")
+    @ApiOperation(value = "throws an client exception")
+    @GET
+    @Path("/bad")
+    public Response badClient() {
+
+        final OAuthTokenResponse entity = new OAuthTokenResponse();
+        entity.setError("client bad");
+        throw new BadRequestException("who's bad", Response.status(Status.BAD_REQUEST).entity(entity).build());
+    }
+
+    @ApiOperation(value = "throws a Runtime Exception")
     @GET
     @Path("/cough")
     public Response cough() {
