@@ -1,7 +1,10 @@
 package net.trajano.ms.example;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +25,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonObject;
@@ -191,4 +196,33 @@ public class HelloResource {
         asyncResponse.resume(Response.ok("hello").build());
     }
 
+    @ApiOperation(value = "upload a file")
+    @POST
+    @Path("/upload")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void upload(
+        final MultipartFormDataInput input,
+        @Suspended final AsyncResponse asyncResponse) throws IOException {
+
+        final JsonObject json = new JsonObject();
+        final Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+        final List<InputPart> inputParts = uploadForm.get("uploadedFile");
+
+        for (final InputPart inputPart : inputParts) {
+
+            final MultivaluedMap<String, String> header = inputPart.getHeaders();
+            final String fileName = getFileName(header);
+
+            //convert the uploaded file to inputstream
+            final InputStream inputStream = inputPart.getBody(InputStream.class, null);
+            int c = 0;
+            while (inputStream.read() != -1) {
+                ++c;
+            }
+
+            json.add(fileName, new JsonPrimitive(c));
+        }
+        asyncResponse.resume(json);
+    }
 }
