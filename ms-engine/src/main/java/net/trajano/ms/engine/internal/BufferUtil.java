@@ -24,4 +24,8 @@ public final class BufferUtil {
         }
     }
 
+    private BufferUtil() {
+
+    }
+
 }
