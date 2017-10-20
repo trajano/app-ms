@@ -25,9 +25,9 @@ import org.springframework.core.io.Resource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
-import net.trajano.ms.common.beans.AssertionNotRequiredFunction;
-import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.oidc.OpenIdConfiguration;
+import net.trajano.ms.vertx.beans.AssertionNotRequiredFunction;
+import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
 
 @Configuration
 public class ServiceConfiguration {

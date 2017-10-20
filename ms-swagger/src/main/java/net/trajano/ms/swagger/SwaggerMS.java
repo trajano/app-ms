@@ -4,7 +4,7 @@ import javax.ws.rs.core.Application;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import net.trajano.ms.common.Microservice;
+import net.trajano.ms.Microservice;
 
 @SpringBootApplication
 public class SwaggerMS extends Application {

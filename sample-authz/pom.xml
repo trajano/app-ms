@@ -15,10 +15,6 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>ms-common</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast-spring</artifactId>
       <version>3.8.6</version>

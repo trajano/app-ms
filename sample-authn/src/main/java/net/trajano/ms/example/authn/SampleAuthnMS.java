@@ -5,7 +5,7 @@ import javax.ws.rs.core.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import net.trajano.ms.common.Microservice;
+import net.trajano.ms.Microservice;
 
 @SpringBootApplication
 @EnableScheduling
