@@ -47,7 +47,7 @@ public class VertxBlockingInputStream extends InputStream {
     public VertxBlockingInputStream(final ReadStream<Buffer> readStream) {
 
         readStream
-            .handler(buffer -> populate(buffer))
+            .handler(this::populate)
             .endHandler(aVoid -> end());
 
     }

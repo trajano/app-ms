@@ -1,8 +1,9 @@
 http:
   port: 8900
 
-error:
-  stackTrace: false
+microservice:
+  show_stack_trace: false
+  show_request_uri: false
 ---
 
 spring.profiles: docker-compose

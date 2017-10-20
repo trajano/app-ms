@@ -14,6 +14,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 
 /**
@@ -55,7 +56,7 @@ public class RouterConfiguration {
 
         final Router router = Router.router(vertx);
 
-        router.options().handler(CorsHandler.create(allowedOrigins)
+        router.route().handler(CorsHandler.create(allowedOrigins)
             .allowedMethod(HttpMethod.GET)
             .allowedMethod(HttpMethod.POST)
             .allowedMethod(HttpMethod.PUT)
@@ -66,6 +67,10 @@ public class RouterConfiguration {
             .allowedHeader("Accept-Language")
             .allowedHeader("Authorization"));
 
+        router.post(refreshTokenPath)
+            .consumes("application/x-www-form-urlencoded")
+            .produces("application/json")
+            .handler(BodyHandler.create().setBodyLimit(1024));
         router.post(refreshTokenPath)
             .consumes("application/x-www-form-urlencoded")
             .produces("application/json")

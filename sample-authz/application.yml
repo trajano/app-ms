@@ -2,8 +2,6 @@ http:
   port: 8282
 
 issuer: http://localhost:8282
-allowedIssuers:
-- http://localhost:8281
 
 ---
 
@@ -14,5 +12,4 @@ http:
 
 issuer: http://authorization-ms
 
-allowedIssuers:
-- http://authentication-ms
+clientsFile: clients-docker.json

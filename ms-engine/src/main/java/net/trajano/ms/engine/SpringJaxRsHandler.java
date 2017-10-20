@@ -50,7 +50,7 @@ import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
-import net.trajano.ms.engine.jaxrs.CommonObjectMapper;
+import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -216,7 +216,7 @@ public class SpringJaxRsHandler implements
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
         applicationContext.setScopeMetadataResolver(new CdiScopeMetadataResolver());
-        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapper.class);
+        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapperProvider.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {
@@ -311,7 +311,7 @@ public class SpringJaxRsHandler implements
 
         final Client client = jaxRsClient(context.vertx());
         final HttpServerRequest serverRequest = context.request();
-        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.uri(), serverRequest.query(), baseUri.toASCIIString());
+        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
 
         if (isMultipartExpected(request)) {

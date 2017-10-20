@@ -37,7 +37,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.beans.DefaultAssertionRequiredFunction;
+import net.trajano.ms.common.beans.DefaultAssertionRequiredPredicate;
 import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.common.beans.JwtClaimsProcessor;
@@ -210,15 +210,15 @@ public class JwtAssertionInterceptor implements
         }
         if (assertionRequiredPredicate == null) {
             LOG.debug("assertionRequiredPredicate was not defined, default annotation based predicate will be used");
-            assertionRequiredPredicate = new DefaultAssertionRequiredFunction();
+            assertionRequiredPredicate = new DefaultAssertionRequiredPredicate();
         }
 
     }
 
     @Autowired(required = false)
-    public void setAssertionRequiredFunction(final JwtAssertionRequiredPredicate assertionRequiredFunction) {
+    public void setAssertionRequiredFunction(final JwtAssertionRequiredPredicate predicate) {
 
-        assertionRequiredPredicate = assertionRequiredFunction;
+        assertionRequiredPredicate = predicate;
     }
 
     @Autowired(required = false)

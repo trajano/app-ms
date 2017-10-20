@@ -16,9 +16,15 @@
   <modules>
     <module>ms-base</module>
     <module>ms-common</module>
+    <module>ms-common-auth</module>
+    <module>ms-common-impl</module>
     <module>ms-engine</module>
+    <module>ms-engine-manifest</module>
+    <module>ms-engine-spring-jaxrs</module>
+    <module>ms-engine-swagger</module>
     <module>ms-gateway</module>
     <module>ms-oidc</module>
+    <module>ms-resource</module>
     <module>ms-swagger</module>
     <module>sample-authn</module>
     <module>sample-authz</module>

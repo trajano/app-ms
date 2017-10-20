@@ -148,15 +148,13 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
             }
             internalResume(entity);
             done.set(true);
-            if (timeoutTimerID != -1) {
-                if (!routingContext.vertx().cancelTimer(timeoutTimerID)) {
-                    LOG.error("Attempted to cancel a timer that does not exist {}", timeoutTimerID);
-                }
+            if (timeoutTimerID != -1 && !routingContext.vertx().cancelTimer(timeoutTimerID)) {
+                LOG.error("Attempted to cancel a timer that does not exist {}", timeoutTimerID);
             }
             return true;
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            return false;
         } finally {
             writeLock.release();
         }

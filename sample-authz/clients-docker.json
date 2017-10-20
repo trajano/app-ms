@@ -1,0 +1,15 @@
+{
+  "clients": [
+    {
+      "client_id": "gateway",
+      "client_secret": "gateway_secret",
+      "grant_types": ["authorization_code"]
+    },
+    {
+      "client_id": "app_id",
+      "client_secret": "app_secret",
+      "grant_types": ["refresh_token", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "jwks_uri": "http://authentication-ms/.well-known/jwks"
+    }
+  ]
+}

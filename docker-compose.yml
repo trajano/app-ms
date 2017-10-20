@@ -19,8 +19,8 @@ services:
     environment:
     - SPRING_PROFILES_ACTIVE=docker-compose
     networks:
-    - default
     - gateway-auth
+    - default
   authorization-ms:
     build: ./sample-authz
     environment:
@@ -57,5 +57,6 @@ networks:
   gateway-auth:
   # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
+    driver: overlay
   # authorization-ms has it's own network to prevent other microservices from using the cache 
   

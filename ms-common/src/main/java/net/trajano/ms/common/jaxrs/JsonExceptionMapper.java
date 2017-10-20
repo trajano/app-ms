@@ -1,9 +1,11 @@
 package net.trajano.ms.common.jaxrs;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -24,18 +26,28 @@ public class JsonExceptionMapper implements
     @Context
     private HttpHeaders headers;
 
-    @Value("${error.stackTrace:true}")
-    private boolean showStackTrace;
+    @Value("${microservice.show_request_uri:true}")
+    private Boolean showRequestUri;
+
+    @Value("${microservice.show_stack_trace:true}")
+    private Boolean showStackTrace;
+
+    @Context
+    private UriInfo uriInfo;
 
     @Override
     public Response toResponse(final Throwable exception) {
 
-        LOG.error(exception.getMessage(), exception);
+        if (exception instanceof WebApplicationException) {
+            final WebApplicationException internalException = (WebApplicationException) exception;
+            return internalException.getResponse();
+        }
+        LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
         MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
         if (headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE) && !headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE)) {
             mediaType = MediaType.APPLICATION_XML_TYPE;
         }
-        return Response.serverError().entity(new ErrorResponse(exception, headers, showStackTrace)).type(mediaType).build();
+        return Response.serverError().entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri)).type(mediaType).build();
     }
 
 }

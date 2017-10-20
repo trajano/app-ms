@@ -16,6 +16,7 @@ public class GatewayMS {
 
     public static void main(final String[] args) {
 
+        System.setProperty("vertx.disableDnsResolver", "true");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         final SpringApplication application = new SpringApplication(GatewayMS.class);
         application.setBannerMode(Mode.OFF);

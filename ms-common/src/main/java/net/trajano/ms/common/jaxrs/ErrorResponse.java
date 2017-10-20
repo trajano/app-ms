@@ -2,10 +2,12 @@ package net.trajano.ms.common.jaxrs;
 
 import static net.trajano.ms.common.jaxrs.RequestIdContextInterceptor.REQUEST_ID;
 
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
     "errorDescription",
     "errorClass",
     "requestId",
+    "requestUri",
     "threadId",
     "stackTrace",
     "cause"
@@ -97,7 +100,11 @@ public class ErrorResponse {
     @XmlElement(name = "request_id")
     private final String requestId;
 
-    @XmlElement(name = "stack_trace")
+    @XmlElement(name = "request_uri")
+    private final URI requestUri;
+
+    @XmlElement(name = "stack_trace",
+        type = LocalStackTraceElement.class)
     private final List<LocalStackTraceElement> stackTrace;
 
     @XmlElement(name = "thread_id")
@@ -112,6 +119,7 @@ public class ErrorResponse {
         stackTrace = null;
         threadId = null;
         requestId = null;
+        requestUri = null;
     }
 
     /**
@@ -138,11 +146,14 @@ public class ErrorResponse {
         errorDescription = e.getMessage();
         threadId = null;
         requestId = null;
+        requestUri = null;
     }
 
     public ErrorResponse(final Throwable e,
         final HttpHeaders headers,
-        final boolean showStackTrace) {
+        final UriInfo uriInfo,
+        final boolean showStackTrace,
+        final boolean showRequestUri) {
 
         error = "server_error";
         errorDescription = e.getLocalizedMessage();
@@ -165,6 +176,7 @@ public class ErrorResponse {
             cause = null;
         }
         requestId = headers.getHeaderString(REQUEST_ID);
+        requestUri = showRequestUri ? uriInfo.getRequestUri() : null;
 
     }
 

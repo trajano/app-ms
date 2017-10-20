@@ -1,5 +1,6 @@
 package net.trajano.ms.common;
 
+import java.io.File;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -49,6 +50,14 @@ public class Microservice {
      */
     public static void run(final Class<? extends Application> applicationClass,
         final String... args) {
+
+        System.setProperty("vertx.disableDnsResolver", "true");
+        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
+
+        final File logbackFile = new File("logback.xml");
+        if (logbackFile.exists()) {
+            System.setProperty("logging.config", logbackFile.getAbsolutePath());
+        }
 
         if (Microservice.applicationClass != null) {
             throw new IllegalStateException("Another Application class has already been registered in this JVM.");
