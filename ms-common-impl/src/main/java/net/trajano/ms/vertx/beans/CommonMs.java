@@ -7,5 +7,4 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan
 public interface CommonMs {
 
-    public static final String JWKS_CACHE = "jwks_cache";
 }
