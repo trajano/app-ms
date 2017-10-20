@@ -3,8 +3,6 @@ package net.trajano.ms.core;
 import java.net.URI;
 import java.security.Principal;
 
-import javax.ws.rs.core.UriBuilder;
-
 import com.nimbusds.jwt.JWTClaimsSet;
 
 /**
@@ -22,8 +20,7 @@ public class JwtClaimsSetPrincipal implements
     public JwtClaimsSetPrincipal(final JWTClaimsSet claimsSet) {
 
         this.claimsSet = claimsSet;
-        final URI build = UriBuilder.fromUri(claimsSet.getIssuer()).userInfo(claimsSet.getSubject()).build();
-        authority = build.getAuthority();
+        authority = String.format("%s@%s", claimsSet.getSubject(), URI.create(claimsSet.getIssuer()).getHost());
 
     }
 
