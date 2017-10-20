@@ -24,6 +24,9 @@ import javax.ws.rs.core.Response.Status;
 
 import org.springframework.stereotype.Component;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
@@ -127,6 +130,17 @@ public class HelloResource {
         final MyType myType = new MyType();
         myType.setFoo("Hello world at " + new Date());
         return myType;
+    }
+
+    @ApiOperation(value = "data from GSON")
+    @GET
+    @Path("/j")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject jsonObject() {
+
+        final JsonObject ret = new JsonObject();
+        ret.add("Hello", new JsonPrimitive("world"));
+        return ret;
     }
 
     @ApiOperation(value = "displays openid config of google")

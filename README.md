@@ -52,6 +52,7 @@ The API will consist of the following API
 * Jackson Annotations
 * CDI 1.2
 * Annotations 1.2 (for `@PermitAll` and `@RolesRequired` annotations)
+* GSON (for simple JSON object building)
 
 The ones that are custom to this implementation are, the API will consist of 
 
