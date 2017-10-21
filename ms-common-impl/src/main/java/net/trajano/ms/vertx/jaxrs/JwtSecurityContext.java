@@ -1,6 +1,7 @@
 package net.trajano.ms.vertx.jaxrs;
 
 import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import org.jose4j.jwt.JwtClaims;
 
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
@@ -24,10 +25,10 @@ public class JwtSecurityContext implements
 
     private final boolean secure;
 
-    public JwtSecurityContext(final Map<String, Object> claimsSet,
+    public JwtSecurityContext(JwtClaims claims,
         final UriInfo uriInfo) {
 
-        principal = new JwtClaimsSetPrincipal(claimsSet);
+        principal = new JwtClaimsSetPrincipal(claims);
         secure = "https".equals(uriInfo.getRequestUri().getScheme());
 
         roles = principal.getRoles();

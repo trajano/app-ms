@@ -1,6 +1,6 @@
 package net.trajano.ms.example.authz.sample;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import net.trajano.ms.common.oauth.ClientValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -52,11 +53,11 @@ public class SampleClientValidator implements
     @PostConstruct
     public void init() throws IOException {
 
-        clients = objectMapper.readerFor(Clients.class).readValue(clientsFile);
+        clients = gson.fromJson(new FileReader(clientsFile), Clients.class);
     }
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private Gson gson;
 
     @Value("${clientsFile:clients.json}")
     private File clientsFile;

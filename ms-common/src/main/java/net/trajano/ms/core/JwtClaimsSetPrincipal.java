@@ -1,5 +1,8 @@
 package net.trajano.ms.core;
 
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+
 import java.net.URI;
 import java.security.Principal;
 import java.util.Collections;
@@ -17,16 +20,6 @@ public class JwtClaimsSetPrincipal implements
     Principal {
 
     /**
-     * Subject claim key.
-     */
-    public static final String SUBJECT = "sub";
-
-    /**
-     * Issuer claim key.
-     */
-    public static final String ISSUER = "iss";
-
-    /**
      * This is a framework specific claim which lists the roles in a String[].
      */
     public static final String ROLES = "roles";
@@ -40,35 +33,46 @@ public class JwtClaimsSetPrincipal implements
      */
     private final Set<String> roles;
 
-    private final Map<String, Object> claimsSet;
+    private final JwtClaims claimsSet;
 
     /**
      * Build the principal using a map.
      * 
      * @param claimsSet
      */
-    public JwtClaimsSetPrincipal(final Map<String, Object> claimsSet) {
+    public JwtClaimsSetPrincipal(final JwtClaims claimsSet) {
 
-        this.claimsSet = Collections.unmodifiableMap(claimsSet);
-        subject = (String) claimsSet.get(SUBJECT);
-        authority = String.format("%s@%s", subject, URI.create((String) claimsSet.get(ISSUER)).getHost());
-        final String[] claimRoles = (String[]) claimsSet.getOrDefault(ROLES, new String[0]);
-        roles = Collections.unmodifiableSet(Stream.of(claimRoles).collect(Collectors.toSet()));
+        try {
+            this.claimsSet = claimsSet;
+            subject = claimsSet.getSubject();
+            authority = String.format("%s@%s", subject, URI.create(claimsSet.getIssuer()).getHost());
+            roles = Collections.unmodifiableSet(claimsSet.getStringListClaimValue(ROLES).parallelStream().collect(Collectors.toSet()));
+        } catch (MalformedClaimException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     /**
-     * @return
+     * The authority string consists of the subject '@' issuer.
+     * 
+     * @return an authority string
      */
     public String getAuthority() {
 
         return authority;
     }
 
-    public Map<String, Object> getClaimsSet() {
+    /**
+     * @return the underlying claims set
+     */
+    public JwtClaims getClaimsSet() {
 
         return claimsSet;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
 

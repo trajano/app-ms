@@ -1,11 +1,9 @@
-package net.trajano.ms.example.authz;
+package net.trajano.ms.auth.internal;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Utility class to process HTTP Headers dealing with authorization.
@@ -27,7 +25,7 @@ public final class HttpAuthorizationHeaders {
      *            authorization
      * @return an array consisting of the user name and password as strings.
      */
-    public static String[] parseBasicAuthorization(@NotNull final String authorization) {
+    public static String[] parseBasicAuthorization(String authorization) {
 
         if (authorization == null) {
             return null;

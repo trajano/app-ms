@@ -1,14 +1,19 @@
 package net.trajano.ms.oidc;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.xml.bind.annotation.*;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenIdConfiguration {
 
@@ -103,6 +108,29 @@ public class OpenIdConfiguration {
 
         this.userinfoEndpoint = userinfoEndpoint;
     }
+
+    public HttpsJwks getHttpsJwks() {
+
+        if (httpsJwks == null) {
+            httpsJwks = new HttpsJwks(jwksUri.toASCIIString());
+        }
+        return httpsJwks;
+    }
+
+    public JsonWebKeySet getJwks() {
+
+        try {
+            return new JsonWebKeySet(getHttpsJwks().getJsonWebKeys());
+        } catch (JoseException e) {
+            throw new InternalServerErrorException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+    }
+
+    @XmlTransient
+    private HttpsJwks httpsJwks;
 
     /*
      * "subject_types_supported": [ "public" ],

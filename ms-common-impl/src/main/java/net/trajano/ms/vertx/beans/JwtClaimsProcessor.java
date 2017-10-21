@@ -1,14 +1,14 @@
 package net.trajano.ms.vertx.beans;
 
-import java.util.function.Function;
+import org.jose4j.jwt.JwtClaims;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import java.util.function.Function;
 
 /**
  * Performs validation on the claims. This is used to perform the
  * authorizations.
  */
 public interface JwtClaimsProcessor extends
-    Function<JWTClaimsSet, Boolean> {
+    Function<JwtClaims, Boolean> {
 
 }

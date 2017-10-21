@@ -1,4 +1,4 @@
-package net.trajano.ms.common.oauth;
+package net.trajano.ms.auth.token;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
@@ -20,6 +21,19 @@ public class IdTokenResponse extends OAuthTokenResponse {
     @XmlElement(name = "id_token",
         required = true)
     private String idToken;
+
+    public IdTokenResponse(String accessToken,
+        String jwt,
+        Integer expiresInSeconds) {
+        this.setAccessToken(accessToken);
+        this.setExpiresIn(expiresInSeconds);
+        this.idToken = jwt;
+
+    }
+
+    public IdTokenResponse() {
+
+    }
 
     public String getIdToken() {
 

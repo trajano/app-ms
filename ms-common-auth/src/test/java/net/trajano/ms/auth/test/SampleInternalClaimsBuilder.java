@@ -1,7 +1,7 @@
-package net.trajano.ms.example.authz.sample;
+package net.trajano.ms.auth.test;
 
-import net.trajano.ms.core.JwtClaimsSetPrincipal;
 import net.trajano.ms.auth.spi.InternalClaimsBuilder;
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;

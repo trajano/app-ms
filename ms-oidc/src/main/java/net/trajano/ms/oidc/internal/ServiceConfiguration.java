@@ -1,39 +1,36 @@
 package net.trajano.ms.oidc.internal;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.google.gson.Gson;
+import net.trajano.ms.oidc.OpenIdConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
-
-import net.trajano.ms.oidc.OpenIdConfiguration;
-import net.trajano.ms.vertx.beans.AssertionNotRequiredFunction;
-import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Configuration
 public class ServiceConfiguration {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Inject
+    private Gson gson;
 
     @Autowired(required = false)
     private CacheManager cacheManager;
@@ -70,11 +67,7 @@ public class ServiceConfiguration {
             resource = applicationContext.getResource("file:" + issuersJson);
         }
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JaxbAnnotationModule());
-        mapper.readValue(resource.getInputStream(), IssuersConfig.class);
-
-        final IssuersConfig issuersConfig = mapper.readValue(resource.getInputStream(), IssuersConfig.class);
+        IssuersConfig issuersConfig = gson.fromJson(new InputStreamReader(resource.getInputStream()), IssuersConfig.class);
 
         issuersConfig.getIssuers().forEach(issuer -> {
             issuer.setOpenIdConfiguration(client.target(UriBuilder.fromUri(issuer.getUri()).path("/.well-known/openid-configuration")).request(MediaType.APPLICATION_JSON).get(OpenIdConfiguration.class));
@@ -86,18 +79,6 @@ public class ServiceConfiguration {
             cacheManager = new ConcurrentMapCacheManager();
         }
 
-    }
-
-    @Bean
-    public JwtAssertionRequiredPredicate noAssertionRequired() {
-
-        return new AssertionNotRequiredFunction();
-    }
-
-    @Bean(name = "nonce")
-    public Cache nonceCache() {
-
-        return cacheManager.getCache("nonce");
     }
 
 }

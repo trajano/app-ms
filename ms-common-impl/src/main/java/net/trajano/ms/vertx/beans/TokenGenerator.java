@@ -1,9 +1,13 @@
 package net.trajano.ms.vertx.beans;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 
 /**
  * This is a utility module that will be used to generate access tokens. It also
@@ -29,6 +33,18 @@ public class TokenGenerator {
     private Random random;
 
     /**
+     * Initializes the random source.
+     *
+     * @throws NoSuchAlgorithmException
+     *             this should not happen.
+     */
+    @PostConstruct
+    public void initializeRandom() throws NoSuchAlgorithmException {
+
+        random = SecureRandom.getInstanceStrong();
+    }
+
+    /**
      * Provides a new string useful for keys and access tokens.
      *
      * @return random string.
@@ -42,9 +58,4 @@ public class TokenGenerator {
         return new String(buf);
     }
 
-    @Autowired
-    public void setRandom(final Random random) {
-
-        this.random = random;
-    }
 }

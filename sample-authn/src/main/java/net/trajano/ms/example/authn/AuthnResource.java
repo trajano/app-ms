@@ -1,19 +1,24 @@
 package net.trajano.ms.example.authn;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.*;
 
+import net.trajano.ms.auth.token.ErrorCodes;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.core.CryptoOps;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
@@ -26,62 +31,49 @@ import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.common.oauth.AllowAnyClientValidator;
 import net.trajano.ms.common.oauth.BaseTokenResource;
 import net.trajano.ms.common.oauth.GrantHandler;
-import net.trajano.ms.common.oauth.GrantTypes;
+import net.trajano.ms.auth.token.GrantTypes;
 
+/**
+ * This works like the FORM based login of Java EE. It allows any user name as
+ * long as the password is "password"
+ */
 @SwaggerDefinition(
-    securityDefinition = @SecurityDefinition(basicAuthDefinitions = @BasicAuthDefinition(key = "client",
-        description = "Client ID/Secret")),
     info = @Info(
         title = "Sample Authn Microservice",
         version = "1.0"))
-@Api(tags = "unprotected")
 @Component
 @Path("/authn")
 @PermitAll
-public class AuthnResource extends BaseTokenResource {
+public class AuthnResource  {
+
+    @Context
+    private Client client;
 
     @Autowired
-    public AuthnResource(
-        final List<GrantHandler> grantHandlers) {
-
-        super(new AllowAnyClientValidator(), grantHandlers);
-    }
+    private CryptoOps cryptoOps;
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response json(@Context final HttpHeaders httpHeaders,
-        final AuthnRequest req) {
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public OAuthTokenResponse json(@FormParam("j_username") String username,
+        @FormParam("j_password") String password,
+        @FormParam("client_id") String clientId) {
 
-        final MultivaluedMap<String, String> form = new MultivaluedHashMap<>();
-        form.putSingle("grant_type", req.getGrantType());
-        form.putSingle("username", req.getUsername());
-        form.putSingle("password", req.getPassword());
-        return super.token(httpHeaders, form);
+        if (!"password".equals(password)) {
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
+        }
+        JwtClaims claims = new JwtClaims();
+        claims.setSubject(username);
+
+        final Form form = new Form();
+        form.param("grant_type", GrantTypes.JWT_ASSERTION);
+        form.param("assertion", cryptoOps.sign(claims));
+        form.param("client_id", clientId);
+
+        return client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(form), OAuthTokenResponse.class);
+
     }
 
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "grant_type",
-            value = "Grant type",
-            required = true,
-            dataType = "java.lang.String",
-            example = GrantTypes.PASSWORD,
-            paramType = "form"),
-        @ApiImplicitParam(name = "username",
-            value = "Username",
-            dataType = "java.lang.String",
-            required = true,
-            paramType = "form"),
-        @ApiImplicitParam(name = "password",
-            value = "Password",
-            dataType = "java.lang.String",
-            required = true,
-            paramType = "form")
-    })
-    @Override
-    public Response token(final HttpHeaders httpHeaders,
-        final MultivaluedMap<String, String> form) {
-
-        return super.token(httpHeaders, form);
-    }
+    @Value("${authorizationEndpoint}")
+    private URI authorizationEndpoint;
 
 }

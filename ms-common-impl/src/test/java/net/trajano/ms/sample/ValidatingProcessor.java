@@ -1,12 +1,11 @@
 package net.trajano.ms.sample;
 
-import java.text.ParseException;
-
+import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 import org.springframework.stereotype.Component;
 
-import com.nimbusds.jwt.JWTClaimsSet;
-
-import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
+import javax.ws.rs.InternalServerErrorException;
 
 @Component
 public class ValidatingProcessor implements
@@ -17,13 +16,12 @@ public class ValidatingProcessor implements
     private final String claimValue = "ya";
 
     @Override
-    public Boolean apply(final JWTClaimsSet claims) {
+    public Boolean apply(final JwtClaims claims) {
 
-        System.out.println("ABC");
         try {
-            return claimValue.equals(claims.getStringClaim(claimName));
-        } catch (final ParseException e) {
-            throw new RuntimeException(e);
+            return claimValue.equals(claims.getStringClaimValue(claimName));
+        } catch (final MalformedClaimException e) {
+            throw new InternalServerErrorException(e);
         }
     }
 }

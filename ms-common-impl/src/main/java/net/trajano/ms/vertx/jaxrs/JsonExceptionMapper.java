@@ -1,5 +1,8 @@
 package net.trajano.ms.vertx.jaxrs;
 
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -37,19 +40,41 @@ public class JsonExceptionMapper implements
     @Context
     private UriInfo uriInfo;
 
+    /**
+     * Log the exception if it is not NotFoundException and only use warn if it
+     * is a client error.
+     * 
+     * @param exception
+     */
+    private void log(final Throwable exception) {
+
+        if (exception instanceof ClientErrorException) {
+            if (!(exception instanceof NotFoundException)) {
+                LOG.warn("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
+            }
+        } else {
+            LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
+        }
+    }
+
     @Override
     public Response toResponse(final Throwable exception) {
 
+        log(exception);
         if (exception instanceof WebApplicationException) {
             final WebApplicationException internalException = (WebApplicationException) exception;
-            return internalException.getResponse();
+            if (internalException.getResponse().hasEntity()) {
+                return internalException.getResponse();
+            }
         }
-        LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
         MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
         if (headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE) && !headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE)) {
             mediaType = MediaType.APPLICATION_XML_TYPE;
         }
-        return Response.serverError().entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri)).type(mediaType).build();
+        return Response.serverError()
+            .entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri))
+            .type(mediaType)
+            .build();
     }
 
 }

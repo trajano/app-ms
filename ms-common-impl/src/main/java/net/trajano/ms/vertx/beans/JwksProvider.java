@@ -1,37 +1,33 @@
 package net.trajano.ms.vertx.beans;
 
-import static net.trajano.ms.core.Qualifiers.JWKS_CACHE;
-
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.text.ParseException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
-import javax.annotation.PostConstruct;
-
+import net.trajano.ms.core.CryptoOps;
+import org.jose4j.jwa.Algorithm;
+import org.jose4j.jwk.*;
+import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jws.JsonWebSignatureAlgorithm;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jwt.JWTClaimsSet;
+import javax.annotation.PostConstruct;
+import javax.ws.rs.InternalServerErrorException;
+import java.security.KeyPairGenerator;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static net.trajano.ms.core.Qualifiers.JWKS_CACHE;
 
 @Component
 public class JwksProvider {
@@ -45,6 +41,9 @@ public class JwksProvider {
 
     public static final int MIN_NUMBER_OF_KEYS = 2;
 
+    @Autowired(required = false)
+    private CacheManager cm;
+
     /**
      * This is a cache of JWKs. If this is not provided a default one is used.
      */
@@ -52,9 +51,14 @@ public class JwksProvider {
 
     private KeyPairGenerator keyPairGenerator;
 
-    private Random random;
+    /**
+     * Random source. Use ThreadLocalRandom since these will not be used for
+     * secure keys.
+     */
+    private Random random = ThreadLocalRandom.current();
 
-    private TokenGenerator tokenGenerator;
+    @Autowired
+    private CryptoOps cryptoOps;
 
     /**
      * Builds JWKS if necessary after 60 seconds, but only builds
@@ -66,50 +70,42 @@ public class JwksProvider {
         int nCreated = 0;
         for (int i = 0; i < MAX_NUMBER_OF_KEYS; ++i) {
             final String cacheKey = String.valueOf(i);
-            final String jwkJson = jwksCache.get(cacheKey, String.class);
-            JWK jwk = null;
-            try {
-                if (jwkJson != null) {
-                    jwk = JWK.parse(jwkJson);
-                }
-            } catch (final ParseException e) {
-                LOG.error("unable to parse key={} json={} recreating entry", cacheKey, jwkJson);
-            }
+            final JsonWebKey jwk = jwksCache.get(cacheKey, JsonWebKey.class);
             if (jwk == null && nCreated < MIN_NUMBER_OF_KEYS) {
-                jwk = buildNewRsaKey();
-                jwksCache.putIfAbsent(cacheKey, jwk.toJSONString());
+                RsaJsonWebKey newJwk = buildNewRsaKey();
+                jwksCache.putIfAbsent(cacheKey, newJwk);
                 ++nCreated;
-                LOG.debug("Created new JWK kid={}", jwk.getKeyID());
+                LOG.debug("Created new JWK kid={}", newJwk.getKeyId());
             }
         }
 
     }
 
-    private JWK buildNewRsaKey() {
+    private RsaJsonWebKey buildNewRsaKey() {
 
-        final KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-            .privateKey((RSAPrivateKey) keyPair.getPrivate())
-            .keyID(tokenGenerator.newToken())
-            .build();
+        try {
+            RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);
+            rsaJsonWebKey.setKeyId(cryptoOps.newToken());
+            rsaJsonWebKey.setAlgorithm(AlgorithmIdentifiers.RSA_USING_SHA512);
+            rsaJsonWebKey.setUse("sig");
+            return rsaJsonWebKey;
+        } catch (JoseException e) {
+            throw new InternalServerErrorException(e);
+        }
     }
 
     /**
      * Gets a single signing key.
      *
-     * @return
+     * @return an RSA web key that supports signing.
      */
-    public RSAKey getASigningKey() {
+    public RsaJsonWebKey getASigningKey() {
 
-        final List<JWK> keys = getKeySet().getKeys();
-        return (RSAKey) keys.get(random.nextInt(keys.size()));
-    }
-
-    public RSAKey getDecryptionKey(final String keyID) {
-
-        return (RSAKey) getKeySet().getKeyByKeyId(keyID);
-
+        final JsonWebKeySet keySet = getKeySet();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(keySet.toJson());
+        }
+        return (RsaJsonWebKey) keySet.findJsonWebKey(null, "RSA", "sig", null);
     }
 
     /**
@@ -117,33 +113,35 @@ public class JwksProvider {
      *
      * @return
      */
-    public JWKSet getKeySet() {
+    public JsonWebKeySet getKeySet() {
 
-        final List<JWK> keys = new LinkedList<>();
+        final JsonWebKeySet set = new JsonWebKeySet();
         for (int i = 0; i < MAX_NUMBER_OF_KEYS; ++i) {
             final String cacheKey = String.valueOf(i);
-            final String jwkJson = jwksCache.get(cacheKey, String.class);
-            try {
-                if (jwkJson != null) {
-                    keys.add(JWK.parse(jwkJson));
-                }
-            } catch (final ParseException e) {
-                LOG.error("unable to parse key={} json={} removing entry", cacheKey, jwkJson);
-                jwksCache.evict(cacheKey);
+            final JsonWebKey jwk = jwksCache.get(cacheKey, JsonWebKey.class);
+            if (jwk != null) {
+                set.addJsonWebKey(jwk);
             }
         }
-        return new JWKSet(keys);
+        return set;
     }
 
     @PostConstruct
     public void init() {
 
+        if (cm == null) {
+            LOG.warn("A org.springframework.cache.CacheManager was not provided an in-memory cache will be used");
+            cm = new ConcurrentMapCacheManager(JWKS_CACHE);
+        }
+
+        jwksCache = cm.getCache(JWKS_CACHE);
         if (jwksCache == null) {
-            LOG.warn("A org.springframework.cache.Cache named {} was not provided an in-memory cache will be used", JWKS_CACHE);
+            LOG.warn("A no cache named {} was not provided by the cache manager an in-memory cache will be used", JWKS_CACHE);
             final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
             jwksCache = cm.getCache(JWKS_CACHE);
         }
-        LOG.debug("cache={}", jwksCache);
+
+        LOG.debug("cache={}", this.jwksCache);
         buildJwks();
     }
 
@@ -154,43 +152,20 @@ public class JwksProvider {
         this.jwksCache = jwksCache;
     }
 
-    @Autowired
-    public void setKeyPairGenerator(final KeyPairGenerator keyPairGenerator) {
+    public JwtConsumer buildConsumer() {
 
-        this.keyPairGenerator = keyPairGenerator;
-
+        return buildConsumer(null);
     }
 
-    @Autowired
-    public void setRandom(final Random random) {
+    public JwtConsumer buildConsumer(HttpsJwks jwks) {
 
-        this.random = random;
+        final JwtConsumerBuilder builder = new JwtConsumerBuilder()
+            .setRequireJwtId();
+        if (jwks != null) {
+            builder
+                .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(jwks));
+        }
+        return builder.build();
     }
 
-    @Autowired
-    public void setTokenGenerator(final TokenGenerator tokenGenerator) {
-
-        this.tokenGenerator = tokenGenerator;
-    }
-
-    /**
-     * This will sign a JWT Claims Set and return a JWS object.
-     *
-     * @param claims
-     *            claims to sign
-     * @return JWS Object
-     * @throws JOSEException
-     */
-    public JWSObject sign(final JWTClaimsSet claims) throws JOSEException {
-
-        final RSAKey aSigningKey = getASigningKey();
-
-        final JWSObject jws = new JWSObject(
-            new JWSHeader.Builder(JWSAlgorithm.RS512)
-                .keyID(aSigningKey.getKeyID())
-                .build(),
-            new Payload(claims.toString()));
-        jws.sign(new RSASSASigner(aSigningKey));
-        return jws;
-    }
 }

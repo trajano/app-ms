@@ -1,24 +1,16 @@
-package net.trajano.ms.example.authz;
+package net.trajano.ms.auth.token;
 
-import java.io.IOException;
-import java.net.URI;
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-
-import javax.annotation.security.PermitAll;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilderException;
-
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import net.trajano.ms.auth.internal.HttpAuthorizationHeaders;
+import net.trajano.ms.auth.internal.TokenCache;
+import net.trajano.ms.auth.spi.InternalClaimsBuilder;
+import net.trajano.ms.common.oauth.ClientValidator;
+import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.core.CryptoOps;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.jwt.NumericDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,22 +18,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.DefaultJOSEProcessor;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SimpleSecurityContext;
-import com.nimbusds.jwt.JWTClaimsSet;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
-import net.trajano.ms.common.oauth.ClientValidator;
-import net.trajano.ms.common.oauth.GrantTypes;
-import net.trajano.ms.common.oauth.IdTokenResponse;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
-import net.trajano.ms.vertx.beans.TokenGenerator;
+import javax.annotation.security.PermitAll;
+import javax.ws.rs.*;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilderException;
+import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Api
 @Configuration
@@ -75,7 +60,7 @@ public class TokenResource {
     private TokenCache tokenCache;
 
     @Autowired
-    private TokenGenerator tokenGenerator;
+    private CryptoOps tokenGenerator;
 
     /**
      * Performs client credential validation then dispatches to the appropriate
@@ -85,7 +70,7 @@ public class TokenResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public OAuthTokenResponse dispatch(
-        @ApiParam(allowableValues = "refresh_token, authorization_code") @FormParam("grant_type") @NotNull final String grantType,
+        @ApiParam(allowableValues = "refresh_token, authorization_code") @FormParam("grant_type") String grantType,
         @FormParam("code") final String code,
         @FormParam("assertion") final String assertion,
         @FormParam("refresh_token") final String refreshToken,
@@ -94,11 +79,11 @@ public class TokenResource {
         final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
 
         if (clientCredentials == null) {
-            throw OAuthTokenResponse.unauthorized("unauthorized_client", "Missing credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Missing credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
         final String clientId = clientCredentials[0];
         if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
-            throw OAuthTokenResponse.unauthorized("unauthorized_client", "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (GrantTypes.REFRESH_TOKEN.equals(grantType)) {
@@ -109,64 +94,75 @@ public class TokenResource {
             return handleJwtAssertionGrant(assertion, clientId);
 
         } else {
-            throw OAuthTokenResponse.badRequest("invalid_grant", "Invalid grant");
+            throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant");
         }
 
     }
 
+    @Autowired
+    private CryptoOps cryptoOps;
+
     private IdTokenResponse handleAuthorizationCodeGrant(final String accessToken,
-        @NotNull final String clientId) {
+        final String clientId) {
 
         if (accessToken == null) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Missing access token");
         }
-        return tokenCache.get(accessToken, clientId);
+        final IdTokenResponse idTokenResponse = tokenCache.get(accessToken, clientId);
+        if (idTokenResponse == null) {
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Access token was not valid", "Bearer");
+        }
+        return idTokenResponse;
 
     }
 
+    /**
+     * Takes an assertion and converts it using an {@link InternalClaimsBuilder}
+     * to a JWT used internally
+     *
+     * @param assertion
+     *            an external JWT assertion
+     * @param clientId
+     *            client ID
+     * @return OAuth response
+     */
     private OAuthTokenResponse handleJwtAssertionGrant(final String assertion,
         final String clientId) {
 
         if (assertion == null) {
-            throw OAuthTokenResponse.badRequest("invalid_request", "Missing Assertion");
+            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing Assertion");
         }
 
         try {
 
-            final DefaultJOSEProcessor<SimpleSecurityContext> joseProcessor = new DefaultJOSEProcessor<>();
-            joseProcessor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.RS512,
-                new RemoteJWKSet<>(clientValidator.getJwksUri(clientId).toURL())));
-            final SimpleSecurityContext securityContext = new SimpleSecurityContext();
-            final JWTClaimsSet claims = JWTClaimsSet.parse(joseProcessor.process(assertion, securityContext).toString());
+            JwtClaims internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(assertion);
 
-            final JWTClaimsSet internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(claims)
-                .issuer(issuer.toASCIIString())
-                .audience(clientId)
-                .jwtID(tokenGenerator.newToken())
-                .issueTime(Date.from(Instant.now()))
-                .expirationTime(Date.from(Instant.now().plus(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS)))
-                .build();
             if (internalClaims.getSubject() == null) {
                 LOG.error("Subject is missing from {}", internalClaims);
                 throw OAuthTokenResponse.internalServerError("Subject is missing from the resulting claims set.");
             }
 
-            return tokenCache.store(internalClaims);
+            internalClaims.setGeneratedJwtId();
+            internalClaims.setIssuer(issuer.toASCIIString());
+            internalClaims.setAudience(clientId);
+            internalClaims.setIssuedAtToNow();
 
-        } catch (final BadJOSEException
-            | ParseException e) {
+            Instant expirationTime = Instant.now().plus(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS);
+            internalClaims.setExpirationTime(NumericDate.fromMilliseconds(expirationTime.toEpochMilli()));
+            internalClaims.setExpirationTimeMinutesInTheFuture(Duration.of(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS).get(ChronoUnit.MINUTES));
+
+            return tokenCache.store(cryptoOps.sign(internalClaims), clientId, expirationTime);
+
+        } catch (final MalformedClaimException e) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Unable to parse assertion");
         } catch (final IllegalArgumentException
-            | UriBuilderException
-            | JOSEException
-            | IOException e) {
+            | UriBuilderException e) {
             throw OAuthTokenResponse.internalServerError(e);
-
         }
     }
 
     private OAuthTokenResponse handleRefreshGrant(final String refreshToken,
-        @NotNull final String clientId) {
+        final String clientId) {
 
         if (refreshToken == null) {
             throw OAuthTokenResponse.badRequest("invalid_request", "Missing refresh token");

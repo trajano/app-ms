@@ -1,13 +1,11 @@
 package net.trajano.ms.vertx.jaxrs;
 
-import java.io.IOException;
 import java.net.URI;
-import java.text.ParseException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Priority;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -18,26 +16,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JOSEObject;
-import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSADecrypter;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jwt.JWTClaimsSet;
-
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
 import net.trajano.ms.vertx.beans.DefaultAssertionRequiredPredicate;
 import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
@@ -57,10 +44,11 @@ public class JwtAssertionInterceptor implements
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);
 
-    /**
-     * Maximum number of keys to cache.
-     */
-    private static final long MAX_NUMBER_OF_KEYS = 20;
+    public static final String X_JWKS_URI = "X-JWKS-URI";
+
+    public static final String X_JWT_ASSERTION = "X-JWT-Assertion";
+
+    public static final String X_JWT_AUDIENCE = "X-JWT-Audience";
 
     private JwtAssertionRequiredPredicate assertionRequiredPredicate;
 
@@ -74,87 +62,57 @@ public class JwtAssertionInterceptor implements
     @Qualifier("authz.issuer")
     private URI issuer;
 
-    private JwksProvider jwksProvider;
-
-    @Autowired
-    private JwksUriProvider jwksUriProvider;
-
     /**
-     * In-memory public key cache.
+     * JWKS Map
      */
-    private Cache<String, RSAKey> keyCache;
+    private final ConcurrentMap<String, HttpsJwks> jwks = new ConcurrentHashMap<>();
+
+    private JwksProvider jwksProvider;
 
     @Context
     private ResourceInfo resourceInfo;
 
     @Override
-    public void filter(final ContainerRequestContext requestContext) throws IOException {
+    public void filter(final ContainerRequestContext requestContext) {
 
         if (!assertionRequiredPredicate.test(resourceInfo)) {
             return;
         }
-        final String assertion = requestContext.getHeaderString("X-JWT-Assertion");
+        final String assertion = requestContext.getHeaderString(X_JWT_ASSERTION);
         if (assertion == null) {
             LOG.warn("Missing assertion on request for {}", requestContext.getUriInfo());
             requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
-                .header(HttpHeaders.WWW_AUTHENTICATE, "JWT")
+                .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
                 .entity("missing assertion")
                 .build());
             return;
         }
         LOG.debug("assertion={}", assertion);
 
-        final JWTClaimsSet claims;
+        final JwtClaims claims;
         try {
-            JOSEObject joseObject = JOSEObject.parse(assertion);
-            if (joseObject instanceof JWEObject) {
-                final JWEObject jwe = (JWEObject) joseObject;
-                jwe.decrypt(new RSADecrypter(jwksProvider.getDecryptionKey(
-                    jwe.getHeader().getKeyID())));
-                joseObject = JOSEObject.parse(jwe.getPayload().toString());
-            }
-
-            if (joseObject instanceof JWSObject) {
-                final JWSObject jws = (JWSObject) joseObject;
-
-                final URI signatureJwksUri = jwksUriProvider.getUri(requestContext);
-                if (signatureJwksUri != null) {
-                    final JWSVerifier verifier = new RSASSAVerifier(getSigningKey(jws.getHeader().getKeyID(), signatureJwksUri));
-                    if (!jws.verify(verifier)) {
-                        LOG.warn("JWT verification failed for {}", requestContext.getUriInfo());
-                        requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
-                            .header(HttpHeaders.WWW_AUTHENTICATE, "JWT")
-                            .entity("signature vertification failed")
-                            .build());
-                        return;
-                    }
+            HttpsJwks httpsJwks;
+            final String jwksUri = requestContext.getHeaderString(X_JWKS_URI);
+            if (jwksUri == null) {
+                httpsJwks = null;
+            } else {
+                httpsJwks = jwks.get(jwksUri);
+                if (httpsJwks == null) {
+                    httpsJwks = new HttpsJwks(jwksUri);
                 }
             }
-            claims = JWTClaimsSet.parse(joseObject.getPayload().toString());
-        } catch (final ParseException
-            | JOSEException
-            | ExecutionException e) {
-            throw new BadRequestException("unable to parse JWT");
-        }
-        if (audience != null && !claims.getAudience().contains(audience.toASCIIString())) {
-            LOG.warn("Audience {} did not match {} for {}", claims.getAudience(), audience, requestContext.getUriInfo());
-            requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_audience", "Audience validation failed", "Bearer").getResponse());
-            return;
-
-        }
-        if (issuer != null && !claims.getIssuer().equals(issuer.toASCIIString())) {
-            LOG.warn("Issuer {} did not match {} for {}", claims.getIssuer(), issuer, requestContext.getUriInfo());
-            requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_issuer", "Issuer validation failed", "Bearer").getResponse());
+            final String audience = requestContext.getHeaderString(X_JWT_AUDIENCE);
+            claims = jwksProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
+        } catch (final InvalidJwtException e) {
+            LOG.error("JWT invalid", e);
+            requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
+                .entity("JWT invalid")
+                .build());
             return;
         }
 
-        if (claims.getExpirationTime() != null && claims.getExpirationTime().before(requestContext.getDate())) {
-            LOG.warn("Claims expired for {}", requestContext.getUriInfo());
-            requestContext.abortWith(OAuthTokenResponse.unauthorized("invalid_claims", "Claims expired", "Bearer").getResponse());
-            return;
-        }
-
-        requestContext.setSecurityContext(new JwtSecurityContext(claims.getClaims(), requestContext.getUriInfo()));
+        requestContext.setSecurityContext(new JwtSecurityContext(claims, requestContext.getUriInfo()));
         if (claimsProcessor != null) {
             final boolean validateClaims = claimsProcessor.apply(claims);
             LOG.debug("{}.validateClaims result={}", claimsProcessor, validateClaims);
@@ -167,33 +125,8 @@ public class JwtAssertionInterceptor implements
         }
     }
 
-    /**
-     * Obtains the key from cache and if not the JWKs.
-     *
-     * @param keyId
-     *            key ID
-     * @return RSAKey with public key.
-     * @throws ExecutionException
-     */
-    private RSAKey getSigningKey(final String keyId,
-        final URI signatureJwksUri) throws ExecutionException {
-
-        final RSAKey key = keyCache.get(keyId, () -> {
-
-            final JWKSet signatureJwks = JWKSet.load(signatureJwksUri.toURL());
-            signatureJwks.getKeys().forEach(t -> keyCache.put(t.getKeyID(), (RSAKey) t));
-            return keyCache.getIfPresent(keyId);
-        });
-        if (key == null) {
-            LOG.error("kid={} was not found in the key cache or {}", keyId, signatureJwksUri);
-        }
-        return key;
-    }
-
     @PostConstruct
     public void init() {
-
-        keyCache = CacheBuilder.newBuilder().maximumSize(MAX_NUMBER_OF_KEYS).build();
 
         if (audience == null) {
             LOG.warn("`authz.audience` was not specified, will accept any audience");

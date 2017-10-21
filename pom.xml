@@ -52,8 +52,10 @@
     </site>
   </distributionManagement>
   <properties>
+    <jackson.version>2.8.10</jackson.version>
     <linkcheck.skip>true</linkcheck.skip>
     <repo.id>app-ms</repo.id>
+    <slf4j.version>1.7.16</slf4j.version>
     <spring.boot.version>1.5.8.RELEASE</spring.boot.version>
     <vertx.version>3.5.0</vertx.version>
   </properties>
@@ -113,6 +115,11 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bitbucket.b_c</groupId>
+        <artifactId>jose4j</artifactId>
+        <version>0.6.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
