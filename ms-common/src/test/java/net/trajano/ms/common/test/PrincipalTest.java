@@ -1,22 +1,25 @@
 package net.trajano.ms.common.test;
 
-import static org.junit.Assert.assertEquals;
-
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 import org.junit.Test;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import java.util.HashMap;
+import java.util.Map;
 
-import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import static org.junit.Assert.assertEquals;
 
 public class PrincipalTest {
 
     @Test
     public void testAuthority() {
 
-        final JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().issuer("https://accounts.trajano.net").subject("archie").build();
-        final JwtClaimsSetPrincipal idTokenPrincipal = new JwtClaimsSetPrincipal(claimsSet);
+        Map<String, Object> claimsMap = new HashMap<>();
+        claimsMap.put(JwtClaimsSetPrincipal.ISSUER, "https://accounts.trajano.net");
+        claimsMap.put(JwtClaimsSetPrincipal.SUBJECT, "archie");
+
+        final JwtClaimsSetPrincipal idTokenPrincipal = new JwtClaimsSetPrincipal(claimsMap);
         assertEquals("archie", idTokenPrincipal.getName());
         assertEquals("archie@accounts.trajano.net", idTokenPrincipal.getAuthority());
-        assertEquals(claimsSet, idTokenPrincipal.getClaimsSet());
+        assertEquals(claimsMap, idTokenPrincipal.getClaimsSet());
     }
 }
