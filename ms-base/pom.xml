@@ -15,6 +15,11 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>ms-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>ms-common-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
   <build>
     <pluginManagement>

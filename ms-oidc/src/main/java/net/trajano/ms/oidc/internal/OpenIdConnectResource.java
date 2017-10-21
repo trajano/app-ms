@@ -41,9 +41,9 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.common.beans.JwksProvider;
-import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.oidc.OpenIdConfiguration;
+import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 
 @Api
 @Component

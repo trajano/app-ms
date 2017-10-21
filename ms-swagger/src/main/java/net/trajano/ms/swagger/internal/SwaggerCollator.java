@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
+import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import io.swagger.models.Model;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.SecuritySchemeDefinition;
-import io.vertx.ext.web.RoutingContext;
 
 @Component
 public class SwaggerCollator {
@@ -42,7 +42,7 @@ public class SwaggerCollator {
     }
 
     public ClonableSwagger getSwagger(final String basePath,
-        final RoutingContext routingContext) {
+        final UriInfo uriInfo) {
 
         ClonableSwagger swagger = swaggerMap.get(basePath);
         if (swagger == null) {
@@ -67,7 +67,7 @@ public class SwaggerCollator {
 
             swaggerMap.putIfAbsent(basePath, swagger);
         }
-        return swagger.withRoutingContext(routingContext);
+        return swagger.withUriInfo(uriInfo);
     }
 
     @PostConstruct

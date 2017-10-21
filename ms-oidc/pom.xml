@@ -12,6 +12,10 @@
   <description>This microservice handles the authentication process via OpenID Connect.</description>
   <dependencies>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>ms-common-impl</artifactId>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>

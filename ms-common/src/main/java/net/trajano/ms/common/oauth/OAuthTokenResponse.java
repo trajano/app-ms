@@ -3,6 +3,7 @@ package net.trajano.ms.common.oauth;
 import java.io.Serializable;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -12,8 +13,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.jboss.resteasy.spi.InternalServerErrorException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -57,9 +56,9 @@ public class OAuthTokenResponse implements
         final OAuthTokenResponse r = new OAuthTokenResponse();
         r.setError("server_error");
         r.setErrorDescription(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-        return new InternalServerErrorException(e, Response
+        return new InternalServerErrorException(Response
             .ok(r, MediaType.APPLICATION_JSON)
-            .status(Status.INTERNAL_SERVER_ERROR).build());
+            .status(Status.INTERNAL_SERVER_ERROR).build(), e);
     }
 
     public static NotAuthorizedException unauthorized(final String error,

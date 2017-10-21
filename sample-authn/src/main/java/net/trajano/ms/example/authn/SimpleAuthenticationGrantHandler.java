@@ -21,10 +21,10 @@ import org.springframework.stereotype.Component;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.beans.JwksProvider;
 import net.trajano.ms.common.oauth.GrantHandler;
 import net.trajano.ms.common.oauth.GrantTypes;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.vertx.beans.JwksProvider;
 
 @Component
 @Configuration

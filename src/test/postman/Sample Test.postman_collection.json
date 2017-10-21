@@ -63,9 +63,10 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"tests[\"Body matches string\"] = responseBody.has(\"Internal-Subjectarchie\");",
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
 							"",
-							"tests[\"Response time is less than 200ms\"] = responseTime < 200;"
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Principal is Archie\"] = jsonData.principal  === \"Internal-Subjectarchie\";"
 						]
 					}
 				}
@@ -76,7 +77,7 @@
 				"header": [
 					{
 						"key": "Accept",
-						"value": "text/plain",
+						"value": "application/json",
 						"description": ""
 					},
 					{
@@ -157,9 +158,10 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"tests[\"Body matches string\"] = responseBody.has(\"Internal-Subjectarchie\");",
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
 							"",
-							"tests[\"Response time is less than 200ms\"] = responseTime < 200;"
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Principal is Archie\"] = jsonData.principal  === \"Internal-Subjectarchie\";"
 						]
 					}
 				}
@@ -170,7 +172,224 @@
 				"header": [
 					{
 						"key": "Accept",
-						"value": "text/plain",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "displays openid config of google",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body matches string\"] = responseBody.has(\"subject_types_supported\");",
+							"",
+							"tests[\"Response time is less than 1000ms\"] = responseTime < 1000;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{base}}/v1/hello/openid",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Gets a JSON using GSON",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
+							"",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Hello world\"] = jsonData.Hello === \"world\";"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{base}}/v1/hello/j",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Crash",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body matches string\"] = responseBody.has(\"error\");",
+							"",
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
+							"",
+							"tests[\"Status code is 500\"] = responseCode.code === 500;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{base}}/v1/hello/cough",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Client Error",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body matches string\"] = responseBody.has(\"error\");",
+							"",
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
+							"",
+							"tests[\"Status code is 400\"] = responseCode.code === 400;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{base}}/v1/hello/bad",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Upload files",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{base}}/v1/hello/upload",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "uploadedFile",
+							"description": "",
+							"type": "file",
+							"src": "Localhost.postman_environment.json"
+						},
+						{
+							"key": "uploadedFile",
+							"description": "",
+							"type": "file",
+							"src": "Docker.postman_environment.json"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Counts",
+			"request": {
+				"url": "http://localhost:8910/v1/secure/count",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
 						"description": ""
 					},
 					{

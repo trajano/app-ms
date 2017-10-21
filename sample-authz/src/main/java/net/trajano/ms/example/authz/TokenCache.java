@@ -22,10 +22,10 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.beans.JwksProvider;
-import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.common.oauth.IdTokenResponse;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 
 @Configuration
 @Component

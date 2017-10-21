@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import net.trajano.ms.common.JwtClaimsSetPrincipal;
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 
 public class PrincipalTest {
 

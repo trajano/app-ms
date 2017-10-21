@@ -37,11 +37,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import net.trajano.ms.common.beans.TokenGenerator;
 import net.trajano.ms.common.oauth.ClientValidator;
 import net.trajano.ms.common.oauth.GrantTypes;
 import net.trajano.ms.common.oauth.IdTokenResponse;
 import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 
 @Api
 @Configuration
@@ -62,8 +62,8 @@ public class TokenResource {
     private URI issuer;
 
     /**
-     * Maximum life of a JWT token. Past that period, it is expected to no longer be
-     * used.
+     * Maximum life of a JWT token. Past that period, it is expected to no
+     * longer be used.
      */
     @Value("${token.jwtMaximumLifetime:86400}")
     private int jwtMaximumLifetimeInSeconds;
