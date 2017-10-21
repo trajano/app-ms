@@ -53,6 +53,7 @@ The API will consist of the following API
 * CDI 1.2
 * Annotations 1.2 (for `@PermitAll` and `@RolesRequired` annotations)
 * GSON (for simple JSON object building)
+* [jose.4.j][] for JOSE support.
 
 The ones that are custom to this implementation are, the API will consist of 
 
@@ -61,4 +62,8 @@ The ones that are custom to this implementation are, the API will consist of
 
 ## JOSE support
 
-The common API will hide the use of JOSE the implementation will perform the necessary validations 
+Each microservice provides their own JWKS endpoint.  This is to facilitate secure communications between each other which may be overkill as it simply adds an extra encryption layer, but should satisfy most corporate security rules.
+
+[jose.4.j][] was chosen because it had only one runtime dependency (SLF4J) vs Nimbus that had jcip-annotations and json-smart.  Another reason to favor [jose.4.j][] was the smaller JAR size.
+
+[jose.4.j]: https://bitbucket.org/b_c/jose4j/wiki/Home
