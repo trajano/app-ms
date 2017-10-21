@@ -54,6 +54,8 @@
   <properties>
     <linkcheck.skip>true</linkcheck.skip>
     <repo.id>app-ms</repo.id>
+    <spring.boot.version>1.5.8.RELEASE</spring.boot.version>
+    <vertx.version>3.5.0</vertx.version>
   </properties>
   <dependencyManagement>
     <dependencies>
