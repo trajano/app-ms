@@ -1,0 +1,17 @@
+root = true
+
+[*.{xml,json,yml,java}]
+insert_final_newline = true
+indent_style = space
+
+[*.{xml,json,yml}]
+indent_size = 2
+
+[*.java]
+indent_size = 4
+
+[Dockerfile]
+insert_final_newline = true
+
+[*.sh]
+end_of_line = lf
