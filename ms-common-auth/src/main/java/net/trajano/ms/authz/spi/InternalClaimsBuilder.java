@@ -14,10 +14,10 @@ public interface InternalClaimsBuilder {
      * The implementation can use the claims to look up from another data store
      * to get the internal claims used by the application.
      *
-     * @param assertion
-     *            external JWT assertion
-     * @return JWTClaimsSet.Builder
+     * @param claims
+     *            external claims
+     * @return internal claims
      */
-    JwtClaims buildInternalJWTClaimsSet(final String assertion);
+    JwtClaims buildInternalJWTClaimsSet(JwtClaims claims);
 
 }

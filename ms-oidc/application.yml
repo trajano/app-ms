@@ -16,7 +16,7 @@ redirect_uri: ${mappings.oidc-ms}/oidc/cb
 authorization:
   endpoint: ${mappings.authz-ms}/token
   refreshTokenPath: /refresh
-  client_id: app_id
+  client_id: oidc_id
   client_secret: app_secret
   
 ---

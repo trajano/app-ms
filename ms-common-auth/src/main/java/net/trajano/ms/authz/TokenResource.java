@@ -3,6 +3,8 @@ package net.trajano.ms.authz;
 import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
@@ -15,9 +17,14 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.NumericDate;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +65,8 @@ public class TokenResource {
     @Value("${issuer}")
     private URI issuer;
 
+    private final ConcurrentMap<URI, HttpsJwks> jwksMap = new ConcurrentHashMap<>();
+
     /**
      * Maximum life of a JWT token. Past that period, it is expected to no
      * longer be used.
@@ -82,7 +91,9 @@ public class TokenResource {
         @ApiParam(allowableValues = "refresh_token, authorization_code") @FormParam("grant_type") final String grantType,
         @FormParam("code") final String code,
         @FormParam("assertion") final String assertion,
+        @FormParam("aud") final String audience,
         @FormParam("refresh_token") final String refreshToken,
+        @FormParam("jwks_uri") final URI jwksUri,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
         final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
@@ -100,7 +111,7 @@ public class TokenResource {
         } else if (GrantTypes.AUTHORIZATION_CODE.equals(grantType)) {
             return handleAuthorizationCodeGrant(code);
         } else if (GrantTypes.JWT_ASSERTION.equals(grantType)) {
-            return handleJwtAssertionGrant(assertion, clientId);
+            return handleJwtAssertionGrant(assertion, clientId, audience);
 
         } else {
             throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant");
@@ -129,10 +140,13 @@ public class TokenResource {
      *            an external JWT assertion
      * @param clientId
      *            client ID
+     * @param jwksUri
+     *            URI pointing to the signatures
      * @return OAuth response
      */
     private OAuthTokenResponse handleJwtAssertionGrant(final String assertion,
-        final String clientId) {
+        final String clientId,
+        final String audience) {
 
         if (assertion == null) {
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing assertion");
@@ -142,8 +156,30 @@ public class TokenResource {
         }
 
         try {
+            final URI jwksUri = clientValidator.getJwksUri(clientId);
+            LOG.debug("jwksUri={}", jwksUri);
+            HttpsJwks httpsJwks = null;
+            if (jwksUri != null) {
+                httpsJwks = jwksMap.computeIfAbsent(jwksUri, uri -> new HttpsJwks(uri.toASCIIString()));
+            }
 
-            final JwtClaims internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(assertion);
+            final JwtConsumerBuilder builder = new JwtConsumerBuilder();
+
+            if (httpsJwks == null) {
+                builder.setDisableRequireSignature()
+                    .setSkipSignatureVerification();
+            } else {
+                builder.setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks));
+            }
+            if (audience == null) {
+                builder.setExpectedAudience(clientId);
+            } else {
+                builder.setExpectedAudience(clientId, audience);
+            }
+            final JwtConsumer jwtConsumer = builder
+                .build();
+
+            final JwtClaims internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(jwtConsumer.processToClaims(assertion));
 
             if (internalClaims.getSubject() == null) {
                 LOG.error("Subject is missing from {}", internalClaims);
@@ -160,7 +196,9 @@ public class TokenResource {
 
             return tokenCache.store(cryptoOps.sign(internalClaims), clientId, expirationTime);
 
-        } catch (final MalformedClaimException e) {
+        } catch (final MalformedClaimException
+            | InvalidJwtException e) {
+            LOG.error("Unable to parse assertion", e);
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Unable to parse assertion");
         } catch (final IllegalArgumentException
             | UriBuilderException e) {

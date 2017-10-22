@@ -1,5 +1,6 @@
 package net.trajano.ms.oidc.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -19,9 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 
 import net.trajano.ms.core.JsonOps;
 import net.trajano.ms.oidc.OpenIdConfiguration;
@@ -30,9 +29,6 @@ import net.trajano.ms.oidc.OpenIdConfiguration;
 public class ServiceConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceConfiguration.class);
-
-    @Autowired
-    private ApplicationContext applicationContext;
 
     @Autowired(required = false)
     private CacheManager cacheManager;
@@ -44,6 +40,9 @@ public class ServiceConfiguration {
 
     @Inject
     private JsonOps jsonOps;
+
+    @Value("${oidc_config_file:openidconnect-config.json}")
+    private File oidcFile;
 
     @Value("${redirect_uri}")
     private URI redirectUri;
@@ -65,16 +64,12 @@ public class ServiceConfiguration {
     public void init() throws IOException {
 
         final Client client = ClientBuilder.newClient();
-        Resource resource = applicationContext.getResource("classpath:" + issuersJson);
-        if (!resource.exists()) {
-            resource = applicationContext.getResource("file:" + issuersJson);
-        }
 
-        final IssuersConfig issuersConfig = jsonOps.fromJson(resource.getInputStream(), IssuersConfig.class);
+        final IssuersConfig issuersConfig = jsonOps.fromJson(oidcFile, IssuersConfig.class);
 
         issuersConfig.getIssuers().forEach(issuer -> {
-            LOG.info("Registered {} to {}", issuer.getId(), issuer.getUri());
             issuer.setOpenIdConfiguration(client.target(UriBuilder.fromUri(issuer.getUri()).path("/.well-known/openid-configuration")).request(MediaType.APPLICATION_JSON).get(OpenIdConfiguration.class));
+            LOG.info("Registered {} to {}", issuer.getId(), issuer.getUri());
         });
         issuers = issuersConfig.getIssuers().stream()
             .collect(Collectors.toMap(IssuerConfig::getId, Function.identity()));

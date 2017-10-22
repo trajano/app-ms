@@ -125,6 +125,7 @@ public class OpenIdConnectResource {
         final Form storeInternalForm = new Form();
         storeInternalForm.param("grant_type", GrantTypes.JWT_ASSERTION);
         storeInternalForm.param("assertion", cryptoOps.sign(jwtClaims));
+        storeInternalForm.param("aud", issuerConfig.getClientId());
 
         return client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, HttpAuthorizationHeaders.buildBasicAuthorization(appClientId, appClientSecret))

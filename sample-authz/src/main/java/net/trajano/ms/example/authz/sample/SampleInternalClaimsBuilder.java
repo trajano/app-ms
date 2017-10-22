@@ -4,9 +4,6 @@ import javax.ws.rs.InternalServerErrorException;
 
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
-import org.jose4j.jwt.consumer.InvalidJwtException;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.springframework.stereotype.Component;
 
 import net.trajano.ms.authz.spi.InternalClaimsBuilder;
@@ -20,22 +17,15 @@ public class SampleInternalClaimsBuilder implements
      * {@inheritDoc}
      */
     @Override
-    public JwtClaims buildInternalJWTClaimsSet(final String assertion) {
+    public JwtClaims buildInternalJWTClaimsSet(final JwtClaims claims) {
 
         try {
 
-            final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-                .setDisableRequireSignature()
-                .setSkipDefaultAudienceValidation()
-                .setSkipSignatureVerification()
-                .build();
-
-            final JwtClaims newClaims = jwtConsumer.processToClaims(assertion);
+            final JwtClaims newClaims = claims;
             newClaims.setSubject("internal-subject-" + newClaims.getSubject());
             newClaims.setStringListClaim(Qualifiers.ROLES, "users");
             return newClaims;
-        } catch (MalformedClaimException
-            | InvalidJwtException e) {
+        } catch (final MalformedClaimException e) {
             throw new InternalServerErrorException(e);
         }
     }
