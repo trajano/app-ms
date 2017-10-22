@@ -3,16 +3,15 @@ package net.trajano.ms.example.authz;
 import javax.ws.rs.core.Application;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
-import io.swagger.annotations.Authorization;
 import net.trajano.ms.Microservice;
+import net.trajano.ms.authz.Authorization;
 
-@SpringBootApplication
-@ComponentScan(basePackageClasses = {
-    SampleAuthzMS.class,
-    Authorization.class
-})
+@SpringBootApplication(
+    scanBasePackageClasses = {
+        SampleAuthzMS.class,
+        Authorization.class
+    })
 public class SampleAuthzMS extends Application {
 
     public static void main(final String[] args) {

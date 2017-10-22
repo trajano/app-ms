@@ -25,8 +25,6 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import net.trajano.ms.core.CryptoOps;
-
 @Component
 public class JwksProvider {
 
@@ -42,13 +40,13 @@ public class JwksProvider {
     @Autowired(required = false)
     private CacheManager cm;
 
-    @Autowired
-    private CryptoOps cryptoOps;
-
     /**
      * This is a cache of JWKs. If this is not provided a default one is used.
      */
     private Cache jwksCache;
+
+    @Autowired
+    private TokenGenerator tokenGenerator;
 
     public JwtConsumer buildConsumer() {
 
@@ -98,7 +96,7 @@ public class JwksProvider {
 
         try {
             final RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);
-            rsaJsonWebKey.setKeyId(cryptoOps.newToken());
+            rsaJsonWebKey.setKeyId(tokenGenerator.newToken());
             rsaJsonWebKey.setAlgorithm(AlgorithmIdentifiers.RSA_USING_SHA512);
             rsaJsonWebKey.setUse("sig");
             return rsaJsonWebKey;
