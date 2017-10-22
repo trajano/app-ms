@@ -1,14 +1,18 @@
 package net.trajano.ms.vertx.jaxrs;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 
 import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import net.trajano.ms.core.Qualifiers;
 
 public class JwtSecurityContext implements
     SecurityContext {
@@ -25,11 +29,14 @@ public class JwtSecurityContext implements
     public JwtSecurityContext(final JwtClaims claims,
         final UriInfo uriInfo) {
 
-        principal = new JwtClaimsSetPrincipal(claims);
-        secure = "https".equals(uriInfo.getRequestUri().getScheme());
+        try {
+            principal = new JwtClaimsSetPrincipal(claims);
+            secure = "https".equals(uriInfo.getRequestUri().getScheme());
 
-        roles = principal.getRoles();
-
+            roles = Collections.unmodifiableSet(claims.getStringListClaimValue(Qualifiers.ROLES).parallelStream().collect(Collectors.toSet()));
+        } catch (final MalformedClaimException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     @Override

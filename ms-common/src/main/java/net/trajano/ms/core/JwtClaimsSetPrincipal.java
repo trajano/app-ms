@@ -2,9 +2,6 @@ package net.trajano.ms.core;
 
 import java.net.URI;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
@@ -17,19 +14,9 @@ import org.jose4j.jwt.MalformedClaimException;
 public class JwtClaimsSetPrincipal implements
     Principal {
 
-    /**
-     * This is a framework specific claim which lists the roles in a String[].
-     */
-    public static final String ROLES = "roles";
-
     private final String authority;
 
     private final JwtClaims claimsSet;
-
-    /**
-     * Roles.
-     */
-    private final Set<String> roles;
 
     private final String subject;
 
@@ -44,7 +31,7 @@ public class JwtClaimsSetPrincipal implements
             this.claimsSet = claimsSet;
             subject = claimsSet.getSubject();
             authority = String.format("%s@%s", subject, URI.create(claimsSet.getIssuer()).getHost());
-            roles = Collections.unmodifiableSet(claimsSet.getStringListClaimValue(ROLES).parallelStream().collect(Collectors.toSet()));
+
         } catch (final MalformedClaimException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -77,8 +64,4 @@ public class JwtClaimsSetPrincipal implements
         return subject;
     }
 
-    public Set<String> getRoles() {
-
-        return roles;
-    }
 }
