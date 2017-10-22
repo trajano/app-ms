@@ -1,0 +1,40 @@
+# Mappings are provided so that environment specific servers can be mapped more easily
+mappings:
+  oidc-ms: http://localhost:8080
+  sample-ms: http://localhost:8900
+  authn-ms: http://localhost:8281
+  authz-ms: http://localhost:8282 
+  swagger-ms: http://localhost:8283
+  gateway-ms: http://localhost:8910
+
+http:
+  port: 8080
+
+passwordRequired: password
+redirect_uri: ${mappings.oidc-ms}/oidc/cb
+
+authorization:
+  endpoint: ${mappings.authz-ms}/token
+  refreshTokenPath: /refresh
+  client_id: app_id
+  client_secret: app_secret
+  
+---
+
+spring.profiles: docker-compose
+  
+http:
+  port: 80
+
+issuer: http://oidc-ms
+redirect_uri: http://localhost:3001/oidc/cb
+
+authorizationEndpoint: http://authorization-ms/token
+
+mappings:
+  sample-ms: http://sample-ms
+  authn-ms: http://authentication-ms
+  authz-ms: http://authorization-ms
+  swagger-ms: http://swagger-ms
+  gateway-ms: http://gateway-ms
+

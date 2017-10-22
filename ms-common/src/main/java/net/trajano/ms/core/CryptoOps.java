@@ -19,9 +19,27 @@ public interface CryptoOps {
 
     String sign(JwtClaims claims);
 
-    JwtClaims toClaimsSet(String idToken,
-        HttpsJwks jwks);
+    default JwtClaims toClaimsSet(final String idToken,
+        final HttpsJwks jwks) {
+
+        return toClaimsSet(idToken, null, jwks);
+    }
 
     JwtClaims toClaimsSet(String idToken,
         JsonWebKeySet jwks);
+
+    /**
+     * Get the claims set with a given
+     *
+     * @param jwt
+     *            JWT
+     * @param audience
+     *            audience
+     * @param jwks
+     *            remote JWKS
+     * @return
+     */
+    JwtClaims toClaimsSet(String jwt,
+        String audience,
+        HttpsJwks jwks);
 }

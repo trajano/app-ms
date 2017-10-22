@@ -54,10 +54,10 @@ public class JcaCryptoOps implements
 
     @Override
     public JwtClaims toClaimsSet(final String jwt,
-        final HttpsJwks httpsJwks) {
+        final JsonWebKeySet jwks) {
 
         final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-            .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks))
+            .setVerificationKeyResolver(new JwksVerificationKeyResolver(jwks.getJsonWebKeys()))
             .build();
 
         try {
@@ -69,10 +69,18 @@ public class JcaCryptoOps implements
 
     @Override
     public JwtClaims toClaimsSet(final String jwt,
-        final JsonWebKeySet jwks) {
+        final String audience,
+        final HttpsJwks httpsJwks) {
 
-        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-            .setVerificationKeyResolver(new JwksVerificationKeyResolver(jwks.getJsonWebKeys()))
+        final JwtConsumerBuilder builder = new JwtConsumerBuilder()
+            .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks));
+        if (audience == null) {
+            builder.setSkipDefaultAudienceValidation();
+        } else {
+            builder.setExpectedAudience(audience);
+        }
+
+        final JwtConsumer jwtConsumer = builder
             .build();
 
         try {

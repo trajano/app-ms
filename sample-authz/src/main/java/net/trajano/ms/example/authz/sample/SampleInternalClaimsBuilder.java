@@ -26,6 +26,7 @@ public class SampleInternalClaimsBuilder implements
 
             final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
                 .setDisableRequireSignature()
+                .setSkipDefaultAudienceValidation()
                 .setSkipSignatureVerification()
                 .build();
 
