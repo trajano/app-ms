@@ -1,5 +1,6 @@
 package net.trajano.ms.vertx.jaxrs;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
@@ -30,10 +31,10 @@ public class JsonExceptionMapper implements
     @Context
     private HttpHeaders headers;
 
-    @Value("${microservice.show_request_uri:true}")
+    @Value("${microservice.show_request_uri:#{null}}")
     private Boolean showRequestUri;
 
-    @Value("${microservice.show_stack_trace:true}")
+    @Value("${microservice.show_stack_trace:#{null}}")
     private Boolean showStackTrace;
 
     @Context
@@ -53,6 +54,21 @@ public class JsonExceptionMapper implements
             }
         } else {
             LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * If the show request URI or show stack trace are not defined, it will
+     * default to whether the current logger is on debug mode or not.
+     */
+    @PostConstruct
+    public void setDebugFlags() {
+
+        if (showRequestUri == null) {
+            showRequestUri = LOG.isDebugEnabled();
+        }
+        if (showStackTrace == null) {
+            showStackTrace = LOG.isDebugEnabled();
         }
     }
 
