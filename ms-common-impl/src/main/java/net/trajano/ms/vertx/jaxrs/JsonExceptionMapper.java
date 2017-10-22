@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import net.trajano.ms.vertx.beans.ErrorResponse;
+import net.trajano.ms.core.ErrorResponse;
 
 @Configuration
 @Component

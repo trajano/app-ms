@@ -34,7 +34,6 @@ import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
@@ -43,6 +42,7 @@ import net.trajano.ms.authz.internal.TokenCache;
 import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.authz.spi.InternalClaimsBuilder;
 import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
 
 @Api
 @Configuration

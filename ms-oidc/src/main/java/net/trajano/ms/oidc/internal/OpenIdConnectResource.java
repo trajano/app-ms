@@ -26,12 +26,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @Api

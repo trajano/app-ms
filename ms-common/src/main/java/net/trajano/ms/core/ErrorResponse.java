@@ -1,6 +1,6 @@
-package net.trajano.ms.vertx.beans;
+package net.trajano.ms.core;
 
-import static net.trajano.ms.vertx.jaxrs.RequestIdContextInterceptor.REQUEST_ID;
+import static net.trajano.ms.core.Qualifiers.REQUEST_ID;
 
 import java.net.URI;
 import java.util.LinkedList;
@@ -15,6 +15,12 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+/**
+ * Error response. This is the error response that gets built by the system for
+ * any errors that occur.
+ *
+ * @author Archimedes Trajano
+ */
 @XmlRootElement
 @XmlType(propOrder = {
     "error",
@@ -119,6 +125,21 @@ public class ErrorResponse {
         stackTrace = null;
         threadId = null;
         requestId = null;
+        requestUri = null;
+    }
+
+    public ErrorResponse(final String error,
+        final String errorDescription,
+        final String requestId) {
+
+        this.error = error;
+        this.errorDescription = errorDescription;
+        this.requestId = requestId;
+
+        cause = null;
+        errorClass = null;
+        stackTrace = null;
+        threadId = Thread.currentThread().getName();
         requestUri = null;
     }
 

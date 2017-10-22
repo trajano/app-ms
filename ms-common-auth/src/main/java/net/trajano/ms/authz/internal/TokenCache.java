@@ -13,10 +13,10 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
 
 @Component
 public class TokenCache {

@@ -1,5 +1,9 @@
 package net.trajano.ms.vertx.jaxrs;
 
+import static net.trajano.ms.core.ErrorCodes.FORBIDDEN;
+import static net.trajano.ms.core.ErrorCodes.UNAUTHORIZED_CLIENT;
+import static net.trajano.ms.core.Qualifiers.REQUEST_ID;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import net.trajano.ms.core.ErrorResponse;
 import net.trajano.ms.vertx.beans.DefaultAssertionRequiredPredicate;
 import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
@@ -81,7 +86,7 @@ public class JwtAssertionInterceptor implements
             LOG.warn("Missing assertion on request for {}", requestContext.getUriInfo());
             requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
-                .entity("missing assertion")
+                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "Missing assertion", requestContext.getHeaderString(REQUEST_ID)))
                 .build());
             return;
         }
@@ -102,10 +107,14 @@ public class JwtAssertionInterceptor implements
             final List<String> audience = Arrays.asList(requestContext.getHeaderString(X_JWT_AUDIENCE).split(", "));
             claims = jwksProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
         } catch (final InvalidJwtException e) {
-            LOG.error("JWT invalid", e);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("JWT invalid", e);
+            } else {
+                LOG.error("JWT Invalid");
+            }
             requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
-                .entity("JWT invalid")
+                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "JWT was not valid", requestContext.getHeaderString(REQUEST_ID)))
                 .build());
             return;
         }
@@ -117,7 +126,7 @@ public class JwtAssertionInterceptor implements
             if (!validateClaims) {
                 LOG.warn("Validation of claims failed on request for {}", requestContext.getUriInfo());
                 requestContext.abortWith(Response.status(Status.FORBIDDEN)
-                    .entity("claims validation failed")
+                    .entity(new ErrorResponse(FORBIDDEN, "Claims validation failed", requestContext.getHeaderString(REQUEST_ID)))
                     .build());
             }
         }
