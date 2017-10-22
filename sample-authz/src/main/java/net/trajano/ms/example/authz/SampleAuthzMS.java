@@ -1,11 +1,12 @@
 package net.trajano.ms.example.authz;
 
-import net.trajano.ms.Microservice;
-import net.trajano.ms.authz.Authorization;
+import javax.ws.rs.core.Application;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import javax.ws.rs.core.Application;
+import io.swagger.annotations.Authorization;
+import net.trajano.ms.Microservice;
 
 @SpringBootApplication
 @ComponentScan(basePackageClasses = {

@@ -1,20 +1,17 @@
 package net.trajano.ms.vertx.test;
 
-import net.trajano.ms.core.CryptoOps;
-import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
-import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
-import net.trajano.ms.vertx.beans.TokenGenerator;
-import net.trajano.ms.vertx.jaxrs.JwtAssertionInterceptor;
-import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.MalformedClaimException;
+import static org.junit.Assert.assertNotNull;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertNotNull;
+import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.vertx.beans.JcaCryptoOps;
+import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 
 /**
  * Tests are hanging on Travis for some odd reason.

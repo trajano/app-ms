@@ -1,22 +1,22 @@
 package net.trajano.ms.oidc.internal;
 
-import net.trajano.ms.oidc.OpenIdConfiguration;
-import org.jose4j.jwk.HttpsJwks;
-import org.jose4j.jwk.JsonWebKey;
-import org.jose4j.jwk.JsonWebKeySet;
-import org.jose4j.lang.JoseException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
+
+import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @XmlRootElement
 public class IssuerConfig {
@@ -106,9 +106,9 @@ public class IssuerConfig {
                 jwkset = new HttpsJwks(getOpenIdConfiguration().getJwksUri().toASCIIString());
             }
             return new JsonWebKeySet(jwkset.getJsonWebKeys());
-        } catch (JoseException e) {
+        } catch (final JoseException e) {
             throw new InternalServerErrorException(e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
     }

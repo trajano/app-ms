@@ -1,11 +1,12 @@
 package net.trajano.ms.sample;
 
-import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
+import javax.ws.rs.InternalServerErrorException;
+
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.InternalServerErrorException;
+import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
 
 @Component
 public class ValidatingProcessor implements

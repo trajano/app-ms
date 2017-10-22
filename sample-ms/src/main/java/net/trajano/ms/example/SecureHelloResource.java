@@ -39,6 +39,9 @@ public class SecureHelloResource {
     private Counter counter;
 
     @Inject
+    private JsonOps jsonOps;
+
+    @Inject
     private UselessCounter uselessCounter;
 
     @ApiOperation(value = "Counts")
@@ -68,8 +71,5 @@ public class SecureHelloResource {
         json.add("claims", jsonOps.toJsonElement(userPrincipal.getClaimsSet().toJson()));
         return json;
     }
-
-    @Inject
-    private JsonOps jsonOps;
 
 }

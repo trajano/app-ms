@@ -12,7 +12,7 @@ public interface CryptoOps {
     /**
      * Generates a random string token suitable for non-durable cache lookups.
      * Do not use these in place of UUIDs.
-     * 
+     *
      * @return string token
      */
     String newToken();
@@ -20,8 +20,8 @@ public interface CryptoOps {
     String sign(JwtClaims claims);
 
     JwtClaims toClaimsSet(String idToken,
-        JsonWebKeySet jwks);
+        HttpsJwks jwks);
 
     JwtClaims toClaimsSet(String idToken,
-        HttpsJwks jwks);
+        JsonWebKeySet jwks);
 }

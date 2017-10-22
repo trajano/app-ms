@@ -37,20 +37,6 @@ public class Microservice {
      *
      * @param applicationClass
      *            JAX-RS Application class
-     * @param args
-     *            command line arguments
-     */
-    public static void run(final Class<? extends Application> applicationClass,
-        final String... args) {
-
-        run(applicationClass, new Class<?>[0], args);
-    }
-
-    /**
-     * Bootstrap the microservice application.
-     *
-     * @param applicationClass
-     *            JAX-RS Application class
      * @param extraSources
      *            extra source classes.
      * @param args
@@ -84,6 +70,20 @@ public class Microservice {
         springApplication
             .setBannerMode(Mode.OFF);
         springApplication.run(args);
+    }
+
+    /**
+     * Bootstrap the microservice application.
+     *
+     * @param applicationClass
+     *            JAX-RS Application class
+     * @param args
+     *            command line arguments
+     */
+    public static void run(final Class<? extends Application> applicationClass,
+        final String... args) {
+
+        run(applicationClass, new Class<?>[0], args);
     }
 
     /**

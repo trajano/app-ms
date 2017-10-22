@@ -1,15 +1,17 @@
 package net.trajano.ms.authz.internal;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.EntryListenerConfig;
-import com.hazelcast.config.MapConfig;
-import net.trajano.ms.core.Qualifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.hazelcast.config.Config;
+import com.hazelcast.config.EntryListenerConfig;
+import com.hazelcast.config.MapConfig;
+
+import net.trajano.ms.core.Qualifiers;
 
 @Configuration
 public class HazelcastConfiguration {
@@ -25,11 +27,11 @@ public class HazelcastConfiguration {
     @Value("${cache.instance_name:authz}")
     private String instanceName;
 
-    @Value("${token.refresh_token_expiration:3600}")
-    private int refreshTokenExpirationInSeconds;
-
     @Value("${token.jwk_expiration:1800}")
     private int jwkExpirationInSeconds;
+
+    @Value("${token.refresh_token_expiration:3600}")
+    private int refreshTokenExpirationInSeconds;
 
     @Bean
     public Config hazelcastConfig() {

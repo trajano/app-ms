@@ -1,6 +1,7 @@
 package net.trajano.ms.vertx.beans;
 
-import net.trajano.ms.core.CryptoOps;
+import javax.ws.rs.InternalServerErrorException;
+
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.jwk.RsaJsonWebKey;
@@ -15,17 +16,17 @@ import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.InternalServerErrorException;
+import net.trajano.ms.core.CryptoOps;
 
 @Component
 public class JcaCryptoOps implements
     CryptoOps {
 
     @Autowired
-    private TokenGenerator tokenGenerator;
+    private JwksProvider jwksProvider;
 
     @Autowired
-    private JwksProvider jwksProvider;
+    private TokenGenerator tokenGenerator;
 
     @Override
     public String newToken() {
@@ -35,7 +36,7 @@ public class JcaCryptoOps implements
     }
 
     @Override
-    public String sign(JwtClaims claims) {
+    public String sign(final JwtClaims claims) {
 
         try {
             final RsaJsonWebKey aSigningKey = jwksProvider.getASigningKey();
@@ -46,37 +47,37 @@ public class JcaCryptoOps implements
             jws.setAlgorithmHeaderValue(aSigningKey.getAlgorithm());
             jws.sign();
             return jws.getCompactSerialization();
-        } catch (JoseException e) {
+        } catch (final JoseException e) {
             throw new InternalServerErrorException(e);
         }
     }
 
     @Override
-    public JwtClaims toClaimsSet(String jwt,
-        JsonWebKeySet jwks) {
+    public JwtClaims toClaimsSet(final String jwt,
+        final HttpsJwks httpsJwks) {
 
-        JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-            .setVerificationKeyResolver(new JwksVerificationKeyResolver(jwks.getJsonWebKeys()))
-            .build();
-
-        try {
-            return jwtConsumer.processToClaims(jwt);
-        } catch (InvalidJwtException e) {
-            throw new InternalServerErrorException(e);
-        }
-    }
-
-    @Override
-    public JwtClaims toClaimsSet(String jwt,
-        HttpsJwks httpsJwks) {
-
-        JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
             .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks))
             .build();
 
         try {
             return jwtConsumer.processToClaims(jwt);
-        } catch (InvalidJwtException e) {
+        } catch (final InvalidJwtException e) {
+            throw new InternalServerErrorException(e);
+        }
+    }
+
+    @Override
+    public JwtClaims toClaimsSet(final String jwt,
+        final JsonWebKeySet jwks) {
+
+        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+            .setVerificationKeyResolver(new JwksVerificationKeyResolver(jwks.getJsonWebKeys()))
+            .build();
+
+        try {
+            return jwtConsumer.processToClaims(jwt);
+        } catch (final InvalidJwtException e) {
             throw new InternalServerErrorException(e);
         }
     }

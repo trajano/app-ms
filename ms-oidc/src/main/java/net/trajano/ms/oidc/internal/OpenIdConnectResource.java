@@ -1,5 +1,28 @@
 package net.trajano.ms.oidc.internal;
 
+import java.net.URI;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+
+import org.jose4j.jwt.JwtClaims;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import io.swagger.annotations.Api;
 import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
@@ -7,28 +30,17 @@ import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.oidc.OpenIdConfiguration;
-import org.jose4j.jwt.JwtClaims;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.ws.rs.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-import java.net.URI;
 
 @Api
 @Component
 @Path("/oidc")
 public class OpenIdConnectResource {
 
-    @Autowired
-    private Client client;
-
     @Value("${authorizationEndpoint}")
     private URI authorizationEndpoint;
+
+    @Autowired
+    private Client client;
 
     @Autowired
     private CryptoOps cryptoOps;

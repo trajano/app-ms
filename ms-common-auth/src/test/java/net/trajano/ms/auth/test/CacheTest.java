@@ -1,11 +1,8 @@
 package net.trajano.ms.auth.test;
 
-import net.trajano.ms.authz.internal.CacheNames;
-import net.trajano.ms.authz.internal.LoggingEntryListener;
-import net.trajano.ms.authz.internal.TokenCache;
-import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
-import net.trajano.ms.vertx.beans.TokenGenerator;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +12,12 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import net.trajano.ms.authz.internal.CacheNames;
+import net.trajano.ms.authz.internal.LoggingEntryListener;
+import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.vertx.beans.JcaCryptoOps;
+import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {

@@ -1,7 +1,6 @@
 package net.trajano.ms.vertx.jaxrs;
 
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -43,7 +42,7 @@ public class JsonExceptionMapper implements
     /**
      * Log the exception if it is not NotFoundException and only use warn if it
      * is a client error.
-     * 
+     *
      * @param exception
      */
     private void log(final Throwable exception) {

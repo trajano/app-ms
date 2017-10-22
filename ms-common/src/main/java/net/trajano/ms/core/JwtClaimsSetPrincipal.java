@@ -1,15 +1,13 @@
 package net.trajano.ms.core;
 
-import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.MalformedClaimException;
-
 import java.net.URI;
 import java.security.Principal;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 
 /**
  * This wraps a JWT claims set as a Principal for use with the Security Context.
@@ -26,18 +24,18 @@ public class JwtClaimsSetPrincipal implements
 
     private final String authority;
 
-    private final String subject;
+    private final JwtClaims claimsSet;
 
     /**
      * Roles.
      */
     private final Set<String> roles;
 
-    private final JwtClaims claimsSet;
+    private final String subject;
 
     /**
      * Build the principal using a map.
-     * 
+     *
      * @param claimsSet
      */
     public JwtClaimsSetPrincipal(final JwtClaims claimsSet) {
@@ -47,14 +45,14 @@ public class JwtClaimsSetPrincipal implements
             subject = claimsSet.getSubject();
             authority = String.format("%s@%s", subject, URI.create(claimsSet.getIssuer()).getHost());
             roles = Collections.unmodifiableSet(claimsSet.getStringListClaimValue(ROLES).parallelStream().collect(Collectors.toSet()));
-        } catch (MalformedClaimException e) {
+        } catch (final MalformedClaimException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
     /**
      * The authority string consists of the subject '@' issuer.
-     * 
+     *
      * @return an authority string
      */
     public String getAuthority() {

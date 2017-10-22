@@ -25,7 +25,7 @@ public final class HttpAuthorizationHeaders {
      *            authorization
      * @return an array consisting of the user name and password as strings.
      */
-    public static String[] parseBasicAuthorization(String authorization) {
+    public static String[] parseBasicAuthorization(final String authorization) {
 
         if (authorization == null) {
             return null;

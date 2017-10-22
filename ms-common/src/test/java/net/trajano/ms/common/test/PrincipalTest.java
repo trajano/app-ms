@@ -1,13 +1,11 @@
 package net.trajano.ms.common.test;
 
-import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import static org.junit.Assert.assertEquals;
+
 import org.jose4j.jwt.JwtClaims;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 
 public class PrincipalTest {
 

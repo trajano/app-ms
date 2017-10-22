@@ -1,7 +1,19 @@
 package net.trajano.ms.oidc.internal;
 
-import com.google.gson.Gson;
-import net.trajano.ms.oidc.OpenIdConfiguration;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -10,18 +22,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.google.gson.Gson;
+
+import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @Configuration
 public class ServiceConfiguration {
@@ -29,14 +32,14 @@ public class ServiceConfiguration {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Inject
-    private Gson gson;
-
     @Autowired(required = false)
     private CacheManager cacheManager;
 
     @Context
     private Client client;
+
+    @Inject
+    private Gson gson;
 
     private Map<String, IssuerConfig> issuers;
 
@@ -67,7 +70,7 @@ public class ServiceConfiguration {
             resource = applicationContext.getResource("file:" + issuersJson);
         }
 
-        IssuersConfig issuersConfig = gson.fromJson(new InputStreamReader(resource.getInputStream()), IssuersConfig.class);
+        final IssuersConfig issuersConfig = gson.fromJson(new InputStreamReader(resource.getInputStream()), IssuersConfig.class);
 
         issuersConfig.getIssuers().forEach(issuer -> {
             issuer.setOpenIdConfiguration(client.target(UriBuilder.fromUri(issuer.getUri()).path("/.well-known/openid-configuration")).request(MediaType.APPLICATION_JSON).get(OpenIdConfiguration.class));

@@ -1,17 +1,14 @@
 package net.trajano.ms.vertx.jaxrs;
 
-import net.trajano.ms.core.JwtClaimsSetPrincipal;
-import org.jose4j.jwt.JwtClaims;
+import java.security.Principal;
+import java.util.Set;
 
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.security.Principal;
-import java.text.ParseException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import org.jose4j.jwt.JwtClaims;
+
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 
 public class JwtSecurityContext implements
     SecurityContext {
@@ -25,7 +22,7 @@ public class JwtSecurityContext implements
 
     private final boolean secure;
 
-    public JwtSecurityContext(JwtClaims claims,
+    public JwtSecurityContext(final JwtClaims claims,
         final UriInfo uriInfo) {
 
         principal = new JwtClaimsSetPrincipal(claims);
