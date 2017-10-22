@@ -3,6 +3,7 @@ package net.trajano.ms.vertx.beans;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.jose4j.jwk.JsonWebKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class JwksRouteHandler implements
     @Override
     public void handle(final RoutingContext context) {
 
-        context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).end(jwksProvider.getKeySet().toPublicJWKSet().toString());
+        context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).end(jwksProvider.getKeySet().toJson(JsonWebKey.OutputControlLevel.PUBLIC_ONLY));
 
     }
 

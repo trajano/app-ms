@@ -1,18 +1,18 @@
 package net.trajano.ms.vertx.jaxrs;
 
 import java.security.Principal;
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 
 import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import net.trajano.ms.core.Qualifiers;
 
 public class JwtSecurityContext implements
     SecurityContext {
@@ -26,23 +26,17 @@ public class JwtSecurityContext implements
 
     private final boolean secure;
 
-    public JwtSecurityContext(final JWTClaimsSet claimsSet,
+    public JwtSecurityContext(final JwtClaims claims,
         final UriInfo uriInfo) {
 
-        principal = new JwtClaimsSetPrincipal(claimsSet);
-        secure = "https".equals(uriInfo.getRequestUri().getScheme());
-
         try {
-            final String[] claimRoles = principal.getClaimsSet().getStringArrayClaim("roles");
-            if (claimRoles == null) {
-                roles = Collections.emptySet();
-            } else {
-                roles = Stream.of(claimRoles).collect(Collectors.toSet());
-            }
-        } catch (final ParseException e) {
+            principal = new JwtClaimsSetPrincipal(claims);
+            secure = "https".equals(uriInfo.getRequestUri().getScheme());
+
+            roles = Collections.unmodifiableSet(claims.getStringListClaimValue(Qualifiers.ROLES).parallelStream().collect(Collectors.toSet()));
+        } catch (final MalformedClaimException e) {
             throw new ExceptionInInitializerError(e);
         }
-
     }
 
     @Override

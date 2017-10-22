@@ -3,7 +3,8 @@ package net.trajano.ms.core;
 import java.net.URI;
 import java.security.Principal;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 
 /**
  * This wraps a JWT claims set as a Principal for use with the Security Context.
@@ -15,32 +16,52 @@ public class JwtClaimsSetPrincipal implements
 
     private final String authority;
 
-    private final JWTClaimsSet claimsSet;
+    private final JwtClaims claimsSet;
 
-    public JwtClaimsSetPrincipal(final JWTClaimsSet claimsSet) {
+    private final String subject;
 
-        this.claimsSet = claimsSet;
-        authority = String.format("%s@%s", claimsSet.getSubject(), URI.create(claimsSet.getIssuer()).getHost());
+    /**
+     * Build the principal using a map.
+     *
+     * @param claimsSet
+     */
+    public JwtClaimsSetPrincipal(final JwtClaims claimsSet) {
 
+        try {
+            this.claimsSet = claimsSet;
+            subject = claimsSet.getSubject();
+            authority = String.format("%s@%s", subject, URI.create(claimsSet.getIssuer()).getHost());
+
+        } catch (final MalformedClaimException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     /**
-     * @return
+     * The authority string consists of the subject '@' issuer.
+     *
+     * @return an authority string
      */
     public String getAuthority() {
 
         return authority;
     }
 
-    public JWTClaimsSet getClaimsSet() {
+    /**
+     * @return the underlying claims set
+     */
+    public JwtClaims getClaimsSet() {
 
         return claimsSet;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
 
-        return claimsSet.getSubject();
+        return subject;
     }
 
 }

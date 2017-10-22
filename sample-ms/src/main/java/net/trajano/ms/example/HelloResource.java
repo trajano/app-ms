@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.security.PermitAll;
+import javax.inject.Inject;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -29,6 +30,7 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -36,7 +38,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.core.JsonOps;
 import net.trajano.ms.example.domain.MyType;
 
 @SwaggerDefinition(
@@ -54,6 +56,9 @@ public class HelloResource {
 
     @Context
     private Client jaxrsClient;
+
+    @Inject
+    private JsonOps jsonOps;
 
     @ApiOperation(value = "displays openid config of google async",
         hidden = true)
@@ -78,8 +83,7 @@ public class HelloResource {
     @Path("/bad")
     public Response badClient() {
 
-        final OAuthTokenResponse entity = new OAuthTokenResponse();
-        entity.setError("client bad");
+        final JsonElement entity = jsonOps.toJsonElement("{\"error\":\"client bad\"}");
         throw new BadRequestException("who's bad", Response.status(Status.BAD_REQUEST).entity(entity).build());
     }
 
@@ -214,7 +218,7 @@ public class HelloResource {
             final MultivaluedMap<String, String> header = inputPart.getHeaders();
             final String fileName = getFileName(header);
 
-            //convert the uploaded file to inputstream
+            //fromJson the uploaded file to inputstream
             final InputStream inputStream = inputPart.getBody(InputStream.class, null);
             int c = 0;
             while (inputStream.read() != -1) {

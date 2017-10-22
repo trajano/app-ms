@@ -1,13 +1,13 @@
 package net.trajano.ms.vertx.beans;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.Method;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.container.ResourceInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Checks if the URI has any JSR-250 annotations that would indicate a secured

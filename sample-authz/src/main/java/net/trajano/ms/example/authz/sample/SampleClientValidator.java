@@ -1,39 +1,33 @@
 package net.trajano.ms.example.authz.sample;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import net.trajano.ms.common.oauth.ClientValidator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.stream.Collectors;
 
-@Component
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.springframework.beans.factory.annotation.Value;
+
+import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.core.JsonOps;
+
+@ApplicationScoped
 public class SampleClientValidator implements
     ClientValidator {
 
     private Clients clients;
 
-    @Override
-    public URI getJwksUri(String clientId) {
+    @Value("${clientsFile:clients.json}")
+    private File clientsFile;
 
-        return getClientInfo(clientId).getJwksUri();
-    }
+    @Inject
+    private JsonOps jsonOps;
 
-    @Override
-    public boolean isValid(String grantType,
-        String clientId,
-        String clientSecret) {
-
-        ClientInfo clientInfo = getClientInfo(clientId);
-        return clientInfo != null && clientInfo.matches(grantType, clientId, clientSecret);
-    }
-
-    private ClientInfo getClientInfo(String clientId) {
+    private ClientInfo getClientInfo(final String clientId) {
 
         return clients.getClients().stream()
             .filter(info -> clientId.equals(info.getClientId())).collect(
@@ -49,16 +43,26 @@ public class SampleClientValidator implements
                     }));
     }
 
+    @Override
+    public URI getJwksUri(final String clientId) {
+
+        return getClientInfo(clientId).getJwksUri();
+    }
+
     @PostConstruct
     public void init() throws IOException {
 
-        clients = objectMapper.readerFor(Clients.class).readValue(clientsFile);
+        clients = jsonOps.fromJson(
+            new FileReader(clientsFile), Clients.class);
     }
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Override
+    public boolean isValid(final String grantType,
+        final String clientId,
+        final String clientSecret) {
 
-    @Value("${clientsFile:clients.json}")
-    private File clientsFile;
+        final ClientInfo clientInfo = getClientInfo(clientId);
+        return clientInfo != null && clientInfo.matches(grantType, clientId, clientSecret);
+    }
 
 }

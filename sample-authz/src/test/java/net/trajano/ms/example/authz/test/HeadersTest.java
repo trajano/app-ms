@@ -1,17 +1,18 @@
 package net.trajano.ms.example.authz.test;
 
-import net.trajano.ms.example.authz.HttpAuthorizationHeaders;
+import static org.junit.Assert.assertNotNull;
+
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 
 public class HeadersTest {
 
     @Test
     public void testAuthorization() {
 
-        String authorization = "Basic YXNkZjphc2Rm";
-        String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
+        final String authorization = "Basic YXNkZjphc2Rm";
+        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
         assertNotNull(clientCredentials);
     }
 }

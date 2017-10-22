@@ -1,18 +1,20 @@
 package net.trajano.ms.oidc.internal;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.Base64;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.nimbusds.jose.jwk.JWKSet;
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
 
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
@@ -33,7 +35,7 @@ public class IssuerConfig {
     private String id;
 
     @XmlTransient
-    private JWKSet jwkset;
+    private HttpsJwks jwkset;
 
     @XmlTransient
     private OpenIdConfiguration openIdConfiguration;
@@ -97,19 +99,18 @@ public class IssuerConfig {
         return id;
     }
 
-    public JWKSet getJwks() throws MalformedURLException,
-        IOException,
-        ParseException {
+    public JsonWebKeySet getJwks() {
 
-        if (jwkset == null) {
-            jwkset = JWKSet.load(openIdConfiguration.getJwksUri().toURL());
+        try {
+            if (jwkset == null) {
+                jwkset = new HttpsJwks(getOpenIdConfiguration().getJwksUri().toASCIIString());
+            }
+            return new JsonWebKeySet(jwkset.getJsonWebKeys());
+        } catch (final JoseException e) {
+            throw new InternalServerErrorException(e);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return jwkset;
-    }
-
-    public JWKSet getJwkset() {
-
-        return jwkset;
     }
 
     public OpenIdConfiguration getOpenIdConfiguration() {
@@ -150,11 +151,6 @@ public class IssuerConfig {
     public void setId(final String id) {
 
         this.id = id;
-    }
-
-    public void setJwkset(final JWKSet jwkset) {
-
-        this.jwkset = jwkset;
     }
 
     public void setOpenIdConfiguration(final OpenIdConfiguration openIdConfiguration) {

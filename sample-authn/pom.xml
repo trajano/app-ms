@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>ms-common-impl</artifactId>
+      <artifactId>ms-common-auth</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

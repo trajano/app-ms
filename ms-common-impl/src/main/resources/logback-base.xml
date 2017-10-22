@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE xml>
+<!DOCTYPE included>
 <included>
   <property name="pattern" value="%d{yyyy-MM-dd' 'HH:mm:ss.SSSZ} [%8.8X{X-Request-ID}] %40.40logger{40} %.-1level %msg%n"/>
   <property name="debug-pattern" value="%d{HH:mm:ss} %.-1level [%10.10thread] %40.40logger{40} - %msg%n"/>

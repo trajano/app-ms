@@ -1,6 +1,16 @@
 package net.trajano.ms.engine;
 
+import java.net.URI;
+import java.util.Set;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+
+import org.reflections.Reflections;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
@@ -11,13 +21,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.swagger.ClonableSwagger;
-import org.reflections.Reflections;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import java.net.URI;
-import java.util.Set;
 
 public class SwaggerHandler implements
     Handler<RoutingContext>,

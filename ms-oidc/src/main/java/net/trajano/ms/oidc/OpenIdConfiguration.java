@@ -1,19 +1,33 @@
 package net.trajano.ms.oidc;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.List;
 
+import javax.ws.rs.InternalServerErrorException;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenIdConfiguration {
 
     @XmlElement(name = "authorization_endpoint")
     private URI authorizationEndpoint;
+
+    @XmlTransient
+    private HttpsJwks httpsJwks;
 
     @XmlElement(name = "issuer")
     private String issuer;
@@ -39,9 +53,29 @@ public class OpenIdConfiguration {
         return authorizationEndpoint;
     }
 
+    public HttpsJwks getHttpsJwks() {
+
+        if (httpsJwks == null) {
+            httpsJwks = new HttpsJwks(jwksUri.toASCIIString());
+        }
+        return httpsJwks;
+    }
+
     public String getIssuer() {
 
         return issuer;
+    }
+
+    public JsonWebKeySet getJwks() {
+
+        try {
+            return new JsonWebKeySet(getHttpsJwks().getJsonWebKeys());
+        } catch (final JoseException e) {
+            throw new InternalServerErrorException(e);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
     }
 
     public URI getJwksUri() {
