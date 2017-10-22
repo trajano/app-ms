@@ -1,6 +1,6 @@
 package net.trajano.ms.example.authz.test;
 
-import net.trajano.ms.auth.internal.HttpAuthorizationHeaders;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;

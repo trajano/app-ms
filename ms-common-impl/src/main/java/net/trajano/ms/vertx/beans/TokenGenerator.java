@@ -4,13 +4,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import javax.annotation.PostConstruct;
 
+import org.springframework.stereotype.Component;
+
 /**
- * This is a utility module that will be used to generate access tokens. It also
+ * This is a util module that will be used to generate access tokens. It also
  * exposes the SecureRandom used so it can be utilized in other places to reduce
  * the cost of initialization.
  *

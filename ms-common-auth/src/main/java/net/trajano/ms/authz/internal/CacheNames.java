@@ -1,4 +1,6 @@
-package net.trajano.ms.auth.internal;
+package net.trajano.ms.authz.internal;
+
+import net.trajano.ms.core.Qualifiers;
 
 public class CacheNames {
 
@@ -6,7 +8,7 @@ public class CacheNames {
 
     public static final String REFRESH_TOKEN_TO_ENTRY = "refresh_token_to_entry";
 
-    public static final String JWKS = "jwks";
+    public static final String JWKS = Qualifiers.JWKS_CACHE;
 
     private CacheNames() {
     }

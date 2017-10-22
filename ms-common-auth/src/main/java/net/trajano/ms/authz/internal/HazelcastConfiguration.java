@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.internal;
+package net.trajano.ms.authz.internal;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.EntryListenerConfig;
@@ -8,12 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static net.trajano.ms.auth.internal.CacheNames.JWKS;
 
 @Configuration
 public class HazelcastConfiguration {
@@ -57,7 +53,7 @@ public class HazelcastConfiguration {
                 .setMaxIdleSeconds(refreshTokenExpirationInSeconds)
                 .addEntryListenerConfig(listener))
             .addMapConfig(new MapConfig()
-                .setName(JWKS)
+                .setName(Qualifiers.JWKS_CACHE)
                 .setTimeToLiveSeconds(jwkExpirationInSeconds)
                 .setMaxIdleSeconds(jwkExpirationInSeconds)
                 .addEntryListenerConfig(listener));
@@ -65,12 +61,6 @@ public class HazelcastConfiguration {
         LOG.debug("hazelcast config={}", config);
         return config;
 
-    }
-
-    @Bean(Qualifiers.JWKS_CACHE)
-    public Cache jwksCache(CacheManager cm) {
-
-        return cm.getCache(JWKS);
     }
 
 }

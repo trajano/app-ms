@@ -1,8 +1,8 @@
 package net.trajano.ms.auth.test;
 
-import net.trajano.ms.auth.internal.CacheNames;
-import net.trajano.ms.auth.internal.LoggingEntryListener;
-import net.trajano.ms.auth.internal.TokenCache;
+import net.trajano.ms.authz.internal.CacheNames;
+import net.trajano.ms.authz.internal.LoggingEntryListener;
+import net.trajano.ms.authz.internal.TokenCache;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
 import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.TokenGenerator;
@@ -42,7 +42,7 @@ public class CacheTest {
     public void testCache() {
 
         assertNotNull(tokenCache);
-        assertNull(tokenCache.get("abc", "123"));
+        assertNull(tokenCache.get("abc"));
     }
 
 }

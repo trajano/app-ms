@@ -1,16 +1,17 @@
 package net.trajano.ms.example.authz;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.scheduling.annotation.EnableScheduling;
-
 import net.trajano.ms.Microservice;
+import net.trajano.ms.authz.Authorization;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 import javax.ws.rs.core.Application;
 
 @SpringBootApplication
-@EnableCaching
-@EnableScheduling
+@ComponentScan(basePackageClasses = {
+    SampleAuthzMS.class,
+    Authorization.class
+})
 public class SampleAuthzMS extends Application {
 
     public static void main(final String[] args) {

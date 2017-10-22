@@ -16,6 +16,8 @@ import com.google.gson.JsonPrimitive;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
+import net.trajano.ms.core.JsonOps;
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
 import net.trajano.ms.example.beans.Counter;
 import net.trajano.ms.example.beans.UselessCounter;
 
@@ -61,8 +63,13 @@ public class SecureHelloResource {
         if (name != null) {
             json.add("name", new JsonPrimitive(name));
         }
-        json.add("principal", new JsonPrimitive(securityContext.getUserPrincipal().getName()));
+        final JwtClaimsSetPrincipal userPrincipal = (JwtClaimsSetPrincipal) securityContext.getUserPrincipal();
+        json.add("principal", new JsonPrimitive(userPrincipal.getName()));
+        json.add("claims", jsonOps.toJsonElement(userPrincipal.getClaimsSet().toJson()));
         return json;
     }
+
+    @Inject
+    private JsonOps jsonOps;
 
 }

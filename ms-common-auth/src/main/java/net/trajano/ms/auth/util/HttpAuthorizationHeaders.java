@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.internal;
+package net.trajano.ms.auth.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

@@ -43,6 +43,23 @@ public class Microservice {
     public static void run(final Class<? extends Application> applicationClass,
         final String... args) {
 
+        run(applicationClass, new Class<?>[0], args);
+    }
+
+    /**
+     * Bootstrap the microservice application.
+     *
+     * @param applicationClass
+     *            JAX-RS Application class
+     * @param extraSources
+     *            extra source classes.
+     * @param args
+     *            command line arguments
+     */
+    public static void run(final Class<? extends Application> applicationClass,
+        final Class<?>[] extraSources,
+        final String... args) {
+
         final Iterator<MicroserviceEngine> it = microserviceEngineLoader.iterator();
         if (!it.hasNext()) {
             throw new LinkageError("No MicroserviceEngine was defined");
@@ -56,7 +73,11 @@ public class Microservice {
         }
         Microservice.applicationClass = applicationClass;
 
-        final Object[] sources = microserviceEngine.bootstrap();
+        final Object[] bootstrapObjects = microserviceEngine.bootstrap();
+        final Object[] sources = new Object[extraSources.length + bootstrapObjects.length];
+
+        System.arraycopy(extraSources, 0, sources, 0, extraSources.length);
+        System.arraycopy(bootstrapObjects, 0, sources, extraSources.length, bootstrapObjects.length);
 
         final SpringApplication springApplication = new SpringApplication(sources);
         springApplication.setWebEnvironment(false);

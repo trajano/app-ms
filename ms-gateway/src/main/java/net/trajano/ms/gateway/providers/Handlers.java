@@ -55,8 +55,10 @@ public class Handlers {
 
     private static final String X_JWT_ASSERTION = "X-JWT-Assertion";
 
+    private static final String X_JWT_AUDIENCE = "X-JWT-Audience";
+
     static {
-        RESTRICTED_HEADERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(X_JWKS_URI, X_JWT_ASSERTION, REQUEST_ID, AUTHORIZATION, DATE)));
+        RESTRICTED_HEADERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(X_JWKS_URI, X_JWT_ASSERTION, X_JWT_AUDIENCE, REQUEST_ID, AUTHORIZATION, DATE)));
     }
 
     /**
@@ -234,7 +236,9 @@ public class Handlers {
                     contextResponse.end(buffer);
                     contextRequest.resume();
                 } else {
-                    final String idToken = new JsonObject(buffer).getString("id_token");
+                    final JsonObject response = new JsonObject(buffer);
+                    final String idToken = response.getString("id_token");
+                    final String audience = response.getString("aud");
                     if (idToken == null) {
                         LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                         context.response().setStatusCode(500)
@@ -262,6 +266,7 @@ public class Handlers {
                     });
                     clientRequest.putHeader(X_JWT_ASSERTION, idToken)
                         .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
+                        .putHeader(X_JWT_AUDIENCE, audience)
                         .putHeader(REQUEST_ID, requestID)
                         .putHeader(DATE, now);
                     contextRequest.resume();

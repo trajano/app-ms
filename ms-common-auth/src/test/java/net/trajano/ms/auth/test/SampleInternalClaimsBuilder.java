@@ -1,7 +1,7 @@
 package net.trajano.ms.auth.test;
 
-import net.trajano.ms.auth.spi.InternalClaimsBuilder;
-import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import javax.ws.rs.InternalServerErrorException;
+
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;
@@ -9,7 +9,8 @@ import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.InternalServerErrorException;
+import net.trajano.ms.authz.spi.InternalClaimsBuilder;
+import net.trajano.ms.core.Qualifiers;
 
 @Component
 public class SampleInternalClaimsBuilder implements
@@ -19,7 +20,7 @@ public class SampleInternalClaimsBuilder implements
      * {@inheritDoc}
      */
     @Override
-    public JwtClaims buildInternalJWTClaimsSet(String assertion) {
+    public JwtClaims buildInternalJWTClaimsSet(final String assertion) {
 
         try {
 
@@ -28,9 +29,9 @@ public class SampleInternalClaimsBuilder implements
                 .setSkipSignatureVerification()
                 .build();
 
-            JwtClaims newClaims = jwtConsumer.processToClaims(assertion);
+            final JwtClaims newClaims = jwtConsumer.processToClaims(assertion);
             newClaims.setSubject("internal-subject-" + newClaims.getSubject());
-            newClaims.setStringListClaim(JwtClaimsSetPrincipal.ROLES, "users");
+            newClaims.setStringListClaim(Qualifiers.ROLES, "users");
             return newClaims;
         } catch (MalformedClaimException
             | InvalidJwtException e) {

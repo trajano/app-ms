@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
@@ -18,20 +17,26 @@ public class IdTokenResponse extends OAuthTokenResponse {
      */
     private static final long serialVersionUID = -1256763182860411545L;
 
+    @XmlElement(name = "aud")
+    private String audience;
+
     @XmlElement(name = "id_token",
         required = true)
     private String idToken;
 
-    public IdTokenResponse(String accessToken,
-        String jwt,
-        Integer expiresInSeconds) {
-        this.setAccessToken(accessToken);
-        this.setExpiresIn(expiresInSeconds);
-        this.idToken = jwt;
+    public IdTokenResponse() {
 
     }
 
-    public IdTokenResponse() {
+    public IdTokenResponse(final String accessToken,
+        final String jwt,
+        final String audience,
+        final Integer expiresInSeconds) {
+
+        setAccessToken(accessToken);
+        setExpiresIn(expiresInSeconds);
+        idToken = jwt;
+        this.audience = audience;
 
     }
 

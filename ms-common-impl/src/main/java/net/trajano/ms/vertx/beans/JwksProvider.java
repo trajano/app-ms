@@ -137,8 +137,7 @@ public class JwksProvider {
         jwksCache = cm.getCache(JWKS_CACHE);
         if (jwksCache == null) {
             LOG.warn("A no cache named {} was not provided by the cache manager an in-memory cache will be used", JWKS_CACHE);
-            final ConcurrentMapCacheManager cm = new ConcurrentMapCacheManager(JWKS_CACHE);
-            jwksCache = cm.getCache(JWKS_CACHE);
+            jwksCache = new ConcurrentMapCacheManager(JWKS_CACHE).getCache(JWKS_CACHE);
         }
 
         LOG.debug("cache={}", this.jwksCache);
@@ -154,16 +153,23 @@ public class JwksProvider {
 
     public JwtConsumer buildConsumer() {
 
-        return buildConsumer(null);
+        return buildConsumer(null, null);
     }
 
-    public JwtConsumer buildConsumer(HttpsJwks jwks) {
+    public JwtConsumer buildConsumer(HttpsJwks jwks,
+        String audience) {
 
         final JwtConsumerBuilder builder = new JwtConsumerBuilder()
             .setRequireJwtId();
         if (jwks != null) {
             builder
                 .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(jwks));
+        }
+        if (audience != null) {
+            builder
+                .setExpectedAudience(audience);
+        } else {
+            builder.setSkipDefaultAudienceValidation();
         }
         return builder.build();
     }

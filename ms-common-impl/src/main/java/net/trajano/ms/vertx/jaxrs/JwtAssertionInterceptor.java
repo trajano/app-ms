@@ -52,10 +52,6 @@ public class JwtAssertionInterceptor implements
 
     private JwtAssertionRequiredPredicate assertionRequiredPredicate;
 
-    @Autowired(required = false)
-    @Qualifier("authz.audience")
-    private URI audience;
-
     private JwtClaimsProcessor claimsProcessor;
 
     @Autowired(required = false)
@@ -128,9 +124,6 @@ public class JwtAssertionInterceptor implements
     @PostConstruct
     public void init() {
 
-        if (audience == null) {
-            LOG.warn("`authz.audience` was not specified, will accept any audience");
-        }
         if (issuer == null) {
             LOG.warn("`authz.issuer` was not specified, will accept any issuer");
         }

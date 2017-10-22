@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.internal;
+package net.trajano.ms.authz.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

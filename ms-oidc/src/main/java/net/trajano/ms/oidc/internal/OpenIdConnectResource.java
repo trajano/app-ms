@@ -4,7 +4,7 @@ import io.swagger.annotations.Api;
 import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.IdTokenResponse;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
+import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 import org.jose4j.jwt.JwtClaims;

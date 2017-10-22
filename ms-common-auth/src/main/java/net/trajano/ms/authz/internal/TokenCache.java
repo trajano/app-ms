@@ -1,9 +1,9 @@
-package net.trajano.ms.auth.internal;
+package net.trajano.ms.authz.internal;
 
-import net.trajano.ms.auth.token.ErrorCodes;
-import net.trajano.ms.auth.token.IdTokenResponse;
-import net.trajano.ms.common.oauth.OAuthTokenResponse;
-import net.trajano.ms.core.CryptoOps;
+import java.time.Instant;
+
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +12,10 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.time.Instant;
+import net.trajano.ms.auth.token.ErrorCodes;
+import net.trajano.ms.auth.token.IdTokenResponse;
+import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.core.CryptoOps;
 
 @Component
 public class TokenCache {
@@ -26,27 +28,36 @@ public class TokenCache {
     @Value("${token.accessTokenExpiration:300}")
     private int accessTokenExpirationInSeconds;
 
+    private Cache accessTokenToEntry;
+
     @Autowired
     private CacheManager cm;
-
-    private Cache refreshTokenToEntry;
-
-    private Cache accessTokenToEntry;
 
     @Autowired
     private CryptoOps cryptoOps;
 
+    private Cache refreshTokenToEntry;
+
+    /**
+     * Evicts the entry from the caches.
+     *
+     * @param cacheEntry
+     *            cache entry.
+     */
+    private void evictEntry(final TokenCacheEntry cacheEntry) {
+
+        accessTokenToEntry.evict(cacheEntry.getAccessToken());
+        refreshTokenToEntry.evict(cacheEntry.getRefreshToken());
+    }
+
     /**
      * This will return null if a valid entry was not found.
-     * 
+     *
      * @param accessToken
      *            access token
-     * @param clientId
-     *            client ID
      * @return OAuth 2.0 ID Token Response
      */
-    public IdTokenResponse get(final String accessToken,
-        final String clientId) {
+    public IdTokenResponse get(final String accessToken) {
 
         final TokenCacheEntry cacheEntry = accessTokenToEntry.get(accessToken, TokenCacheEntry.class);
         if (cacheEntry == null) {
@@ -58,26 +69,8 @@ public class TokenCache {
             LOG.debug("Entry was expired for accessToken={}", accessToken);
             return null;
         }
-        if (!clientId.equals(cacheEntry.getClientId())) {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Expected client_id={} for accessToken={} but was {} in the cache", clientId, accessToken, cacheEntry.getClientId());
-            }
-            return null;
-        }
-        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getExpiresInSeconds());
+        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getClientId(), cacheEntry.getExpiresInSeconds());
 
-    }
-
-    /**
-     * Evicts the entry from the caches.
-     *
-     * @param cacheEntry
-     *            cache entry.
-     */
-    private void evictEntry(TokenCacheEntry cacheEntry) {
-
-        accessTokenToEntry.evict(cacheEntry.getAccessToken());
-        refreshTokenToEntry.evict(cacheEntry.getRefreshToken());
     }
 
     @PostConstruct
@@ -107,6 +100,36 @@ public class TokenCache {
     }
 
     /**
+     * Stores the internal claims set into the cache and returns an OAuth token.
+     *
+     * @param jwt
+     *            JWT to store
+     * @param clientId
+     *            client ID, this is usually the gateway.
+     * @param expiresOn
+     *            JWT expiration
+     * @return OAuth 2.0 token response with the new tokens.
+     */
+    public OAuthTokenResponse store(final String jwt,
+        final String clientId,
+        final Instant expiresOn) {
+
+        final String accessToken = cryptoOps.newToken();
+        final String refreshToken = cryptoOps.newToken();
+        final TokenCacheEntry newCacheEntry = new TokenCacheEntry(accessToken, refreshToken, jwt, clientId, expiresOn);
+        accessTokenToEntry.putIfAbsent(accessToken, newCacheEntry);
+        refreshTokenToEntry.putIfAbsent(refreshToken, newCacheEntry);
+
+        final OAuthTokenResponse oauthTokenResponse = new OAuthTokenResponse();
+        oauthTokenResponse.setAccessToken(accessToken);
+        oauthTokenResponse.setTokenType("Bearer");
+        oauthTokenResponse.setExpiresIn(accessTokenExpirationInSeconds);
+        oauthTokenResponse.setRefreshToken(refreshToken);
+
+        return oauthTokenResponse;
+    }
+
+    /**
      * Stores the cache entry into the caches with updated tokens. It will evict
      * the existing entries as well.
      *
@@ -118,36 +141,6 @@ public class TokenCache {
 
         evictEntry(cacheEntry);
         return store(cacheEntry.getJwt(), cacheEntry.getClientId(), cacheEntry.getExpiresOn());
-    }
-
-    /**
-     * Stores the internal claims set into the cache and returns an OAuth token.
-     *
-     * @param jwt
-     *            JWT to store
-     * @param clientId
-     *            client ID
-     * @param expiresOn
-     *            JWT expiration
-     * @return OAuth 2.0 token response with the new tokens.
-     */
-    public OAuthTokenResponse store(final String jwt,
-        final String clientId,
-        final Instant expiresOn) {
-
-        final String accessToken = cryptoOps.newToken();
-        final String refreshToken = cryptoOps.newToken();
-        TokenCacheEntry newCacheEntry = new TokenCacheEntry(accessToken, refreshToken, jwt, clientId, expiresOn);
-        accessTokenToEntry.putIfAbsent(accessToken, newCacheEntry);
-        refreshTokenToEntry.putIfAbsent(refreshToken, newCacheEntry);
-
-        final OAuthTokenResponse oauthTokenResponse = new OAuthTokenResponse();
-        oauthTokenResponse.setAccessToken(accessToken);
-        oauthTokenResponse.setTokenType("Bearer");
-        oauthTokenResponse.setExpiresIn(accessTokenExpirationInSeconds);
-        oauthTokenResponse.setRefreshToken(refreshToken);
-
-        return oauthTokenResponse;
     }
 
 }
