@@ -27,6 +27,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
 
 /**
@@ -64,6 +65,7 @@ public class AuthnResource {
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
+        claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
 
         final Form form = new Form();
         form.param("grant_type", GrantTypes.JWT_ASSERTION);

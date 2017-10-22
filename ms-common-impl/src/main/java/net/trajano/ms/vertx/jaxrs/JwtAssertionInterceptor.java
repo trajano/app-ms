@@ -1,6 +1,8 @@
 package net.trajano.ms.vertx.jaxrs;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -97,7 +99,7 @@ public class JwtAssertionInterceptor implements
                     httpsJwks = new HttpsJwks(jwksUri);
                 }
             }
-            final String audience = requestContext.getHeaderString(X_JWT_AUDIENCE);
+            final List<String> audience = Arrays.asList(requestContext.getHeaderString(X_JWT_AUDIENCE).split(", "));
             claims = jwksProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
         } catch (final InvalidJwtException e) {
             LOG.error("JWT invalid", e);

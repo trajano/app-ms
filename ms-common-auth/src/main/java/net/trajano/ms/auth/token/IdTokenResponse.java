@@ -1,5 +1,7 @@
 package net.trajano.ms.auth.token;
 
+import java.util.Collection;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -18,7 +20,7 @@ public class IdTokenResponse extends OAuthTokenResponse {
     private static final long serialVersionUID = -1256763182860411545L;
 
     @XmlElement(name = "aud")
-    private String audience;
+    private Collection<String> audience;
 
     @XmlElement(name = "id_token",
         required = true)
@@ -30,7 +32,7 @@ public class IdTokenResponse extends OAuthTokenResponse {
 
     public IdTokenResponse(final String accessToken,
         final String jwt,
-        final String audience,
+        final Collection<String> audience,
         final Integer expiresInSeconds) {
 
         setAccessToken(accessToken);

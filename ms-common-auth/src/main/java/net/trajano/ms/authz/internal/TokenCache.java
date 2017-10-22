@@ -1,6 +1,7 @@
 package net.trajano.ms.authz.internal;
 
 import java.time.Instant;
+import java.util.Collection;
 
 import javax.annotation.PostConstruct;
 
@@ -69,7 +70,7 @@ public class TokenCache {
             LOG.debug("Entry was expired for accessToken={}", accessToken);
             return null;
         }
-        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getClientId(), cacheEntry.getExpiresInSeconds());
+        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresInSeconds());
 
     }
 
@@ -92,7 +93,7 @@ public class TokenCache {
             evictEntry(cacheEntry);
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "JWT has exceeded life time");
         }
-        if (!clientId.equals(cacheEntry.getClientId())) {
+        if (!cacheEntry.getAudiences().contains(clientId)) {
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
         }
         return updateEntry(cacheEntry);
@@ -111,12 +112,12 @@ public class TokenCache {
      * @return OAuth 2.0 token response with the new tokens.
      */
     public OAuthTokenResponse store(final String jwt,
-        final String clientId,
+        final Collection<String> audiences,
         final Instant expiresOn) {
 
         final String accessToken = cryptoOps.newToken();
         final String refreshToken = cryptoOps.newToken();
-        final TokenCacheEntry newCacheEntry = new TokenCacheEntry(accessToken, refreshToken, jwt, clientId, expiresOn);
+        final TokenCacheEntry newCacheEntry = new TokenCacheEntry(accessToken, refreshToken, jwt, audiences, expiresOn);
         accessTokenToEntry.putIfAbsent(accessToken, newCacheEntry);
         refreshTokenToEntry.putIfAbsent(refreshToken, newCacheEntry);
 
@@ -140,7 +141,7 @@ public class TokenCache {
     private OAuthTokenResponse updateEntry(final TokenCacheEntry cacheEntry) {
 
         evictEntry(cacheEntry);
-        return store(cacheEntry.getJwt(), cacheEntry.getClientId(), cacheEntry.getExpiresOn());
+        return store(cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresOn());
     }
 
 }

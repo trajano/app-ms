@@ -188,13 +188,17 @@ public class TokenResource {
 
             internalClaims.setGeneratedJwtId();
             internalClaims.setIssuer(issuer.toASCIIString());
-            internalClaims.setAudience(clientId);
+            if (audience == null) {
+                internalClaims.setAudience(clientId);
+            } else {
+                internalClaims.setAudience(clientId, audience);
+            }
             internalClaims.setIssuedAtToNow();
 
             final Instant expirationTime = Instant.now().plus(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS);
             internalClaims.setExpirationTime(NumericDate.fromMilliseconds(expirationTime.toEpochMilli()));
 
-            return tokenCache.store(cryptoOps.sign(internalClaims), clientId, expirationTime);
+            return tokenCache.store(cryptoOps.sign(internalClaims), internalClaims.getAudience(), expirationTime);
 
         } catch (final MalformedClaimException
             | InvalidJwtException e) {

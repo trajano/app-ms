@@ -15,9 +15,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -178,6 +180,7 @@ public class Handlers {
      *
      * @return handler
      */
+    @SuppressWarnings("unchecked")
     public Handler<RoutingContext> protectedHandler(final String baseUri,
         final URI endpoint) {
 
@@ -238,7 +241,8 @@ public class Handlers {
                 } else {
                     final JsonObject response = new JsonObject(buffer);
                     final String idToken = response.getString("id_token");
-                    final String audience = response.getString("aud");
+
+                    final List<String> audience = response.getJsonArray("aud").getList();
                     if (idToken == null) {
                         LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                         context.response().setStatusCode(500)
@@ -266,7 +270,7 @@ public class Handlers {
                     });
                     clientRequest.putHeader(X_JWT_ASSERTION, idToken)
                         .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
-                        .putHeader(X_JWT_AUDIENCE, audience)
+                        .putHeader(X_JWT_AUDIENCE, audience.stream().collect(Collectors.joining(", ")))
                         .putHeader(REQUEST_ID, requestID)
                         .putHeader(DATE, now);
                     contextRequest.resume();
