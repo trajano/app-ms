@@ -16,6 +16,9 @@ public class JwtClaimsSetPrincipal implements
 
     private final String authority;
 
+    /**
+     * Wrapped claims set.
+     */
     private final JwtClaims claimsSet;
 
     private final String subject;
@@ -35,6 +38,32 @@ public class JwtClaimsSetPrincipal implements
         } catch (final MalformedClaimException e) {
             throw new ExceptionInInitializerError(e);
         }
+    }
+
+    /**
+     * Only compare the claims, since that is the main content. {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final JwtClaimsSetPrincipal other = (JwtClaimsSetPrincipal) obj;
+        if (claimsSet == null) {
+            if (other.claimsSet != null) {
+                return false;
+            }
+        } else if (!claimsSet.equals(other.claimsSet)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -62,6 +91,15 @@ public class JwtClaimsSetPrincipal implements
     public String getName() {
 
         return subject;
+    }
+
+    /**
+     * Gets the hash code of the claims set. {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+
+        return claimsSet.hashCode();
     }
 
 }

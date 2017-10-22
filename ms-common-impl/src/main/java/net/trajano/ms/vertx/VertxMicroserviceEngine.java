@@ -28,8 +28,12 @@ import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 import net.trajano.ms.spi.MicroserviceEngine;
-import net.trajano.ms.vertx.beans.CommonMs;
+import net.trajano.ms.vertx.beans.GsonJacksonJsonOps;
+import net.trajano.ms.vertx.beans.GsonProvider;
+import net.trajano.ms.vertx.beans.JcaCryptoOps;
+import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwksRouteHandler;
+import net.trajano.ms.vertx.beans.TokenGenerator;
 import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
 
 @Component
@@ -67,7 +71,8 @@ public class VertxMicroserviceEngine implements
 
         return new Object[] {
             VertxConfig.class,
-            VertxMicroserviceEngine.class
+            VertxMicroserviceEngine.class,
+            TokenGenerator.class
         };
     }
 
@@ -87,7 +92,7 @@ public class VertxMicroserviceEngine implements
 
         final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.setParent(baseApplicationContext);
-        applicationContext.register(CommonMs.class);
+        applicationContext.register(GsonJacksonJsonOps.class, GsonProvider.class, JcaCryptoOps.class, JwksProvider.class, JwksRouteHandler.class);
         applicationContext.register(CommonMsJaxRs.class);
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, Microservice.getApplicationClass()));
 

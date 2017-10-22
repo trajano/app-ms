@@ -77,8 +77,8 @@ public class TokenCacheEntry implements
     }
 
     /**
-     * If {@link #getExpiresOn()} is null, then this will return null. Otherwise it
-     * will return the number of seconds before expiration.
+     * If {@link #getExpiresOn()} is null, then this will return null. Otherwise
+     * it will return the number of seconds before expiration.
      *
      * @return
      */

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.auth.token.ErrorCodes;
@@ -36,6 +37,7 @@ import net.trajano.ms.core.CryptoOps;
     info = @Info(
         title = "Sample Authn Microservice",
         version = "1.0"))
+@Api
 @Component
 @Path("/authn")
 @PermitAll
