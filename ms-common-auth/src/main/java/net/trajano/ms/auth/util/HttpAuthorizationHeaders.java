@@ -17,6 +17,14 @@ public final class HttpAuthorizationHeaders {
      */
     private static final Pattern BASIC_AUTHORIZATION_PATTERN = Pattern.compile("^Basic ((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$");
 
+    public static String buildBasicAuthorization(final String username,
+        final String password) {
+
+        final StringBuilder b = new StringBuilder("Basic ");
+        b.append(Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)));
+        return b.toString();
+    }
+
     /**
      * This will extract the username and password components of a basic
      * authorization header. If there is any problem this will return null.
