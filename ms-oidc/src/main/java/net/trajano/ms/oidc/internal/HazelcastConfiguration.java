@@ -8,7 +8,10 @@ import org.springframework.context.annotation.Configuration;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.EntryListenerConfig;
+import com.hazelcast.config.JoinConfig;
 import com.hazelcast.config.MapConfig;
+import com.hazelcast.config.MulticastConfig;
+import com.hazelcast.config.NetworkConfig;
 
 import net.trajano.ms.core.Qualifiers;
 
@@ -34,6 +37,10 @@ public class HazelcastConfiguration {
 
         final EntryListenerConfig listener = new EntryListenerConfig();
         final Config config = new Config()
+            .setNetworkConfig(new NetworkConfig()
+                .setJoin(new JoinConfig()
+                    .setMulticastConfig(new MulticastConfig()
+                        .setEnabled(true))))
             .setInstanceName(instanceName)
             .setProperty("hazelcast.logging.type", "slf4j")
             .addMapConfig(new MapConfig()

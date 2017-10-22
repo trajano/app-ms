@@ -36,6 +36,9 @@ public class ContainerRequestScope implements
     public static void resetRequestContext() {
 
         final ContainerRequestContext containerRequest = containerRequestHolder.get();
+        if (containerRequest == null) {
+            return;
+        }
         final Map<String, Runnable> destructionCallbacks = getDestructionCallbacks(containerRequest);
         containerRequest.getPropertyNames().parallelStream().forEach(name -> {
             final Runnable callback = destructionCallbacks.get(name);
