@@ -55,8 +55,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
         LOG.debug("vertxRequest.isEnded={}", vertxRequest.isEnded());
 
         if (!vertxRequest.isEnded()) {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream(vertxRequest);
-            this.is = is;
+            is = new VertxBlockingInputStream(vertxRequest);
         } else {
             is = NullInputStream.nullInputStream();
         }

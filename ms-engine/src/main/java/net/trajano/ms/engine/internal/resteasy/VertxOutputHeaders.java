@@ -52,7 +52,7 @@ public class VertxOutputHeaders extends AbstractMultivaluedMap<String, Object> {
             final List<Object> values) {
 
             final List<Object> prev = vertxResponse.headers().getAll(key).stream().map(v -> v).collect(Collectors.toList());
-            final List<String> collect = values.stream().map(o -> String.valueOf(o)).collect(Collectors.toList());
+            final List<String> collect = values.stream().map(String::valueOf).collect(Collectors.toList());
             vertxResponse.putHeader(key, collect);
             return prev;
         }

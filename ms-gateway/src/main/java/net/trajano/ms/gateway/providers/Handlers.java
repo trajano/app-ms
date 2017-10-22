@@ -373,8 +373,12 @@ public class Handlers {
     }
 
     /**
-     * This handler passes the data through
+     * This handler passes the data through.
      *
+     * @param baseUri
+     *            base URI
+     * @param endpoint
+     *            endpoint
      * @return handler
      */
     public Handler<RoutingContext> unprotectedHandler(final String baseUri,
@@ -395,7 +399,7 @@ public class Handlers {
                 contextRequest.response()
                     .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
                 clientResponse.handler(contextRequest.response()::write)
-                    .endHandler((v) -> contextRequest.response().end());
+                    .endHandler(v -> contextRequest.response().end());
             }).exceptionHandler(context::fail)
                 .setChunked(true);
 
@@ -408,7 +412,7 @@ public class Handlers {
             clientRequest.putHeader(REQUEST_ID, requestID);
             clientRequest.putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));
             contextRequest.handler(clientRequest::write)
-                .endHandler((v) -> clientRequest.end());
+                .endHandler(v -> clientRequest.end());
 
         };
     }
