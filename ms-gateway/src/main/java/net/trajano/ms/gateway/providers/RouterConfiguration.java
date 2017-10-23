@@ -1,5 +1,8 @@
 package net.trajano.ms.gateway.providers;
 
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_FORM_URLENCODED;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
+
 import java.net.URI;
 
 import org.slf4j.Logger;
@@ -48,6 +51,9 @@ public class RouterConfiguration {
     @Value("${jwks.source}")
     private URI jwksSourceURI;
 
+    @Autowired
+    private RefreshHandler refreshHandler;
+
     @Value("${authorization.refreshTokenPath:/refresh}")
     private String refreshTokenPath;
 
@@ -68,17 +74,17 @@ public class RouterConfiguration {
             .allowedHeader("Authorization"));
 
         router.post(refreshTokenPath)
-            .consumes("application/x-www-form-urlencoded")
-            .produces("application/json")
+            .consumes(APPLICATION_FORM_URLENCODED)
+            .produces(APPLICATION_JSON)
             .handler(BodyHandler.create().setBodyLimit(1024));
         router.post(refreshTokenPath)
-            .consumes("application/x-www-form-urlencoded")
-            .produces("application/json")
-            .handler(handlers.refreshHandler());
+            .consumes(APPLICATION_FORM_URLENCODED)
+            .produces(APPLICATION_JSON)
+            .handler(refreshHandler);
 
         // Route JWKS path
         router.get(jwksPath)
-            .produces("application/json")
+            .produces(APPLICATION_JSON)
             .handler(handlers.unprotectedHandler(jwksPath, jwksSourceURI))
             .failureHandler(handlers.failureHandler());
 
@@ -102,13 +108,13 @@ public class RouterConfiguration {
                 if (protectedRoute) {
                     LOG.info("get JSON from={} to={}, protected, exact={}", from, to, exact);
                     router.get(from + wildcard)
-                        .produces("application/json")
+                        .produces(APPLICATION_JSON)
                         .handler(handlers.protectedHandler(from, to))
                         .failureHandler(handlers.failureHandler());
                 } else {
                     LOG.info("get JSON from={} to={}, unprotected, exact={}", from, to, exact);
                     router.get(from + wildcard)
-                        .produces("application/json")
+                        .produces(APPLICATION_JSON)
                         .handler(handlers.unprotectedHandler(from, to))
                         .failureHandler(handlers.failureHandler());
                 }

@@ -6,6 +6,8 @@ import static io.vertx.core.http.HttpHeaders.DATE;
 import static java.time.ZoneOffset.UTC;
 import static java.time.ZonedDateTime.now;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_FORM_URLENCODED;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.ConnectException;
@@ -40,6 +42,7 @@ import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.MediaTypes;
 
 @Configuration
 @Component
@@ -50,8 +53,6 @@ public class Handlers {
     private static final Logger LOG = LoggerFactory.getLogger(Handlers.class);
 
     private static final Set<CharSequence> RESTRICTED_HEADERS;
-
-    private static final String TOKEN_PATTERN = "^[A-Za-z0-9]{64}$";
 
     private static final String X_JWKS_URI = "X-JWKS-URI";
 
@@ -73,15 +74,15 @@ public class Handlers {
     private URI authorizationEndpoint;
 
     /**
-     * This is the Authorization header value for the gateway when requesting the
-     * JWT data from the authorization server.
+     * This is the Authorization header value for the gateway when requesting
+     * the JWT data from the authorization server.
      */
     private String gatewayClientAuthorization;
 
     /**
-     * Gateway client ID. The gateway has it's own client ID because it is the only
-     * one that should be authorized to get the id_token from an authorization_code
-     * request to the authorization server token endpoint.
+     * Gateway client ID. The gateway has it's own client ID because it is the
+     * only one that should be authorized to get the id_token from an
+     * authorization_code request to the authorization server token endpoint.
      */
     @Value("${authorization.client_id}")
     private String gatewayClientId;
@@ -112,7 +113,7 @@ public class Handlers {
                 if (context.failure() instanceof ConnectException) {
                     context.response().setStatusCode(504)
                         .setStatusMessage("Gateway Timeout")
-                        .putHeader(CONTENT_TYPE, "application/json")
+                        .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                         .end(new JsonObject()
                             .put("error", "server_error")
                             .put("error_description", "Gateway Timeout")
@@ -120,7 +121,7 @@ public class Handlers {
                 } else {
                     context.response().setStatusCode(500)
                         .setStatusMessage("Internal Server Error")
-                        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                         .end(new JsonObject()
                             .put("error", "server_error")
                             .put("error_description", "Internal Server Error")
@@ -133,8 +134,8 @@ public class Handlers {
 
     /**
      * Obtains the access token from the request. It is expected to be the
-     * Authorization with a bearer tag. The authentication code is expected to be a
-     * given pattern.
+     * Authorization with a bearer tag. The authentication code is expected to
+     * be a given pattern.
      *
      * @param contextRequest
      *            request
@@ -203,22 +204,10 @@ public class Handlers {
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized")
                     .putHeader("WWW-Authenticate", "Bearer")
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)
                     .end(new JsonObject()
                         .put("error", "invalid_request")
                         .put("error_description", "Missing or invalid access authorization")
-                        .toBuffer());
-                return;
-            }
-            if (!accessToken.matches(TOKEN_PATTERN)) {
-                LOG.debug("invalid token={}", accessToken);
-                contextResponse
-                    .setStatusCode(400)
-                    .setStatusMessage("Bad Request")
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(new JsonObject()
-                        .put("error", "invalid_request")
-                        .put("error_description", "Token not valid")
                         .toBuffer());
                 return;
             }
@@ -247,7 +236,7 @@ public class Handlers {
                         LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                         context.response().setStatusCode(500)
                             .setStatusMessage("Internal Server Error")
-                            .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                             .end(new JsonObject()
                                 .put("error", "server_error")
                                 .put("error_description", "Unable to get assertion from authorization endpoint")
@@ -282,99 +271,11 @@ public class Handlers {
 
             authorizationRequest
                 .putHeader(AUTHORIZATION, gatewayClientAuthorization)
-                .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
-                .putHeader(HttpHeaders.ACCEPT, "application/json")
+                .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_FORM_URLENCODED)
+                .putHeader(HttpHeaders.ACCEPT, APPLICATION_JSON)
                 .putHeader(REQUEST_ID, requestID)
                 .putHeader(DATE, now)
                 .end("grant_type=authorization_code&code=" + accessToken);
-
-        };
-    }
-
-    /**
-     * This handler deals with refreshing the OAuth token.
-     *
-     * @return handler
-     */
-    public Handler<RoutingContext> refreshHandler() {
-
-        return context -> {
-            final HttpServerRequest contextRequest = context.request();
-            final HttpServerResponse contextResponse = context.response();
-
-            final String requestID = requestIDProvider.newRequestID(context);
-
-            final String grantType = contextRequest.getFormAttribute("grant_type");
-            if (grantType == null) {
-                contextResponse
-                    .setChunked(false)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .setStatusCode(400)
-                    .setStatusMessage("Bad Request")
-                    .end(new JsonObject()
-                        .put("error", "invalid_grant")
-                        .put("error_description", "Missing grant type")
-                        .toBuffer());
-                return;
-            }
-
-            final String authorization = contextRequest.getHeader(HttpHeaders.AUTHORIZATION);
-            if (authorization == null) {
-                contextResponse
-                    .setChunked(false)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .setStatusCode(401)
-                    .setStatusMessage("Unauthorized Client")
-                    .putHeader("WWW-Authenticate", "Basic")
-                    .end(new JsonObject()
-                        .put("error", "invalid_grant")
-                        .put("error_description", "Missing authorization")
-                        .toBuffer());
-                return;
-            }
-
-            if (!"refresh_token".equals(grantType)) {
-                contextResponse
-                    .setChunked(false)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .setStatusCode(400)
-                    .setStatusMessage("Bad Request")
-                    .end(new JsonObject()
-                        .put("error", "unsupported_grant_type")
-                        .put("error_description", "Unsupported grant type")
-                        .toBuffer());
-                return;
-            }
-            final String refreshToken = contextRequest.getFormAttribute("refresh_token");
-            if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
-                contextResponse
-                    .setChunked(false)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .setStatusCode(400)
-                    .setStatusMessage("Bad Request")
-                    .end(new JsonObject()
-                        .put("error", "invalid_request")
-                        .put("error_description", "Missing grant")
-                        .toBuffer());
-                return;
-            }
-
-            final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
-                // Trust the authorization endpoint
-                authorizationResponse.bodyHandler(contextResponse
-                    .setChunked(false)
-                    .setStatusCode(authorizationResponse.statusCode())
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .putHeader(RequestIDProvider.REQUEST_ID, requestID)
-                    .setStatusMessage(authorizationResponse.statusMessage())::end);
-            });
-            authorizationRequest
-                .putHeader(HttpHeaders.AUTHORIZATION, authorization)
-                .putHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
-                .putHeader(HttpHeaders.ACCEPT, "application/json")
-                .putHeader(REQUEST_ID, requestID)
-                .putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)))
-                .end("grant_type=refresh_token&refresh_token=" + refreshToken);
 
         };
     }
