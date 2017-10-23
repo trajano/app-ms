@@ -34,7 +34,7 @@ public class VertxClientResponse extends ClientResponse {
         httpClientRequest.handler(httpClientResponse -> {
             setStatus(httpClientResponse.statusCode());
             setHeaders(Conversions.toMultivaluedStringMap(httpClientResponse.headers()));
-            httpClientResponse.handler(buffer -> is.populate(buffer))
+            httpClientResponse.handler(is::populate)
                 .endHandler(aVoid -> is.end());
             LOG.trace("prepared HTTP client response handler");
             metadataLock.release();

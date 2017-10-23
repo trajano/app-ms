@@ -313,11 +313,10 @@ public class SpringJaxRsHandler implements
         final Client client = jaxRsClient(context.vertx());
         final HttpServerRequest serverRequest = context.request();
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
+
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
 
-        if (isMultipartExpected(request)) {
-            context.request().setExpectMultipart(true);
-        }
+        context.request().setExpectMultipart(isMultipartExpected(request));
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
             context.vertx().executeBlocking(
                 future -> {
@@ -356,20 +355,22 @@ public class SpringJaxRsHandler implements
                 });
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
-        } finally {
-
         }
     }
 
+    /**
+     * Checks if multipart is expected for the resource. This is determined by
+     * the presence of {@value MediaType#MULTIPART_FORM_DATA} in the
+     * {@link Consumes} annotation.
+     *
+     * @param request
+     * @return
+     */
     private boolean isMultipartExpected(final HttpRequest request) {
 
         final ResourceInvoker invoker = dispatcher.getInvoker(request);
         final Consumes consumes = invoker.getMethod().getAnnotation(Consumes.class);
-        if (consumes == null || !Arrays.asList(consumes.value()).contains(MediaType.MULTIPART_FORM_DATA)) {
-            return false;
-        } else {
-            return true;
-        }
+        return consumes != null && Arrays.asList(consumes.value()).contains(MediaType.MULTIPART_FORM_DATA);
 
     }
 

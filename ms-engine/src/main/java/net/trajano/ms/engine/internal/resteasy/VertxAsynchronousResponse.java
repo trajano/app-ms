@@ -74,6 +74,16 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
             .status(Status.SERVICE_UNAVAILABLE).build());
     }
 
+    /**
+     * Cancels the current timeout timer if defined.
+     */
+    private void cancelTimer() {
+
+        if (timeoutTimerID != -1 && !routingContext.vertx().cancelTimer(timeoutTimerID)) {
+            LOG.error("Attempted to cancel a timer that does not exist {}", timeoutTimerID);
+        }
+    }
+
     private void handleTimeout() {
 
         LOG.warn("Timeout has occurred for timerId={}", timeoutTimerID);
@@ -148,9 +158,7 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
             }
             internalResume(entity);
             done.set(true);
-            if (timeoutTimerID != -1 && !routingContext.vertx().cancelTimer(timeoutTimerID)) {
-                LOG.error("Attempted to cancel a timer that does not exist {}", timeoutTimerID);
-            }
+            cancelTimer();
             return true;
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -172,11 +180,7 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
             if (!isSuspended()) {
                 return false;
             }
-            if (timeoutTimerID != -1) {
-                if (!routingContext.vertx().cancelTimer(timeoutTimerID)) {
-                    LOG.error("Attempted to cancel a timer that does not exist {}", timeoutTimerID);
-                }
-            }
+            cancelTimer();
             final long millis = unit.toMillis(time);
             timeoutTimerID = routingContext.vertx().setTimer(millis, timerId -> handleTimeout());
             LOG.debug("New timeout handler created timeoutTimerId={} for {} ms", timeoutTimerID, millis);

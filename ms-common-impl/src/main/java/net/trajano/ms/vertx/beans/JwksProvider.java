@@ -2,6 +2,8 @@ package net.trajano.ms.vertx.beans;
 
 import static net.trajano.ms.core.Qualifiers.JWKS_CACHE;
 
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.ws.rs.InternalServerErrorException;
 
@@ -54,7 +56,7 @@ public class JwksProvider {
     }
 
     public JwtConsumer buildConsumer(final HttpsJwks jwks,
-        final String audience) {
+        final List<String> audience) {
 
         final JwtConsumerBuilder builder = new JwtConsumerBuilder()
             .setRequireJwtId();
@@ -64,7 +66,7 @@ public class JwksProvider {
         }
         if (audience != null) {
             builder
-                .setExpectedAudience(audience);
+                .setExpectedAudience(audience.toArray(new String[audience.size()]));
         } else {
             builder.setSkipDefaultAudienceValidation();
         }

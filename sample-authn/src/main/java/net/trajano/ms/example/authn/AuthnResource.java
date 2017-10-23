@@ -1,6 +1,7 @@
 package net.trajano.ms.example.authn;
 
 import java.net.URI;
+import java.text.ParseException;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
@@ -24,10 +25,11 @@ import org.springframework.stereotype.Component;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
-import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
 
 /**
  * This works like the FORM based login of Java EE. It allows any user name as
@@ -64,6 +66,11 @@ public class AuthnResource {
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
+        try {
+            claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
+        } catch (final ParseException e) {
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
+        }
 
         final Form form = new Form();
         form.param("grant_type", GrantTypes.JWT_ASSERTION);

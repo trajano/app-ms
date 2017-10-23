@@ -3,15 +3,12 @@ package net.trajano.ms.engine.internal.resteasy;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
-import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.slf4j.Logger;
@@ -19,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.engine.internal.NullInputStream;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
+import net.trajano.ms.engine.internal.VertxRoutingContextHttpHeaders;
 
 /**
  * For the most part the request is prebuilt and immutable. That way there is no
@@ -35,11 +32,11 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
     private final ResteasyAsynchronousContext asynchronousContext;
 
-    private final Map<String, Object> attributes;
+    private final RoutingContext context;
 
     private boolean forwarded;
 
-    private final ResteasyHttpHeaders httpHeaders;
+    private final HttpHeaders httpHeaders;
 
     private final InputStream is;
 
@@ -51,19 +48,18 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
         super(uriInfo);
 
+        this.context = context;
         vertxRequest = context.request();
+
+        httpHeaders = new VertxRoutingContextHttpHeaders(context);
+
         LOG.debug("vertxRequest.isEnded={}", vertxRequest.isEnded());
 
         if (!vertxRequest.isEnded()) {
-            final VertxBlockingInputStream is = new VertxBlockingInputStream(vertxRequest);
-            this.is = is;
+            is = new VertxBlockingInputStream(vertxRequest);
         } else {
             is = NullInputStream.nullInputStream();
         }
-
-        httpHeaders = new ResteasyHttpHeaders(Conversions.toMultivaluedStringMap(vertxRequest.headers()),
-            Conversions.toCookies(context.cookies()));
-        attributes = new HashMap<>();
 
         asynchronousContext = new VertxExecutionContext(context, dispatcher, this, new VertxHttpResponse(context));
     }
@@ -83,13 +79,13 @@ public class VertxHttpRequest extends BaseHttpRequest {
     @Override
     public Object getAttribute(final String attribute) {
 
-        return attributes.get(attribute);
+        return context.get(attribute);
     }
 
     @Override
     public Enumeration<String> getAttributeNames() {
 
-        return Collections.enumeration(attributes.keySet());
+        return Collections.enumeration(context.data().keySet());
     }
 
     @Override
@@ -113,13 +109,13 @@ public class VertxHttpRequest extends BaseHttpRequest {
     @Override
     public MultivaluedMap<String, String> getMutableHeaders() {
 
-        return httpHeaders.getMutableHeaders();
+        throw new UnsupportedOperationException("Mutable headers are not supported");
     }
 
     @Override
     public void removeAttribute(final String name) {
 
-        attributes.remove(name);
+        context.remove(name);
 
     }
 
@@ -127,7 +123,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
     public void setAttribute(final String name,
         final Object value) {
 
-        attributes.put(name, value);
+        context.put(name, value);
 
     }
 

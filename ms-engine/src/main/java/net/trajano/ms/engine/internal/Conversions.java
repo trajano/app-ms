@@ -16,6 +16,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.web.impl.CookieImpl;
+import net.trajano.ms.engine.internal.resteasy.CaseInsenstiveMultivalueStringMap;
 
 public final class Conversions {
 
@@ -64,9 +65,15 @@ public final class Conversions {
         return mvm;
     }
 
+    /**
+     * This returns a case-insensitive multivalued map suitable for headers.
+     *
+     * @param multimap
+     * @return
+     */
     public static MultivaluedMap<String, String> toMultivaluedStringMap(final MultiMap multimap) {
 
-        final MultivaluedMap<String, String> mvm = new MultivaluedHashMap<>(multimap.size());
+        final MultivaluedMap<String, String> mvm = new CaseInsenstiveMultivalueStringMap();
         multimap.forEach(entry -> mvm.add(entry.getKey(), entry.getValue()));
         return mvm;
     }

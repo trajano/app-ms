@@ -2,6 +2,7 @@ package net.trajano.ms.oidc.internal;
 
 import java.net.URI;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,6 +13,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -24,22 +26,38 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.auth.token.ErrorCodes;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @Api
 @Component
 @Path("/oidc")
+@PermitAll
 public class OpenIdConnectResource {
 
-    @Value("${authorizationEndpoint}")
+    /**
+     * Gateway client ID. The gateway has it's own client ID because it is the
+     * only one that should be authorized to get the id_token from an
+     * authorization_code request to the authorization server token endpoint.
+     */
+    @Value("${authorization.client_id}")
+    private String appClientId;
+
+    /**
+     * Gateway client secret
+     */
+    @Value("${authorization.client_secret}")
+    private String appClientSecret;
+
+    @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
 
-    @Autowired
+    @Context
     private Client client;
 
     @Autowired
@@ -48,20 +66,20 @@ public class OpenIdConnectResource {
     @Autowired
     private ServiceConfiguration serviceConfiguration;
 
-    @Path("/auth")
+    @Path("/auth/{issuer_id}")
     @GET
     public Response auth(@QueryParam("state") final String state,
-        @QueryParam("issuer_id") final String issuerId,
+        @PathParam("issuer_id") final String issuerId,
         @Context final UriInfo uriInfo) {
 
         return Response.ok().status(Status.TEMPORARY_REDIRECT).header("Location", authUri(state, issuerId, uriInfo)).build();
     }
 
-    @Path("/auth-uri")
+    @Path("/auth-uri/{issuer_id}")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public URI authUri(@QueryParam("state") final String state,
-        @QueryParam("issuer_id") final String issuerId,
+        @PathParam("issuer_id") final String issuerId,
         @Context final UriInfo uriInfo) {
 
         if (issuerId == null) {
@@ -99,17 +117,19 @@ public class OpenIdConnectResource {
         final OpenIdConfiguration openIdConfiguration = issuerConfig.getOpenIdConfiguration();
         final IdTokenResponse openIdToken = client.target(openIdConfiguration.getTokenEndpoint())
             .request(MediaType.APPLICATION_JSON)
-            .header("Authorization", issuerConfig.buildAuthorization())
+            .header(HttpHeaders.AUTHORIZATION, issuerConfig.buildAuthorization())
             .post(Entity.form(form), IdTokenResponse.class);
 
         final JwtClaims jwtClaims = cryptoOps.toClaimsSet(openIdToken.getIdToken(), openIdConfiguration.getHttpsJwks());
 
         final Form storeInternalForm = new Form();
         storeInternalForm.param("grant_type", GrantTypes.JWT_ASSERTION);
-        storeInternalForm.param("client_id", "CLIENT_ID");
         storeInternalForm.param("assertion", cryptoOps.sign(jwtClaims));
+        storeInternalForm.param("aud", issuerConfig.getClientId());
 
-        return client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON).post(Entity.form(storeInternalForm), OAuthTokenResponse.class);
+        return client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.AUTHORIZATION, HttpAuthorizationHeaders.buildBasicAuthorization(appClientId, appClientSecret))
+            .post(Entity.form(storeInternalForm), OAuthTokenResponse.class);
 
     }
 

@@ -1,9 +1,11 @@
-package net.trajano.ms.auth.token;
+package net.trajano.ms.core;
 
 /**
- * OAuth 2.0 error codes
+ * Error codes used in OAuth 2.0 Responses or {@link ErrorResponse}.
  */
 public final class ErrorCodes {
+
+    public static final String FORBIDDEN = "forbidden";
 
     public static final String INVALID_REQUEST = "invalid_request";
 

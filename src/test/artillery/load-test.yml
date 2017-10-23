@@ -1,0 +1,62 @@
+config:
+  target: "http://localhost:8910"
+  phases:
+  - duration: 120
+    arrivalRate: 20
+  processor: "./processor.js"
+  environments:
+    docker:
+      target: "http://localhost:3001"
+scenarios:
+- flow:
+  - get:
+      url: "/jwks"
+  - get:
+      url: "/v1"
+- flow:
+  - post:
+      url: "/v1/authn"
+      form:
+        j_username: archie
+        j_password: password
+      headers:
+        Accept: application/json
+        Content-Type: application/x-www-form-urlencoded
+        Authorization: Basic YXBwX2lkOmFwcF9zZWNyZXQ=
+      capture:
+      - json: "$.access_token"
+        as: "access_token"
+      - json: "$.refresh_token"
+        as: "refresh_token"
+  - get:
+      url: "/v1/secure"
+      headers:
+        Accept: application/json
+        Authorization: "Bearer {{ access_token }}"
+  - post:
+      url: "/refresh"
+#      beforeRequest: "logRequest"
+#      afterResponse: "logHeaders"
+      form:
+        grant_type: refresh_token
+        refresh_token: "{{ refresh_token }}"
+      headers:
+        Accept: application/json
+        Content-Type: application/x-www-form-urlencoded
+        Authorization: Basic YXBwX2lkOmFwcF9zZWNyZXQ=
+      capture:
+      - json: "$.access_token"
+        as: "access_token"
+      - json: "$.refresh_token"
+        as: "refresh_token"
+  - get:
+      url: "/v1/secure"
+      headers:
+        Accept: application/json
+        Authorization: "Bearer {{ access_token }}"
+  - get:
+      url: "/v1/hello/openid"
+      headers:
+        Accept: application/json
+        Authorization: "Bearer {{ access_token }}"
+        

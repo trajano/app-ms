@@ -3,6 +3,7 @@ package net.trajano.ms.authz.internal;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -17,10 +18,9 @@ public class TokenCacheEntry implements
     private final String accessToken;
 
     /**
-     * Client ID that originate the request. They are going to be the expected
-     * audience for the token.
+     * Audiences.
      */
-    private final String clientId;
+    private final Collection<String> audiences;
 
     /**
      * Created on. {@link Date} is used because of
@@ -42,21 +42,21 @@ public class TokenCacheEntry implements
     public TokenCacheEntry(final String accessToken,
         final String refreshToken,
         final String jwt,
-        final String clientId) {
+        final Collection<String> audiences) {
 
-        this(accessToken, refreshToken, jwt, clientId, null);
+        this(accessToken, refreshToken, jwt, audiences, null);
     }
 
     public TokenCacheEntry(final String accessToken,
         final String refreshToken,
         final String jwt,
-        final String clientId,
+        final Collection<String> audiences,
         final Instant expiresOn) {
 
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.jwt = jwt;
-        this.clientId = clientId;
+        this.audiences = audiences;
         this.expiresOn = Date.from(expiresOn);
         createdOn = Date.from(Instant.now());
     }
@@ -66,9 +66,9 @@ public class TokenCacheEntry implements
         return accessToken;
     }
 
-    public String getClientId() {
+    public Collection<String> getAudiences() {
 
-        return clientId;
+        return audiences;
     }
 
     public Instant getCreatedOn() {

@@ -3,11 +3,11 @@ package net.trajano.ms.oidc.internal;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -16,9 +16,11 @@ import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.lang.JoseException;
 
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class IssuerConfig {
 
     @XmlElement(name = "client_id",
@@ -29,6 +31,7 @@ public class IssuerConfig {
         required = true)
     private String clientSecret;
 
+    @XmlElement(name = "display")
     private String display;
 
     @XmlElement(required = true)
@@ -40,6 +43,7 @@ public class IssuerConfig {
     @XmlTransient
     private OpenIdConfiguration openIdConfiguration;
 
+    @XmlElement(name = "prompt")
     private String prompt;
 
     @XmlElement(name = "scope",
@@ -54,12 +58,12 @@ public class IssuerConfig {
         final String nonce) {
 
         openIdConfiguration.getAuthorizationEndpoint();
-        final UriBuilder b = UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint());
-        b.queryParam("response_type", "code");
-        b.queryParam("scope", scope);
-        b.queryParam("client_id", clientId);
-        b.queryParam("redirect_uri", redirectUri);
-        b.queryParam("nonce", nonce);
+        final UriBuilder b = UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint())
+            .queryParam("response_type", "code")
+            .queryParam("scope", scope)
+            .queryParam("client_id", clientId)
+            .queryParam("redirect_uri", redirectUri)
+            .queryParam("nonce", nonce);
         if (state != null) {
             b.queryParam("state", state);
         }
@@ -76,7 +80,7 @@ public class IssuerConfig {
 
     public String buildAuthorization() {
 
-        return "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes(StandardCharsets.US_ASCII));
+        return HttpAuthorizationHeaders.buildBasicAuthorization(clientId, clientSecret);
     }
 
     public String getClientId() {

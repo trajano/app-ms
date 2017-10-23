@@ -97,7 +97,7 @@ public class SwaggerHandler implements
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
             final Reflections reflections = new Reflections(packageName);
-            reflections.getTypesAnnotatedWith(Api.class).forEach(clazz -> swaggerReader.read(clazz));
+            reflections.getTypesAnnotatedWith(Api.class).forEach(swaggerReader::read);
             reflections.getTypesAnnotatedWith(SwaggerDefinition.class).forEach(swaggerReader::read);
         } else {
             swaggerReader.read(applicationClass);
@@ -129,6 +129,7 @@ public class SwaggerHandler implements
     @Override
     public void close() {
 
+        // does nothing.
     }
 
     public Swagger getSwagger() {

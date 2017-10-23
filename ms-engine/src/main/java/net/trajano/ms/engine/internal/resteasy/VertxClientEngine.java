@@ -70,8 +70,7 @@ public class VertxClientEngine implements
 
         final VertxClientResponse clientResponse = new VertxClientResponse(request.getClientConfiguration(), httpClientRequest);
 
-        request.getHeaders().asMap().forEach((name,
-            value) -> httpClientRequest.putHeader(name, value));
+        request.getHeaders().asMap().forEach(httpClientRequest::putHeader);
 
         try (final VertxOutputStream os = new VertxOutputStream(httpClientRequest)) {
             request.writeRequestBody(os);

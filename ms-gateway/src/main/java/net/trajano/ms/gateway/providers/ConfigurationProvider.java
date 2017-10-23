@@ -29,26 +29,22 @@ public class ConfigurationProvider {
     @Bean
     public HttpClientOptions httpClientOptions() {
 
-        final HttpClientOptions options = new HttpClientOptions();
-        return options;
+        return new HttpClientOptions();
     }
 
     @Bean
     public HttpServerOptions httpServerOptions() {
 
-        final HttpServerOptions options = new HttpServerOptions()
+        return new HttpServerOptions()
             .setPort(httpPort);
-        return options;
     }
 
     @Bean
     public VertxOptions vertxOptions() {
 
-        final VertxOptions options = new VertxOptions();
-        options.setWarningExceptionTime(vertxWarningExceptionTime);
-        options.setWorkerPoolSize(vertxWorkerPoolSize);
-
-        return options;
+        return new VertxOptions()
+            .setWarningExceptionTime(vertxWarningExceptionTime)
+            .setWorkerPoolSize(vertxWorkerPoolSize);
     }
 
 }

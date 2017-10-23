@@ -15,9 +15,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -71,15 +73,15 @@ public class Handlers {
     private URI authorizationEndpoint;
 
     /**
-     * This is the Authorization header value for the gateway when requesting
-     * the JWT data from the authorization server.
+     * This is the Authorization header value for the gateway when requesting the
+     * JWT data from the authorization server.
      */
     private String gatewayClientAuthorization;
 
     /**
-     * Gateway client ID. The gateway has it's own client ID because it is the
-     * only one that should be authorized to get the id_token from an
-     * authorization_code request to the authorization server token endpoint.
+     * Gateway client ID. The gateway has it's own client ID because it is the only
+     * one that should be authorized to get the id_token from an authorization_code
+     * request to the authorization server token endpoint.
      */
     @Value("${authorization.client_id}")
     private String gatewayClientId;
@@ -131,8 +133,8 @@ public class Handlers {
 
     /**
      * Obtains the access token from the request. It is expected to be the
-     * Authorization with a bearer tag. The authentication code is expected to
-     * be a given pattern.
+     * Authorization with a bearer tag. The authentication code is expected to be a
+     * given pattern.
      *
      * @param contextRequest
      *            request
@@ -178,6 +180,7 @@ public class Handlers {
      *
      * @return handler
      */
+    @SuppressWarnings("unchecked")
     public Handler<RoutingContext> protectedHandler(final String baseUri,
         final URI endpoint) {
 
@@ -238,7 +241,8 @@ public class Handlers {
                 } else {
                     final JsonObject response = new JsonObject(buffer);
                     final String idToken = response.getString("id_token");
-                    final String audience = response.getString("aud");
+
+                    final List<String> audience = response.getJsonArray("aud").getList();
                     if (idToken == null) {
                         LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                         context.response().setStatusCode(500)
@@ -252,7 +256,7 @@ public class Handlers {
                     }
 
                     final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
-                        contextResponse.setChunked(true)
+                        contextResponse.setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
                             .setStatusCode(clientResponse.statusCode());
                         clientResponse.headers().forEach(e -> contextResponse.putHeader(e.getKey(), e.getValue()));
                         clientResponse.handler(contextResponse::write)
@@ -266,7 +270,7 @@ public class Handlers {
                     });
                     clientRequest.putHeader(X_JWT_ASSERTION, idToken)
                         .putHeader(X_JWKS_URI, jwksUri.toASCIIString())
-                        .putHeader(X_JWT_AUDIENCE, audience)
+                        .putHeader(X_JWT_AUDIENCE, audience.stream().collect(Collectors.joining(", ")))
                         .putHeader(REQUEST_ID, requestID)
                         .putHeader(DATE, now);
                     contextRequest.resume();
@@ -302,7 +306,9 @@ public class Handlers {
 
             final String grantType = contextRequest.getFormAttribute("grant_type");
             if (grantType == null) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -314,7 +320,9 @@ public class Handlers {
 
             final String authorization = contextRequest.getHeader(HttpHeaders.AUTHORIZATION);
             if (authorization == null) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized Client")
                     .putHeader("WWW-Authenticate", "Basic")
@@ -326,7 +334,9 @@ public class Handlers {
             }
 
             if (!"refresh_token".equals(grantType)) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -337,7 +347,9 @@ public class Handlers {
             }
             final String refreshToken = contextRequest.getFormAttribute("refresh_token");
             if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -349,13 +361,12 @@ public class Handlers {
 
             final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
                 // Trust the authorization endpoint
-                authorizationResponse.bodyHandler(buffer -> {
-                    contextResponse.setStatusCode(authorizationResponse.statusCode());
-                    contextResponse.setStatusMessage(authorizationResponse.statusMessage());
-                    authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                    contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
-                    contextResponse.end(buffer);
-                });
+                authorizationResponse.bodyHandler(contextResponse
+                    .setChunked(false)
+                    .setStatusCode(authorizationResponse.statusCode())
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .putHeader(RequestIDProvider.REQUEST_ID, requestID)
+                    .setStatusMessage(authorizationResponse.statusMessage())::end);
             });
             authorizationRequest
                 .putHeader(HttpHeaders.AUTHORIZATION, authorization)
@@ -369,8 +380,12 @@ public class Handlers {
     }
 
     /**
-     * This handler passes the data through
+     * This handler passes the data through.
      *
+     * @param baseUri
+     *            base URI
+     * @param endpoint
+     *            endpoint
      * @return handler
      */
     public Handler<RoutingContext> unprotectedHandler(final String baseUri,
@@ -391,7 +406,7 @@ public class Handlers {
                 contextRequest.response()
                     .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
                 clientResponse.handler(contextRequest.response()::write)
-                    .endHandler((v) -> contextRequest.response().end());
+                    .endHandler(v -> contextRequest.response().end());
             }).exceptionHandler(context::fail)
                 .setChunked(true);
 
@@ -404,7 +419,7 @@ public class Handlers {
             clientRequest.putHeader(REQUEST_ID, requestID);
             clientRequest.putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));
             contextRequest.handler(clientRequest::write)
-                .endHandler((v) -> clientRequest.end());
+                .endHandler(v -> clientRequest.end());
 
         };
     }
