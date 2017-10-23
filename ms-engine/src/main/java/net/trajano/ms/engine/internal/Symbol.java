@@ -14,6 +14,24 @@ public final class Symbol
     implements
     InvocationHandler {
 
+    /**
+     * A marker interface to indicate that an object is a symbol.
+     */
+    private static interface ISymbol {
+    }
+
+    /**
+     * Checks whether a given object is a symbol.
+     * 
+     * @param o
+     *            object to test
+     * @return true if it is a symbol.
+     */
+    public static boolean isSymbol(final Object o) {
+
+        return o instanceof ISymbol;
+    }
+
     public static <T> T newSymbol(final Class<T> clazz) {
 
         return newSymbol(clazz, clazz.getName());
@@ -25,7 +43,8 @@ public final class Symbol
 
         try {
             return (T) Proxy.newProxyInstance(Symbol.class.getClassLoader(), new Class[] {
-                clazz
+                clazz,
+                ISymbol.class
             }, new Symbol(name));
         } catch (final IllegalArgumentException e) {
             throw new ExceptionInInitializerError(e);

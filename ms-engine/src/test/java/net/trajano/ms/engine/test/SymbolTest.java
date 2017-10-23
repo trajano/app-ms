@@ -2,6 +2,7 @@ package net.trajano.ms.engine.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Objects;
 
@@ -12,6 +13,14 @@ import io.vertx.core.buffer.Buffer;
 import net.trajano.ms.engine.internal.Symbol;
 
 public class SymbolTest {
+
+    @Test
+    public void testIsSymbol() {
+
+        final Buffer a = Symbol.newSymbol(Buffer.class);
+        assertTrue(Symbol.isSymbol(a));
+        assertFalse(Symbol.isSymbol("not a symbol"));
+    }
 
     /**
      * Since Symbol was only used for interface classes, the code to support
