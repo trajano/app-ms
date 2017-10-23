@@ -1,6 +1,7 @@
 package net.trajano.ms.example.authn;
 
 import java.net.URI;
+import java.text.ParseException;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
@@ -65,7 +66,11 @@ public class AuthnResource {
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
-        claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
+        try {
+            claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
+        } catch (final ParseException e) {
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
+        }
 
         final Form form = new Form();
         form.param("grant_type", GrantTypes.JWT_ASSERTION);

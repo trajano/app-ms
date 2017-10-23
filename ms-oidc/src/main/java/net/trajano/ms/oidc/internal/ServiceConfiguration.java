@@ -1,7 +1,6 @@
 package net.trajano.ms.oidc.internal;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.function.Function;
@@ -61,7 +60,7 @@ public class ServiceConfiguration {
     }
 
     @PostConstruct
-    public void init() throws IOException {
+    public void init() {
 
         final Client client = ClientBuilder.newClient();
 

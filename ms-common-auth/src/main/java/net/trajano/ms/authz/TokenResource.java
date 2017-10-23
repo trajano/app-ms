@@ -1,6 +1,7 @@
 package net.trajano.ms.authz;
 
 import java.net.URI;
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,14 +97,16 @@ public class TokenResource {
         @FormParam("jwks_uri") final URI jwksUri,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
-        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
+        final String clientId;
+        try {
+            final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
 
-        if (clientCredentials == null) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Missing credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
-        }
-        final String clientId = clientCredentials[0];
-        if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            clientId = clientCredentials[0];
+            if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
+                throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            }
+        } catch (final ParseException e) {
+            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (GrantTypes.REFRESH_TOKEN.equals(grantType)) {
