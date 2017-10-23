@@ -73,15 +73,15 @@ public class Handlers {
     private URI authorizationEndpoint;
 
     /**
-     * This is the Authorization header value for the gateway when requesting
-     * the JWT data from the authorization server.
+     * This is the Authorization header value for the gateway when requesting the
+     * JWT data from the authorization server.
      */
     private String gatewayClientAuthorization;
 
     /**
-     * Gateway client ID. The gateway has it's own client ID because it is the
-     * only one that should be authorized to get the id_token from an
-     * authorization_code request to the authorization server token endpoint.
+     * Gateway client ID. The gateway has it's own client ID because it is the only
+     * one that should be authorized to get the id_token from an authorization_code
+     * request to the authorization server token endpoint.
      */
     @Value("${authorization.client_id}")
     private String gatewayClientId;
@@ -133,8 +133,8 @@ public class Handlers {
 
     /**
      * Obtains the access token from the request. It is expected to be the
-     * Authorization with a bearer tag. The authentication code is expected to
-     * be a given pattern.
+     * Authorization with a bearer tag. The authentication code is expected to be a
+     * given pattern.
      *
      * @param contextRequest
      *            request
@@ -256,7 +256,7 @@ public class Handlers {
                     }
 
                     final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
-                        contextResponse.setChunked(true)
+                        contextResponse.setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
                             .setStatusCode(clientResponse.statusCode());
                         clientResponse.headers().forEach(e -> contextResponse.putHeader(e.getKey(), e.getValue()));
                         clientResponse.handler(contextResponse::write)
@@ -306,7 +306,9 @@ public class Handlers {
 
             final String grantType = contextRequest.getFormAttribute("grant_type");
             if (grantType == null) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -318,7 +320,9 @@ public class Handlers {
 
             final String authorization = contextRequest.getHeader(HttpHeaders.AUTHORIZATION);
             if (authorization == null) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(401)
                     .setStatusMessage("Unauthorized Client")
                     .putHeader("WWW-Authenticate", "Basic")
@@ -330,7 +334,9 @@ public class Handlers {
             }
 
             if (!"refresh_token".equals(grantType)) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -341,7 +347,9 @@ public class Handlers {
             }
             final String refreshToken = contextRequest.getFormAttribute("refresh_token");
             if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
-                contextResponse.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                contextResponse
+                    .setChunked(false)
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                     .setStatusCode(400)
                     .setStatusMessage("Bad Request")
                     .end(new JsonObject()
@@ -353,13 +361,12 @@ public class Handlers {
 
             final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse -> {
                 // Trust the authorization endpoint
-                authorizationResponse.bodyHandler(buffer -> {
-                    contextResponse.setStatusCode(authorizationResponse.statusCode());
-                    contextResponse.setStatusMessage(authorizationResponse.statusMessage());
-                    authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                    contextResponse.putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
-                    contextResponse.end(buffer);
-                });
+                authorizationResponse.bodyHandler(contextResponse
+                    .setChunked(false)
+                    .setStatusCode(authorizationResponse.statusCode())
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .putHeader(RequestIDProvider.REQUEST_ID, requestID)
+                    .setStatusMessage(authorizationResponse.statusMessage())::end);
             });
             authorizationRequest
                 .putHeader(HttpHeaders.AUTHORIZATION, authorization)
