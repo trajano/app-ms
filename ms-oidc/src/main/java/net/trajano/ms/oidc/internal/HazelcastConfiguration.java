@@ -20,6 +20,8 @@ public class HazelcastConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(HazelcastConfiguration.class);
 
+    public static final String SERVER_STATE = "server_state";
+
     @Value("${token.access_token_expiration:300}")
     private int accessTokenExpirationInSeconds;
 
@@ -44,7 +46,7 @@ public class HazelcastConfiguration {
             .setInstanceName(instanceName)
             .setProperty("hazelcast.logging.type", "slf4j")
             .addMapConfig(new MapConfig()
-                .setName("nonce")
+                .setName(SERVER_STATE)
                 .setTimeToLiveSeconds(nonceExpirationInSeconds)
                 .setMaxIdleSeconds(nonceExpirationInSeconds))
             .addMapConfig(new MapConfig()

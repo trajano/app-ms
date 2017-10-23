@@ -117,7 +117,7 @@ public class TokenResource {
             return handleJwtAssertionGrant(assertion, clientId, audience);
 
         } else {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant");
+            throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant type");
         }
 
     }
