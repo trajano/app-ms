@@ -1,4 +1,4 @@
-package net.trajano.ms.oidc.internal;
+package net.trajano.ms.example.oidc.sample;
 
 import java.io.File;
 import java.net.URI;
@@ -15,45 +15,42 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Configuration;
 
 import net.trajano.ms.core.JsonOps;
 import net.trajano.ms.oidc.OpenIdConfiguration;
+import net.trajano.ms.oidc.spi.IssuerConfig;
+import net.trajano.ms.oidc.spi.IssuersConfig;
+import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
 @Configuration
-public class ServiceConfiguration {
+public class JsonServiceConfiguration implements
+    ServiceConfiguration {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceConfiguration.class);
-
-    @Autowired(required = false)
-    private CacheManager cacheManager;
+    private static final Logger LOG = LoggerFactory.getLogger(JsonServiceConfiguration.class);
 
     private Map<String, IssuerConfig> issuers;
-
-    @Value("${issuersJson:openidconnect-config.json}")
-    private String issuersJson;
 
     @Inject
     private JsonOps jsonOps;
 
-    @Value("${oidc_config_file:openidconnect-config.json}")
+    @Value("${oidc.config_file:openidconnect-config.json}")
     private File oidcFile;
 
-    @Value("${redirect_uri}")
+    @Value("${oidc.redirect_uri}")
     private URI redirectUri;
 
     @Value("${token_endpoint:}")
     private URI tokenEndpoint;
 
+    @Override
     public IssuerConfig getIssuerConfig(final String issuerId) {
 
         return issuers.get(issuerId);
     }
 
+    @Override
     public URI getRedirectUri() {
 
         return redirectUri;
@@ -72,10 +69,6 @@ public class ServiceConfiguration {
         });
         issuers = issuersConfig.getIssuers().stream()
             .collect(Collectors.toMap(IssuerConfig::getId, Function.identity()));
-
-        if (cacheManager == null) {
-            cacheManager = new ConcurrentMapCacheManager();
-        }
 
     }
 

@@ -1,4 +1,4 @@
-package net.trajano.ms.oidc.internal;
+package net.trajano.ms.oidc.spi;
 
 import java.util.List;
 

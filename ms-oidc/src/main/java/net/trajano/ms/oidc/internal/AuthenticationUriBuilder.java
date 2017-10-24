@@ -1,4 +1,4 @@
-package net.trajano.ms.oidc;
+package net.trajano.ms.oidc.internal;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -13,16 +13,13 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
+import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
-import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
-import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
-import net.trajano.ms.oidc.internal.HazelcastConfiguration;
-import net.trajano.ms.oidc.internal.IssuerConfig;
-import net.trajano.ms.oidc.internal.ServerState;
-import net.trajano.ms.oidc.internal.ServiceConfiguration;
+import net.trajano.ms.oidc.spi.IssuerConfig;
+import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
 /**
  * Provides a method to build an authentication URI.
@@ -79,10 +76,8 @@ public class AuthenticationUriBuilder {
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
         }
 
-        // TODO validate whether the client credentials are valid.
         try {
-            final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
-            if (!clientValidator.isValid(GrantTypes.OPENID, clientCredentials[0], clientCredentials[1])) {
+            if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
                 throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
             }
         } catch (final ParseException e) {

@@ -1,4 +1,4 @@
-package net.trajano.ms.oidc.internal;
+package net.trajano.ms.oidc;
 
 import java.net.URI;
 
@@ -33,14 +33,19 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.JsonObject;
+
 import io.swagger.annotations.Api;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
-import net.trajano.ms.oidc.AuthenticationUriBuilder;
-import net.trajano.ms.oidc.OpenIdConfiguration;
+import net.trajano.ms.oidc.internal.AuthenticationUriBuilder;
+import net.trajano.ms.oidc.internal.HazelcastConfiguration;
+import net.trajano.ms.oidc.internal.ServerState;
+import net.trajano.ms.oidc.spi.IssuerConfig;
+import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
 @Api
 @Component
@@ -63,7 +68,7 @@ public class OpenIdConnectResource {
     @Autowired
     private CryptoOps cryptoOps;
 
-    private Cache nonceCache;
+    private Cache serverStateCache;
 
     @Autowired
     private ServiceConfiguration serviceConfiguration;
@@ -100,6 +105,18 @@ public class OpenIdConnectResource {
         return authenticationUriBuilder.build(state, issuerId, authorization, new JwtClaims());
     }
 
+    @Path("/auth-uri/{issuer_id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject authUriJson(@QueryParam("state") final String state,
+        @PathParam("issuer_id") final String issuerId,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+        final JsonObject uriObject = new JsonObject();
+        uriObject.addProperty("uri", authUri(state, issuerId, authorization).toASCIIString());
+        return uriObject;
+    }
+
     @Path("/cb/{issuer_id}")
     @GET
     public Response callback(@QueryParam("code") final String code,
@@ -114,7 +131,7 @@ public class OpenIdConnectResource {
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
         }
 
-        final ServerState serverState = nonceCache.get(jwtState, ServerState.class);
+        final ServerState serverState = serverStateCache.get(jwtState, ServerState.class);
         if (serverState == null) {
             throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid state");
         }
@@ -183,7 +200,7 @@ public class OpenIdConnectResource {
     @PostConstruct
     public void init() {
 
-        nonceCache = cm.getCache(HazelcastConfiguration.SERVER_STATE);
+        serverStateCache = cm.getCache(HazelcastConfiguration.SERVER_STATE);
     }
 
 }
