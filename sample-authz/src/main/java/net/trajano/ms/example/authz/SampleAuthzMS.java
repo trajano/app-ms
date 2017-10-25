@@ -5,13 +5,16 @@ import javax.ws.rs.core.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import net.trajano.ms.Microservice;
+import net.trajano.ms.auth.jsonclientvalidator.JsonClientValidator;
 import net.trajano.ms.authz.Authorization;
 
 @SpringBootApplication(
     scanBasePackageClasses = {
         SampleAuthzMS.class,
+        JsonClientValidator.class,
         Authorization.class
     })
+
 public class SampleAuthzMS extends Application {
 
     public static void main(final String[] args) {
