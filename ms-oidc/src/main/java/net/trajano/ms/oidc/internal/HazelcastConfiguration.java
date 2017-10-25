@@ -20,8 +20,7 @@ public class HazelcastConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(HazelcastConfiguration.class);
 
-    @Value("${token.access_token_expiration:300}")
-    private int accessTokenExpirationInSeconds;
+    public static final String SERVER_STATE = "server_state";
 
     @Value("${cache.instance_name:authz}")
     private String instanceName;
@@ -29,8 +28,8 @@ public class HazelcastConfiguration {
     @Value("${token.jwk_expiration:1800}")
     private int jwkExpirationInSeconds;
 
-    @Value("${oidc.nonce_expiration:3600}")
-    private int nonceExpirationInSeconds;
+    @Value("${oidc.server_state_expiration:3600}")
+    private int serverStateExpiration;
 
     @Bean
     public Config hazelcastConfig() {
@@ -44,9 +43,9 @@ public class HazelcastConfiguration {
             .setInstanceName(instanceName)
             .setProperty("hazelcast.logging.type", "slf4j")
             .addMapConfig(new MapConfig()
-                .setName("nonce")
-                .setTimeToLiveSeconds(nonceExpirationInSeconds)
-                .setMaxIdleSeconds(nonceExpirationInSeconds))
+                .setName(SERVER_STATE)
+                .setTimeToLiveSeconds(serverStateExpiration)
+                .setMaxIdleSeconds(serverStateExpiration))
             .addMapConfig(new MapConfig()
                 .setName(Qualifiers.JWKS_CACHE)
                 .setTimeToLiveSeconds(jwkExpirationInSeconds)

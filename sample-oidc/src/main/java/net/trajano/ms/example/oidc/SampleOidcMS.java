@@ -1,4 +1,4 @@
-package net.trajano.ms.example.authz;
+package net.trajano.ms.example.oidc;
 
 import javax.ws.rs.core.Application;
 
@@ -6,20 +6,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import net.trajano.ms.Microservice;
 import net.trajano.ms.auth.jsonclientvalidator.JsonClientValidator;
-import net.trajano.ms.authz.Authorization;
+import net.trajano.ms.oidc.OpenIdConnect;
 
 @SpringBootApplication(
     scanBasePackageClasses = {
-        SampleAuthzMS.class,
-        JsonClientValidator.class,
-        Authorization.class
+        SampleOidcMS.class,
+        OpenIdConnect.class,
+        JsonClientValidator.class
     })
-
-public class SampleAuthzMS extends Application {
+public class SampleOidcMS extends Application {
 
     public static void main(final String[] args) {
 
-        Microservice.run(SampleAuthzMS.class, args);
+        Microservice.run(SampleOidcMS.class, args);
     }
-
 }

@@ -3,27 +3,17 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.trajano.ms.app</groupId>
-    <artifactId>app-ms</artifactId>
+    <artifactId>ms-base</artifactId>
     <version>0.0.9-SNAPSHOT</version>
+    <relativePath>../ms-base</relativePath>
   </parent>
-  <artifactId>ms-oidc</artifactId>
-  <name>OpenID Connect</name>
-  <description>This microservice handles the authentication process via OpenID Connect.</description>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring.boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+  <artifactId>sample-oidc</artifactId>
+  <name>Sample OIDC Microservice</name>
+  <description>This microservice is used to do provide an OIDC endpoint.</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>ms-common-auth</artifactId>
+      <artifactId>ms-oidc</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -32,6 +22,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>${project.artifactId}</finalName>
     <pluginManagement>
       <plugins>
         <plugin>

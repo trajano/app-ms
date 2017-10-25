@@ -1,4 +1,4 @@
-package net.trajano.ms.oidc.internal;
+package net.trajano.ms.oidc.spi;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -16,11 +16,14 @@ import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.lang.JoseException;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IssuerConfig {
 
     @XmlElement(name = "client_id",
@@ -45,6 +48,10 @@ public class IssuerConfig {
 
     @XmlElement(name = "prompt")
     private String prompt;
+
+    @XmlElement(name = "redirect_uri",
+        required = true)
+    private URI redirectUri;
 
     @XmlElement(name = "scope",
         required = true)
@@ -73,7 +80,6 @@ public class IssuerConfig {
         if (prompt != null) {
             b.queryParam("prompt", prompt);
         }
-
         return b
             .build();
     }
@@ -127,6 +133,11 @@ public class IssuerConfig {
         return prompt;
     }
 
+    public URI getRedirectUri() {
+
+        return redirectUri;
+    }
+
     public String getScope() {
 
         return scope;
@@ -165,6 +176,11 @@ public class IssuerConfig {
     public void setPrompt(final String prompt) {
 
         this.prompt = prompt;
+    }
+
+    public void setRedirectUri(final URI redirectUri) {
+
+        this.redirectUri = redirectUri;
     }
 
     public void setScope(final String scope) {

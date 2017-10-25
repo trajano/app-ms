@@ -10,8 +10,8 @@ mappings:
 http:
   port: 8080
 
-passwordRequired: password
-redirect_uri: ${mappings.oidc-ms}/oidc/cb
+oidc:
+  redirect_uri: ${mappings.oidc-ms}/oidc/cb
 
 authorization:
   endpoint: ${mappings.authz-ms}/token

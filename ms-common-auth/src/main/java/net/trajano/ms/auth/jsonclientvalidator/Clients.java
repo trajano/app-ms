@@ -1,4 +1,4 @@
-package net.trajano.ms.example.authz.sample;
+package net.trajano.ms.auth.jsonclientvalidator;
 
 import java.util.List;
 

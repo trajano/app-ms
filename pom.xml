@@ -29,6 +29,7 @@
     <module>sample-authn</module>
     <module>sample-authz</module>
     <module>sample-ms</module>
+    <module>sample-oidc</module>
   </modules>
   <scm>
     <connection>scm:git:https://github.com/trajano/${repo.id}.git</connection>
@@ -93,6 +94,11 @@
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>ms-oidc</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>ms-swagger</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -112,14 +118,19 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.12</version>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>sample-oidc</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bitbucket.b_c</groupId>
         <artifactId>jose4j</artifactId>
         <version>0.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <version>${spring.boot.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -1,4 +1,4 @@
-package net.trajano.ms.example.authz.sample;
+package net.trajano.ms.auth.jsonclientvalidator;
 
 import java.io.File;
 import java.io.FileReader;
@@ -7,16 +7,16 @@ import java.net.URI;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.core.JsonOps;
 
-@ApplicationScoped
-public class SampleClientValidator implements
+@Component
+public class JsonClientValidator implements
     ClientValidator {
 
     private Clients clients;
