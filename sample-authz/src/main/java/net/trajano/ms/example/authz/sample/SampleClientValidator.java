@@ -12,7 +12,7 @@ import javax.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Value;
 
-import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.core.JsonOps;
 
 @ApplicationScoped
