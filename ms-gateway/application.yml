@@ -2,7 +2,8 @@
 mappings:
   sample-ms: http://localhost:8900
   authn-ms: http://localhost:8281
-  authz-ms: http://localhost:8282 
+  authz-ms: http://localhost:8282
+  oidc-ms: http://localhost:8080
   swagger-ms: http://localhost:8283
   gateway-ms: http://localhost:8910
 
@@ -28,6 +29,10 @@ routes:
   exact: true
   protected: false 
   onlyGetJson: true
+- from: /oidc
+  to: ${mappings.oidc-ms}/oidc
+  exact: false
+  protected: false
 - from: /v1/hello
   to: ${mappings.sample-ms}/hello
   exact: true
@@ -59,6 +64,7 @@ mappings:
   sample-ms: http://sample-ms
   authn-ms: http://authentication-ms
   authz-ms: http://authorization-ms
+  oidc-ms: http://oidc-ms
   swagger-ms: http://swagger-ms
   gateway-ms: http://gateway-ms
 

@@ -27,7 +27,9 @@ http:
   port: 80
 
 issuer: http://oidc-ms
-redirect_uri: http://localhost:3001/oidc/cb
+oidc:
+  redirect_uri: http://localhost:3001/oidc/cb
+  config_file: openidconnect-config-docker.json
 
 authorizationEndpoint: http://authorization-ms/token
 
@@ -38,3 +40,5 @@ mappings:
   swagger-ms: http://swagger-ms
   gateway-ms: http://gateway-ms
 
+client_validator:
+  file: clients-docker.json

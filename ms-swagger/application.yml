@@ -4,6 +4,7 @@ mappings:
   authn-ms: http://localhost:8281
   authz-ms: http://localhost:8282 
   swagger-ms: http://localhost:8283
+  oidc-ms: http://localhost:8080
 
 http:
   port: 8283
@@ -23,6 +24,9 @@ swagger:
   - swagger: ${mappings.authn-ms}
     paths:
     - /authn
+  - swagger: ${mappings.oidc-ms}
+    paths:
+    - /oidc
       
 
 ---
@@ -37,4 +41,5 @@ mappings:
   authn-ms: http://authentication-ms
   authz-ms: http://authorization-ms
   swagger-ms: http://swagger-ms
+  oidc-ms: http://oidc-ms
   

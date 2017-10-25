@@ -21,7 +21,7 @@ public class JsonClientValidator implements
 
     private Clients clients;
 
-    @Value("${clientsFile:clients.json}")
+    @Value("${client_validator.file:clients.json}")
     private File clientsFile;
 
     @Inject

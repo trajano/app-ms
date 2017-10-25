@@ -1,0 +1,12 @@
+{
+	"issuers": [
+		{
+			"id": "google",
+			"uri": "https://accounts.google.com",
+			"scope": "openid",
+			"client_id": "863581363907-ctrbes2f0nfcrdjob1tniir6mketjuai.apps.googleusercontent.com",
+			"client_secret": "53pQO8y20lnhY-hKSkbbHN-q",
+			"redirect_uri": "http://localhost:8910/v1/hello"
+		}
+	]
+}

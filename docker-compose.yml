@@ -28,6 +28,15 @@ services:
     networks:
     - gateway-auth
     - authorization
+  oidc-ms:
+    build: ./sample-oidc
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+    deploy:
+      replicas: 2
+    networks:
+    - gateway-auth
+    - default
   sample-ms:
     build: ./sample-ms
     environment:

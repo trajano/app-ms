@@ -12,4 +12,5 @@ http:
 
 issuer: http://authorization-ms
 
-clientsFile: clients-docker.json
+client_validator:
+  file: clients-docker.json
