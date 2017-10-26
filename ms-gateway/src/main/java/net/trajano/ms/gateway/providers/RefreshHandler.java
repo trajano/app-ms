@@ -18,9 +18,9 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
 
 /**
@@ -34,10 +34,6 @@ public class RefreshHandler implements
      * Bad request status message.
      */
     private static final String BAD_REQUEST = "Bad Request";
-
-    private static final String ERROR = "error";
-
-    private static final String ERROR_DESCRIPTION = "error_description";
 
     /**
      * This is the pattern for the refresh token used.
@@ -68,10 +64,7 @@ public class RefreshHandler implements
                 .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                 .setStatusCode(400)
                 .setStatusMessage(BAD_REQUEST)
-                .end(new JsonObject()
-                    .put(ERROR, "invalid_grant")
-                    .put(ERROR_DESCRIPTION, "Missing grant type")
-                    .toBuffer());
+                .end(Errors.invalidGrant("Missing grant type").toBuffer());
             return;
         }
 
@@ -83,10 +76,7 @@ public class RefreshHandler implements
                 .setStatusCode(401)
                 .setStatusMessage("Unauthorized Client")
                 .putHeader("WWW-Authenticate", "Basic")
-                .end(new JsonObject()
-                    .put(ERROR, "invalid_grant")
-                    .put(ERROR_DESCRIPTION, "Missing authorization")
-                    .toBuffer());
+                .end(Errors.unauthorizedClient("Missing authorization").toBuffer());
             return;
         }
 
@@ -96,10 +86,7 @@ public class RefreshHandler implements
                 .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                 .setStatusCode(400)
                 .setStatusMessage(BAD_REQUEST)
-                .end(new JsonObject()
-                    .put(ERROR, "unsupported_grant_type")
-                    .put(ERROR_DESCRIPTION, "Unsupported grant type")
-                    .toBuffer());
+                .end(Errors.build("unsupported_grant_type", "Unsupported grant type").toBuffer());
             return;
         }
         final String refreshToken = contextRequest.getFormAttribute("refresh_token");
@@ -109,10 +96,7 @@ public class RefreshHandler implements
                 .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                 .setStatusCode(400)
                 .setStatusMessage(BAD_REQUEST)
-                .end(new JsonObject()
-                    .put(ERROR, "invalid_request")
-                    .put(ERROR_DESCRIPTION, "Missing grant")
-                    .toBuffer());
+                .end(Errors.invalidGrant("Invalid grant").toBuffer());
             return;
         }
 

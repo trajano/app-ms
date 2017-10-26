@@ -43,11 +43,14 @@ import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
 
 @Configuration
 @Component
 public class Handlers {
+
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
     private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
 
@@ -115,26 +118,17 @@ public class Handlers {
                     context.response().setStatusCode(504)
                         .setStatusMessage("Gateway Timeout")
                         .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                        .end(new JsonObject()
-                            .put("error", "server_error")
-                            .put("error_description", "Gateway Timeout")
-                            .toBuffer());
+                        .end(Errors.serverError("Gateway Timeout").toBuffer());
                 } else if (context.failure() instanceof UnknownHostException) {
                     context.response().setStatusCode(503)
-                        .setStatusMessage("Gateway Timeout")
+                        .setStatusMessage("Gateway Error")
                         .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                        .end(new JsonObject()
-                            .put("error", "server_error")
-                            .put("error_description", "Gateway Timeout")
-                            .toBuffer());
+                        .end(Errors.serverError("Gateway Error").toBuffer());
                 } else {
                     context.response().setStatusCode(500)
-                        .setStatusMessage("Internal Server Error")
+                        .setStatusMessage(INTERNAL_SERVER_ERROR)
                         .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                        .end(new JsonObject()
-                            .put("error", "server_error")
-                            .put("error_description", "Internal Server Error")
-                            .toBuffer());
+                        .end(Errors.serverError(INTERNAL_SERVER_ERROR).toBuffer());
                 }
             }
         };
@@ -150,8 +144,7 @@ public class Handlers {
      *            request
      * @return access token
      */
-    private String getAccessToken(final HttpServerRequest contextRequest,
-        final HttpServerResponse contextResponse) {
+    private String getAccessToken(final HttpServerRequest contextRequest) {
 
         final String authorizationHeader = contextRequest.getHeader(AUTHORIZATION);
         if (authorizationHeader == null) {
@@ -202,7 +195,7 @@ public class Handlers {
                 throw new IllegalStateException(contextRequest.uri() + " did not start with" + baseUri);
             }
 
-            final String accessToken = getAccessToken(contextRequest, contextResponse);
+            final String accessToken = getAccessToken(contextRequest);
 
             final String requestID = requestIDProvider.newRequestID(context);
             final String now = RFC_1123_DATE_TIME.format(now(UTC));
@@ -214,10 +207,7 @@ public class Handlers {
                     .setStatusMessage("Unauthorized")
                     .putHeader("WWW-Authenticate", "Bearer")
                     .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)
-                    .end(new JsonObject()
-                        .put("error", "invalid_request")
-                        .put("error_description", "Missing or invalid access authorization")
-                        .toBuffer());
+                    .end(Errors.unauthorizedClient("missing or invalid access token").toBuffer());
                 return;
             }
 
@@ -244,12 +234,9 @@ public class Handlers {
                     if (idToken == null) {
                         LOG.error("Unable to get the ID Token from {} given access_token={}", authorizationEndpoint, accessToken);
                         context.response().setStatusCode(500)
-                            .setStatusMessage("Internal Server Error")
+                            .setStatusMessage(INTERNAL_SERVER_ERROR)
                             .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                            .end(new JsonObject()
-                                .put("error", "server_error")
-                                .put("error_description", "Unable to get assertion from authorization endpoint")
-                                .toBuffer());
+                            .end(Errors.serverError("Unable to get assertion from authorization endpoint").toBuffer());
                         return;
                     }
 
