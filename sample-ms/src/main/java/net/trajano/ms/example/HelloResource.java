@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -65,7 +66,8 @@ public class HelloResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/async")
-    public void async(@Suspended final AsyncResponse asyncResponse) throws Exception {
+    public void async(@Suspended final AsyncResponse asyncResponse) throws InterruptedException,
+        ExecutionException {
 
         final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").async().get();
 
@@ -92,7 +94,7 @@ public class HelloResource {
     @Path("/cough")
     public Response cough() {
 
-        throw new RuntimeException("ahem", new IOException("burp"));
+        throw new IllegalStateException("ahem", new IOException("burp"));
     }
 
     private String getFileName(final MultivaluedMap<String, String> header) {
@@ -104,8 +106,7 @@ public class HelloResource {
 
                 final String[] name = filename.split("=");
 
-                final String finalFileName = name[1].trim().replaceAll("\"", "");
-                return finalFileName;
+                return name[1].trim().replaceAll("\"", "");
             }
         }
         return "unknown";
