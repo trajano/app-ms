@@ -1,13 +1,20 @@
 package net.trajano.ms.vertx.jaxrs;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.annotation.PostConstruct;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -23,10 +30,26 @@ import net.trajano.ms.core.ErrorResponse;
 @Configuration
 @Component
 @Provider
+@Produces({
+    MediaType.APPLICATION_JSON,
+    MediaType.APPLICATION_XML,
+    MediaType.TEXT_XML,
+    MediaType.TEXT_PLAIN
+})
 public class JsonExceptionMapper implements
     ExceptionMapper<Throwable> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonExceptionMapper.class);
+
+    /**
+     * Supported media types.
+     */
+    private static final Set<MediaType> SUPPORTED_MEDIA_TYPES = new HashSet<>(Arrays.asList(
+        MediaType.APPLICATION_JSON_TYPE,
+        MediaType.APPLICATION_XML_TYPE,
+        MediaType.TEXT_XML_TYPE,
+        MediaType.TEXT_PLAIN_TYPE,
+        MediaType.TEXT_HTML_TYPE));
 
     @Context
     private HttpHeaders headers;
@@ -39,6 +62,26 @@ public class JsonExceptionMapper implements
 
     @Context
     private UriInfo uriInfo;
+
+    /**
+     * Determines the appropriate media type based on what is requested. If
+     * wildcard use JSON.
+     *
+     * @return media type appropriate for request
+     */
+    private MediaType getAppropriateMediaType() {
+
+        final List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
+        for (final MediaType mediaType : acceptableMediaTypes) {
+            if (mediaType.equals(MediaType.WILDCARD_TYPE)) {
+                return MediaType.APPLICATION_JSON_TYPE;
+            } else if (SUPPORTED_MEDIA_TYPES.contains(mediaType)) {
+                return mediaType;
+            }
+        }
+        return MediaType.APPLICATION_JSON_TYPE;
+
+    }
 
     /**
      * Log the exception if it is not NotFoundException and only use warn if it
@@ -55,6 +98,21 @@ public class JsonExceptionMapper implements
         } else {
             LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
         }
+    }
+
+    /**
+     * This sets the context data so the mapper can be unit tested.
+     */
+    public void setContextData(final HttpHeaders headers,
+        final UriInfo uriInfo,
+        final boolean showRequestUri,
+        final boolean showStackTrace) {
+
+        this.headers = headers;
+        this.uriInfo = uriInfo;
+        this.showRequestUri = showRequestUri;
+        this.showStackTrace = showStackTrace;
+
     }
 
     /**
@@ -76,20 +134,28 @@ public class JsonExceptionMapper implements
     public Response toResponse(final Throwable exception) {
 
         log(exception);
+        int status = Status.INTERNAL_SERVER_ERROR.getStatusCode();
         if (exception instanceof WebApplicationException) {
             final WebApplicationException internalException = (WebApplicationException) exception;
             if (internalException.getResponse().hasEntity()) {
                 return internalException.getResponse();
+            } else {
+                status = internalException.getResponse().getStatus();
             }
         }
-        MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
-        if (headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE) && !headers.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE)) {
-            mediaType = MediaType.APPLICATION_XML_TYPE;
+        final MediaType mediaType = getAppropriateMediaType();
+
+        if (mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || mediaType.isCompatible(MediaType.TEXT_HTML_TYPE)) {
+            return Response.status(status)
+                .entity(exception.getMessage())
+                .type(mediaType)
+                .build();
+        } else {
+            return Response.status(status)
+                .entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri))
+                .type(mediaType)
+                .build();
         }
-        return Response.serverError()
-            .entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri))
-            .type(mediaType)
-            .build();
     }
 
 }

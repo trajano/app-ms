@@ -2,7 +2,7 @@ config:
   target: "http://localhost:8910"
   phases:
   - duration: 120
-    arrivalRate: 20
+    arrivalRate: 50
   processor: "./processor.js"
   environments:
     docker:

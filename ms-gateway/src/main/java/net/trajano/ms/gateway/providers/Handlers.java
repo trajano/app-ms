@@ -12,6 +12,7 @@ import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
@@ -112,6 +113,14 @@ public class Handlers {
             if (!context.response().ended()) {
                 if (context.failure() instanceof ConnectException) {
                     context.response().setStatusCode(504)
+                        .setStatusMessage("Gateway Timeout")
+                        .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
+                        .end(new JsonObject()
+                            .put("error", "server_error")
+                            .put("error_description", "Gateway Timeout")
+                            .toBuffer());
+                } else if (context.failure() instanceof UnknownHostException) {
+                    context.response().setStatusCode(503)
                         .setStatusMessage("Gateway Timeout")
                         .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                         .end(new JsonObject()
