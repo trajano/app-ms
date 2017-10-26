@@ -69,4 +69,8 @@ public final class Conversions {
         }
         return options;
     }
+
+    private Conversions() {
+
+    }
 }
