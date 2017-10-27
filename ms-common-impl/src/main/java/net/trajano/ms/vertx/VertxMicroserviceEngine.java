@@ -79,8 +79,12 @@ public class VertxMicroserviceEngine implements
     @PostConstruct
     public void start() {
 
-        LOG.debug("Application={}", Microservice.getApplicationClass().getName());
+        LOG.debug("Application={}", Microservice.getApplicationClass());
 
+        if (Microservice.getApplicationClass() == null) {
+            LOG.warn("No application class specified, assuming running as a unit test");
+            return;
+        }
         vertx = Vertx.vertx(vertxOptions);
         final Router router = Router.router(vertx);
 

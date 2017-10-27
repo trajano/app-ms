@@ -10,10 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import net.trajano.ms.sample.JwksResource;
-import net.trajano.ms.vertx.beans.JcaCryptoOps;
+import net.trajano.ms.vertx.VertxConfig;
 import net.trajano.ms.vertx.beans.JwksProvider;
-import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
-import net.trajano.ms.vertx.beans.TokenGenerator;
 
 /**
  * Tests are hanging on Travis for some odd reason.
@@ -22,10 +20,7 @@ import net.trajano.ms.vertx.beans.TokenGenerator;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
-    JwtClaimsProcessor.class,
-    JcaCryptoOps.class,
-    TokenGenerator.class,
-    JwksProvider.class
+    VertxConfig.class
 })
 public class CacheCreationTest {
 

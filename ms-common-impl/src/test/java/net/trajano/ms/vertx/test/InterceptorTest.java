@@ -9,10 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import net.trajano.ms.core.CryptoOps;
-import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.VertxConfig;
 import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
-import net.trajano.ms.vertx.beans.TokenGenerator;
 import net.trajano.ms.vertx.jaxrs.JwtAssertionInterceptor;
 
 /**
@@ -22,11 +20,7 @@ import net.trajano.ms.vertx.jaxrs.JwtAssertionInterceptor;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
-    JwtClaimsProcessor.class,
-    JcaCryptoOps.class,
-    JwksProvider.class,
-    TokenGenerator.class,
-    JwtAssertionInterceptor.class
+    VertxConfig.class
 })
 public class InterceptorTest {
 

@@ -2,6 +2,7 @@ package net.trajano.ms.vertx;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import io.vertx.core.VertxOptions;
@@ -9,8 +10,11 @@ import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;
+import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 
 @Configuration
+@ComponentScan
+@ComponentScan(basePackageClasses = SpringConfiguration.class)
 public class VertxConfig {
 
     @Value("${http.client.proxy.host:#{null}}")
