@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,18 +113,12 @@ public class SwaggerCollator {
                 final String to = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d].to", i, j, k));
 
                 LOG.debug("getting path={} from paths={} and transform to={}", from, remoteSwagger.getPaths().keySet(), to);
-                remoteSwagger.getPaths().keySet().parallelStream()
-                    .filter(s -> s.startsWith(from))
-                    .forEach(p -> swagger.put(to + p.substring(from.length()), remoteSwagger.getPath(p)));
+                Optional.ofNullable(remoteSwagger.getPaths())
+                    .ifPresent(t -> remoteSwagger.getPaths().keySet().parallelStream()
+                        .filter(s -> s.startsWith(from))
+                        .forEach(p -> swagger.put(to + p.substring(from.length()), remoteSwagger.getPath(p))));
 
-                if (remoteSwagger.getDefinitions() != null) {
-                    remoteSwagger.getDefinitions().entrySet().parallelStream()
-                        .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
-                }
-                if (remoteSwagger.getSecurityDefinitions() != null) {
-                    remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
-                        .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
-                }
+                updateDefinitions(definitionsMap, securityDefinitionsMap, remoteSwagger);
             } else {
                 final String path = env.getRequiredProperty(String.format("swagger[%d].uris[%d].paths[%d]", i, j, k));
                 if (LOG.isDebugEnabled()) {
@@ -134,15 +129,7 @@ public class SwaggerCollator {
                         .filter(s -> s.startsWith(path))
                         .forEach(p -> swagger.put(p, remoteSwagger.getPath(p)));
                 }
-                if (remoteSwagger.getDefinitions() != null) {
-                    remoteSwagger.getDefinitions().entrySet().parallelStream()
-                        .forEach(e -> definitionsMap.put(e.getKey(), e.getValue()));
-                }
-
-                if (remoteSwagger.getSecurityDefinitions() != null) {
-                    remoteSwagger.getSecurityDefinitions().entrySet().parallelStream()
-                        .forEach(e -> securityDefinitionsMap.put(e.getKey(), e.getValue()));
-                }
+                updateDefinitions(definitionsMap, securityDefinitionsMap, remoteSwagger);
             }
             ++k;
         }
@@ -168,6 +155,29 @@ public class SwaggerCollator {
 
         }
 
+    }
+
+    /**
+     * Update the current definition maps.
+     * 
+     * @param currentDefinitionsMap
+     *            current definitions map
+     * @param currentSecurityDefinitionsMap
+     *            current security defintions map
+     * @param swagger
+     *            remote swagger data
+     */
+    private void updateDefinitions(final Map<String, Model> currentDefinitionsMap,
+        final Map<String, SecuritySchemeDefinition> currentSecurityDefinitionsMap,
+        final Swagger swagger) {
+
+        Optional.ofNullable(swagger.getDefinitions())
+            .ifPresent(t -> t.entrySet().parallelStream()
+                .forEach(e -> currentDefinitionsMap.put(e.getKey(), e.getValue())));
+
+        Optional.ofNullable(swagger.getSecurityDefinitions())
+            .ifPresent(t -> t.entrySet().parallelStream()
+                .forEach(e -> currentSecurityDefinitionsMap.put(e.getKey(), e.getValue())));
     }
 
 }
