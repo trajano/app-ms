@@ -1,6 +1,11 @@
 package net.trajano.ms.vertx.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,6 +37,10 @@ public class SpringJaxrsHandlerTest {
     public void testEngine() {
 
         assertNotNull(engine);
+        final Response response = ClientBuilder.newClient().target("http://localhost:8900/api/sing").request().get();
+        assertEquals(200, response.getStatus());
+        assertTrue(response.readEntity(String.class).startsWith("Hello"));
+
     }
 
 }

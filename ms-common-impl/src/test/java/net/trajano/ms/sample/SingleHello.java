@@ -1,5 +1,6 @@
 package net.trajano.ms.sample;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -11,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.vertx.ext.web.RoutingContext;
 
 @Path("/sing")
-
+@PermitAll
 public class SingleHello {
 
     @Autowired
