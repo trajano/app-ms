@@ -143,6 +143,11 @@
             <goals>deploy</goals>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>net.trajano.mojo</groupId>
+          <artifactId>m2e-codestyle-maven-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>

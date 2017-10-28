@@ -74,8 +74,8 @@ public class OpenIdConnectResource {
     private ServiceConfiguration serviceConfiguration;
 
     /**
-     * The state that is passed here is transformed to a JWT before passing to
-     * the OIDC IP.
+     * The state that is passed here is transformed to a JWT before passing to the
+     * OIDC IP.
      *
      * @param state
      *            this is a client level state

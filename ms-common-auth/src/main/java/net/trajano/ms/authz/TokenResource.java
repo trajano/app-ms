@@ -69,8 +69,8 @@ public class TokenResource {
     private final ConcurrentMap<URI, HttpsJwks> jwksMap = new ConcurrentHashMap<>();
 
     /**
-     * Maximum life of a JWT token. Past that period, it is expected to no
-     * longer be used.
+     * Maximum life of a JWT token. Past that period, it is expected to no longer be
+     * used.
      */
     @Value("${token.jwtMaximumLifetime:86400}")
     private int jwtMaximumLifetimeInSeconds;
@@ -136,8 +136,8 @@ public class TokenResource {
     }
 
     /**
-     * Takes an assertion and converts it using an {@link InternalClaimsBuilder}
-     * to a JWT used internally
+     * Takes an assertion and converts it using an {@link InternalClaimsBuilder} to
+     * a JWT used internally
      *
      * @param assertion
      *            an external JWT assertion

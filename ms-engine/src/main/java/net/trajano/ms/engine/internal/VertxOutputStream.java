@@ -39,8 +39,8 @@ public class VertxOutputStream extends OutputStream {
     }
 
     /**
-     * Checks if the stream has been closed by the current thread. If so it
-     * should not allow usage anymore.
+     * Checks if the stream has been closed by the current thread. If so it should
+     * not allow usage anymore.
      *
      * @throws IOException
      *             when the stream is closed.

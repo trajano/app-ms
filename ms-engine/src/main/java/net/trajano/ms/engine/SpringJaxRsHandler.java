@@ -59,8 +59,7 @@ public class SpringJaxRsHandler implements
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router.
+     * Convenience method to construct and register the routes to a Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -76,8 +75,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register the routes to a Vert.x
-     * router with a base Spring application context.
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
      *
      * @param router
      *            vert.x router
@@ -130,8 +129,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -146,8 +145,8 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Convenience method to construct and register a single application route
-     * to a Vert.x router.
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
      *
      * @param router
      *            vert.x router
@@ -359,9 +358,9 @@ public class SpringJaxRsHandler implements
     }
 
     /**
-     * Checks if multipart is expected for the resource. This is determined by
-     * the presence of {@value MediaType#MULTIPART_FORM_DATA} in the
-     * {@link Consumes} annotation.
+     * Checks if multipart is expected for the resource. This is determined by the
+     * presence of {@value MediaType#MULTIPART_FORM_DATA} in the {@link Consumes}
+     * annotation.
      *
      * @param request
      * @return

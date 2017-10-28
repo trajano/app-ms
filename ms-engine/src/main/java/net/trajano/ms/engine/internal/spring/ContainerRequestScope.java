@@ -30,8 +30,7 @@ public class ContainerRequestScope implements
     }
 
     /**
-     * This will reset the request context and execute the destruction
-     * callbacks.
+     * This will reset the request context and execute the destruction callbacks.
      */
     public static void resetRequestContext() {
 

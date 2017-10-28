@@ -22,8 +22,7 @@ public class Microservice {
     private static ServiceLoader<MicroserviceEngine> microserviceEngineLoader = ServiceLoader.load(MicroserviceEngine.class);
 
     /**
-     * This returns the application class that was set, may be
-     * <code>null</code>.
+     * This returns the application class that was set, may be <code>null</code>.
      *
      * @return the application class.
      */

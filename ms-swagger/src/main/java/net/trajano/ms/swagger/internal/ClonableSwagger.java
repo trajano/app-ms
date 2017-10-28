@@ -15,8 +15,8 @@ import io.swagger.models.Swagger;
 public class ClonableSwagger extends Swagger {
 
     /**
-     * Creates a shallow copy of the swagger but set the schemes, host and base
-     * path based on {@link UriInfo}.
+     * Creates a shallow copy of the swagger but set the schemes, host and base path
+     * based on {@link UriInfo}.
      *
      * @param uriInfo
      *            URI info of the request.

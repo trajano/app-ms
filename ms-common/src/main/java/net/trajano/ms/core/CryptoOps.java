@@ -10,8 +10,8 @@ import org.jose4j.jwt.JwtClaims;
 public interface CryptoOps {
 
     /**
-     * Generates a random string token suitable for non-durable cache lookups.
-     * Do not use these in place of UUIDs.
+     * Generates a random string token suitable for non-durable cache lookups. Do
+     * not use these in place of UUIDs.
      *
      * @return string token
      */
