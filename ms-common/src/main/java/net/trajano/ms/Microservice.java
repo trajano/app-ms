@@ -14,7 +14,7 @@ import net.trajano.ms.spi.MicroserviceEngine;
 
 public class Microservice {
 
-    private static Class<? extends Application> applicationClass;
+    protected static Class<? extends Application> applicationClass;
 
     /**
      * Microservice engine to use.
@@ -22,8 +22,7 @@ public class Microservice {
     private static ServiceLoader<MicroserviceEngine> microserviceEngineLoader = ServiceLoader.load(MicroserviceEngine.class);
 
     /**
-     * This returns the application class that was set, may be
-     * <code>null</code>.
+     * This returns the application class that was set, may be <code>null</code>.
      *
      * @return the application class.
      */
@@ -89,7 +88,7 @@ public class Microservice {
     /**
      * Prevent instantiation. Only use {@link #run(Class, String...)}
      */
-    private Microservice() {
+    protected Microservice() {
 
     }
 

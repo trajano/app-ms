@@ -78,15 +78,15 @@ public class Handlers {
     private URI authorizationEndpoint;
 
     /**
-     * This is the Authorization header value for the gateway when requesting
-     * the JWT data from the authorization server.
+     * This is the Authorization header value for the gateway when requesting the
+     * JWT data from the authorization server.
      */
     private String gatewayClientAuthorization;
 
     /**
-     * Gateway client ID. The gateway has it's own client ID because it is the
-     * only one that should be authorized to get the id_token from an
-     * authorization_code request to the authorization server token endpoint.
+     * Gateway client ID. The gateway has it's own client ID because it is the only
+     * one that should be authorized to get the id_token from an authorization_code
+     * request to the authorization server token endpoint.
      */
     @Value("${authorization.client_id}")
     private String gatewayClientId;
@@ -137,8 +137,8 @@ public class Handlers {
 
     /**
      * Obtains the access token from the request. It is expected to be the
-     * Authorization with a bearer tag. The authentication code is expected to
-     * be a given pattern.
+     * Authorization with a bearer tag. The authentication code is expected to be a
+     * given pattern.
      *
      * @param contextRequest
      *            request

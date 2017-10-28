@@ -64,8 +64,8 @@ public class JsonExceptionMapper implements
     private UriInfo uriInfo;
 
     /**
-     * Determines the appropriate media type based on what is requested. If
-     * wildcard use JSON.
+     * Determines the appropriate media type based on what is requested. If wildcard
+     * use JSON.
      *
      * @return media type appropriate for request
      */
@@ -84,8 +84,8 @@ public class JsonExceptionMapper implements
     }
 
     /**
-     * Log the exception if it is not NotFoundException and only use warn if it
-     * is a client error.
+     * Log the exception if it is not NotFoundException and only use warn if it is a
+     * client error.
      *
      * @param exception
      */
@@ -116,8 +116,8 @@ public class JsonExceptionMapper implements
     }
 
     /**
-     * If the show request URI or show stack trace are not defined, it will
-     * default to whether the current logger is on debug mode or not.
+     * If the show request URI or show stack trace are not defined, it will default
+     * to whether the current logger is on debug mode or not.
      */
     @PostConstruct
     public void setDebugFlags() {

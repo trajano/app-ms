@@ -19,8 +19,8 @@ import org.springframework.stereotype.Component;
 public class TokenGenerator {
 
     /**
-     * Only allow letters and numbers, no symbols. It makes it easier to copy
-     * and paste for testing.
+     * Only allow letters and numbers, no symbols. It makes it easier to copy and
+     * paste for testing.
      */
     private static final char[] ALLOWED_TOKEN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 

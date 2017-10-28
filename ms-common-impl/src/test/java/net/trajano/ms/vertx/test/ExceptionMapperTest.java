@@ -1,6 +1,7 @@
 package net.trajano.ms.vertx.test;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 import javax.ws.rs.BadRequestException;
@@ -25,6 +26,7 @@ public class ExceptionMapperTest {
     public void setupMapper() {
 
         mapper = new JsonExceptionMapper();
+        mapper.setDebugFlags();
         final HttpHeaders headers = Mockito.mock(HttpHeaders.class);
         Mockito.when(headers.getAcceptableMediaTypes()).thenReturn(Arrays.asList(MediaType.WILDCARD_TYPE));
         mapper.setContextData(headers, Mockito.mock(UriInfo.class), true, true);
@@ -63,6 +65,13 @@ public class ExceptionMapperTest {
         Assert.assertEquals(500, response.getStatus());
         Assert.assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
         Assert.assertEquals("ahem", response.getEntity());
+    }
+
+    @Test
+    public void testCheckedNested() {
+
+        final Response response = mapper.toResponse(new IOException("blah", new GeneralSecurityException()));
+        Assert.assertEquals(500, response.getStatus());
     }
 
     @Test

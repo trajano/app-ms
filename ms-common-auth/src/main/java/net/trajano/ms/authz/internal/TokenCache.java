@@ -131,8 +131,8 @@ public class TokenCache {
     }
 
     /**
-     * Stores the cache entry into the caches with updated tokens. It will evict
-     * the existing entries as well.
+     * Stores the cache entry into the caches with updated tokens. It will evict the
+     * existing entries as well.
      *
      * @param cacheEntry
      *            entry to store
