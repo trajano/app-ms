@@ -13,6 +13,8 @@ public final class ErrorCodes {
 
     public static final String UNSUPPORT_GRANT_TYPE = "unsupported_grant_type";
 
+    public static final String UNSUPPORTED_TOKEN_TYPE = "unsupported_token_type";
+
     private ErrorCodes() {
 
     }

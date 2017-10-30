@@ -8,8 +8,10 @@ mappings:
   gateway-ms: http://localhost:8910
 
 authorization:
-  endpoint: ${mappings.authz-ms}/token
-  refreshTokenPath: /refresh
+  token_endpoint: ${mappings.authz-ms}/token
+  revocation_endpoint: ${mappings.authz-ms}/revoke
+  refresh_token_path: /refresh
+  revocation_path: /logout
   client_id: gateway
   client_secret: gateway_secret
 

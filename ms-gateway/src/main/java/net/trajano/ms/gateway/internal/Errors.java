@@ -17,6 +17,11 @@ public final class Errors {
         return build("invalid_grant", errorDescription);
     }
 
+    public static JsonObject invalidRequest(final String errorDescription) {
+
+        return build("invalid_request", errorDescription);
+    }
+
     public static JsonObject serverError(final String errorDescription) {
 
         return build("server_error", errorDescription);

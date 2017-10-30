@@ -50,9 +50,9 @@ import net.trajano.ms.gateway.internal.MediaTypes;
 @Component
 public class Handlers {
 
-    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-
     private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
+
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
     private static final Logger LOG = LoggerFactory.getLogger(Handlers.class);
 
@@ -74,7 +74,7 @@ public class Handlers {
     @Value("${allowedOrigins:*}")
     private String allowedOrigins;
 
-    @Value("${authorization.endpoint}")
+    @Value("${authorization.token_endpoint}")
     private URI authorizationEndpoint;
 
     /**
