@@ -66,6 +66,6 @@ networks:
   gateway-auth:
   # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
-    driver: overlay
+  #  driver: overlay
   # authorization-ms has it's own network to prevent other microservices from using the cache 
   
