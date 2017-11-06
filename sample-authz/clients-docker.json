@@ -8,8 +8,15 @@
     {
       "client_id": "app_id",
       "client_secret": "app_secret",
-      "grant_types": ["refresh_token", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "jwks_uri": "http://authentication-ms/.well-known/jwks"
+    },
+    {
+      "client_id": "oidc_id",
+      "client_secret": "app_secret",
+      "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "jwks_uri": "http://oidc-ms/.well-known/jwks"
     }
+    
   ]
 }

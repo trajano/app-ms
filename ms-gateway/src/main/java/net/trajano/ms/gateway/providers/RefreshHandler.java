@@ -7,6 +7,7 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.URI;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,9 +39,9 @@ public class RefreshHandler implements
     /**
      * This is the pattern for the refresh token used.
      */
-    private static final String TOKEN_PATTERN = "^[A-Za-z0-9]{64}$";
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9]{64}$");
 
-    @Value("${authorization.endpoint}")
+    @Value("${authorization.token_endpoint}")
     private URI authorizationEndpoint;
 
     @Autowired
@@ -90,7 +91,7 @@ public class RefreshHandler implements
             return;
         }
         final String refreshToken = contextRequest.getFormAttribute("refresh_token");
-        if (refreshToken == null || !refreshToken.matches(TOKEN_PATTERN)) {
+        if (refreshToken == null || !TOKEN_PATTERN.matcher(refreshToken).matches()) {
             contextResponse
                 .setChunked(false)
                 .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)

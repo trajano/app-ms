@@ -105,7 +105,7 @@ public class OpenIdConnectResource {
         return authenticationUriBuilder.build(state, issuerId, authorization, new JwtClaims());
     }
 
-    @Path("/auth-uri/{issuer_id}")
+    @Path("/auth-info/{issuer_id}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonObject authUriJson(@QueryParam("state") final String state,

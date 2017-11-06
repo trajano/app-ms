@@ -101,6 +101,29 @@ public class TokenCache {
     }
 
     /**
+     * Revokes the refresh token and associated access token. This will only throw
+     * an error if the token was not associated with the given client ID.
+     *
+     * @param refreshToken
+     *            refreshToken
+     * @param clientId
+     *            client ID
+     */
+    public void revokeRefreshToken(final String refreshToken,
+        final String clientId) {
+
+        final TokenCacheEntry cacheEntry = refreshTokenToEntry.get(refreshToken, TokenCacheEntry.class);
+        if (cacheEntry == null) {
+            return;
+        }
+        if (!cacheEntry.getAudiences().contains(clientId)) {
+            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
+        }
+        evictEntry(cacheEntry);
+
+    }
+
+    /**
      * Stores the internal claims set into the cache and returns an OAuth token.
      *
      * @param jwt

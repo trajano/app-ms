@@ -1,7 +1,7 @@
 {
   "clients": [
     {
-      "client_id": "app_id",
+      "client_id": "oidc_id",
       "client_secret": "app_secret",
       "grant_types": ["openid"],
       "jwks_uri": "http://localhost:8281/.well-known/jwks"

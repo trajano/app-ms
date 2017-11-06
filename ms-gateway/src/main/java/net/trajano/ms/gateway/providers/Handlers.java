@@ -19,6 +19,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,9 +51,9 @@ import net.trajano.ms.gateway.internal.MediaTypes;
 @Component
 public class Handlers {
 
-    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-
     private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
+
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
     private static final Logger LOG = LoggerFactory.getLogger(Handlers.class);
 
@@ -74,7 +75,7 @@ public class Handlers {
     @Value("${allowedOrigins:*}")
     private String allowedOrigins;
 
-    @Value("${authorization.endpoint}")
+    @Value("${authorization.token_endpoint}")
     private URI authorizationEndpoint;
 
     /**
@@ -217,14 +218,15 @@ public class Handlers {
             final RequestOptions clientRequestOptions = Conversions.toRequestOptions(endpoint, contextRequest.uri().substring(baseUri.length()));
 
             final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint), authorizationResponse ->
-            // Trust the authorization endpoint
+            // Trust the authorization endpoint not to give a large body
             authorizationResponse.bodyHandler(buffer -> {
 
                 if (authorizationResponse.statusCode() != 200) {
-                    contextResponse.setStatusCode(authorizationResponse.statusCode());
-                    contextResponse.setStatusMessage(authorizationResponse.statusMessage());
-                    authorizationResponse.headers().forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
-                    contextResponse.end(buffer);
+                    authorizationResponse.headers().forEach(h -> stripTransferEncodingAndLength(contextResponse, h));
+                    contextResponse.setStatusCode(authorizationResponse.statusCode())
+                        .setStatusMessage(authorizationResponse.statusMessage())
+                        .setChunked(false)
+                        .end(buffer);
                     contextRequest.resume();
                 } else {
                     final JsonObject response = new JsonObject(buffer);
@@ -274,6 +276,15 @@ public class Handlers {
                 .end("grant_type=authorization_code&code=" + accessToken);
 
         };
+    }
+
+    private void stripTransferEncodingAndLength(final HttpServerResponse contextResponse,
+        final Entry<String, String> h) {
+
+        if ("Content-Length".equalsIgnoreCase(h.getKey()) || "Transfer-Encoding".equalsIgnoreCase(h.getKey())) {
+            return;
+        }
+        contextResponse.putHeader(h.getKey(), h.getValue());
     }
 
     /**

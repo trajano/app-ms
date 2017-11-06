@@ -1,7 +1,10 @@
 version: '3.2'
 services:
   web:
-    image: nginx:alpine
+    build: ./quasar-ms
+    image: trajano/quasar-ms
+    ports:
+    - "3000:80"
     networks:
     - gateway-web
   gateway-ms:
@@ -66,6 +69,6 @@ networks:
   gateway-auth:
   # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
-    driver: overlay
+  #  driver: overlay
   # authorization-ms has it's own network to prevent other microservices from using the cache 
   

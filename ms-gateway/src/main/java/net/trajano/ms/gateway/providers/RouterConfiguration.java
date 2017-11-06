@@ -54,8 +54,14 @@ public class RouterConfiguration {
     @Autowired
     private RefreshHandler refreshHandler;
 
-    @Value("${authorization.refreshTokenPath:/refresh}")
+    @Value("${authorization.refresh_token_path:/refresh}")
     private String refreshTokenPath;
+
+    @Autowired
+    private RevocationHandler revocationHandler;
+
+    @Value("${authorization.revocation_path:/logoff}")
+    private String revocationPath;
 
     @Bean
     public Router router(final Vertx vertx) {
@@ -63,6 +69,7 @@ public class RouterConfiguration {
         final Router router = Router.router(vertx);
 
         router.route().handler(CorsHandler.create(allowedOrigins)
+            .maxAgeSeconds(600)
             .allowedMethod(HttpMethod.GET)
             .allowedMethod(HttpMethod.POST)
             .allowedMethod(HttpMethod.PUT)
@@ -81,6 +88,15 @@ public class RouterConfiguration {
             .consumes(APPLICATION_FORM_URLENCODED)
             .produces(APPLICATION_JSON)
             .handler(refreshHandler);
+
+        router.post(revocationPath)
+            .consumes(APPLICATION_FORM_URLENCODED)
+            .produces(APPLICATION_JSON)
+            .handler(BodyHandler.create().setBodyLimit(1024));
+        router.post(revocationPath)
+            .consumes(APPLICATION_FORM_URLENCODED)
+            .produces(APPLICATION_JSON)
+            .handler(revocationHandler);
 
         // Route JWKS path
         router.get(jwksPath)
