@@ -26,6 +26,7 @@
     <module>ms-oidc</module>
     <module>ms-resource</module>
     <module>ms-swagger</module>
+    <module>quasar-ms</module>
     <module>sample-authn</module>
     <module>sample-authz</module>
     <module>sample-ms</module>
