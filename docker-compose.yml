@@ -1,7 +1,10 @@
 version: '3.2'
 services:
   web:
-    image: nginx:alpine
+    build: ./quasar-ms
+    image: trajano/quasar-ms
+    ports:
+    - "3000:80"
     networks:
     - gateway-web
   gateway-ms:
