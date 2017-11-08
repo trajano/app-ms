@@ -176,7 +176,7 @@ public class ErrorResponse {
         final boolean showStackTrace,
         final boolean showRequestUri) {
 
-        error = "server_error";
+        error = ErrorCodes.SERVER_ERROR;
         errorDescription = e.getLocalizedMessage();
         errorClass = e.getClass().getName();
         threadId = Thread.currentThread().getName();
