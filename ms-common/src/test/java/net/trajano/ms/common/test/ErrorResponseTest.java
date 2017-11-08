@@ -13,14 +13,18 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
 public class ErrorResponseTest {
+
     @Test
     public void errorWithNoStackTraces() {
+
         ErrorResponse response = new ErrorResponse(new IOException("ahem"), mock(HttpHeaders.class), mock(UriInfo.class), false, false);
         assertNull(response.getStackTrace());
         assertNull(response.getCause());
     }
+
     @Test
     public void chainedErrorButNoStackTrace() {
+
         ErrorResponse response = new ErrorResponse(new IOException("ahem", new IllegalStateException()), mock(HttpHeaders.class), mock(UriInfo.class), false, false);
         assertNull(response.getStackTrace());
         assertNull(response.getCause());
@@ -28,6 +32,7 @@ public class ErrorResponseTest {
 
     @Test
     public void thrownError() {
+
         ErrorResponse response = new ErrorResponse(new IOException("ahem"), mock(HttpHeaders.class), mock(UriInfo.class), true, false);
         assertNotNull(response.getStackTrace());
         assertNull(response.getCause());
@@ -35,6 +40,7 @@ public class ErrorResponseTest {
 
     @Test
     public void chainedError() {
+
         ErrorResponse response = new ErrorResponse(new IOException("ahem", new IllegalStateException()), mock(HttpHeaders.class), mock(UriInfo.class), true, false);
         assertNotNull(response.getStackTrace());
         assertNotNull(response.getCause());
@@ -42,6 +48,7 @@ public class ErrorResponseTest {
 
     @Test
     public void simpleError() {
+
         ErrorResponse response = new ErrorResponse("error", "error description", "request id");
         assertEquals("error", response.getError());
         assertEquals("error description", response.getErrorDescription());

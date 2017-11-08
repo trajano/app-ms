@@ -7,8 +7,13 @@
     <version>0.0.10-SNAPSHOT</version>
   </parent>
   <artifactId>quasar-ms</artifactId>
+  <packaging>pom</packaging>
   <name>Microservice Web UI</name>
   <description>VueJS/Quasar based UI</description>
+  <properties>
+    <sonar.exclusions>src/assets</sonar.exclusions>
+    <sonar.sources>src</sonar.sources>
+  </properties>
   <build>
     <plugins>
       <plugin>
