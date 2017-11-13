@@ -11,7 +11,9 @@
   <name>Microservice Web UI</name>
   <description>VueJS/Quasar based UI</description>
   <properties>
+    <sonar.coverage.exclusions>**/*.test.js</sonar.coverage.exclusions>
     <sonar.exclusions>src/assets</sonar.exclusions>
+    <sonar.javascript.lcov.reportPaths>coverage/lcov.info</sonar.javascript.lcov.reportPaths>
     <sonar.sources>src</sonar.sources>
   </properties>
   <build>
@@ -47,6 +49,16 @@
               <arguments>run build</arguments>
             </configuration>
             <phase>generate-resources</phase>
+          </execution>
+          <execution>
+            <id>npm test</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>test --coverage</arguments>
+            </configuration>
+            <phase>test</phase>
           </execution>
         </executions>
         <configuration>
