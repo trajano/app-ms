@@ -13,7 +13,7 @@ const apiStore = {
         'Authorization',
         'Bearer ' + getters['oauthToken/accessToken']
       )
-      let response = await fetch('http://192.168.1.42:3001' + uri, { headers })
+      let response = await fetch(process.env.GATEWAY_URI + uri, { headers })
       return response.json()
     },
     securePost: (state, getters) => async (uri, jsonData) => {
@@ -24,7 +24,7 @@ const apiStore = {
         'Authorization',
         'Bearer ' + getters['oauthToken/accessToken']
       )
-      let response = await fetch('http://192.168.1.42:3001' + uri, {
+      let response = await fetch(process.env.GATEWAY_URI + uri, {
         method: 'POST',
         headers,
         body: JSON.stringify(jsonData)
