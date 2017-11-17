@@ -8,7 +8,7 @@
   </parent>
   <groupId>net.trajano.ms.app</groupId>
   <artifactId>app-ms</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Microservice Application</name>
   <description>This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.</description>
@@ -35,7 +35,7 @@
   <scm>
     <connection>scm:git:https://github.com/trajano/${repo.id}.git</connection>
     <developerConnection>scm:git:https://github.com/trajano/${repo.id}.git</developerConnection>
-    <tag>app-ms-1.0.0</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/trajano/${repo.id}</url>
   </scm>
   <issueManagement>
