@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>app-ms</artifactId>
-    <version>0.0.10-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>ms-engine-spring-jaxrs</artifactId>
 </project>
