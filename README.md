@@ -55,10 +55,13 @@ The API will consist of the following API
 * GSON (for simple JSON object building)
 * [jose.4.j][] for JOSE support.
 
-The ones that are custom to this implementation are, the API will consist of 
+The ones that are custom to this implementation are, the API consists of the following key classes.
 
-* `net.trajano.ms.Microservice`
-* `net.trajano.ms.common.JwtClaimsSetPrincipal`
+* [`net.trajano.ms.Microservice`](https://site.trajano.net/app-ms/ms-common/apidocs/net/trajano/ms/Microservice.html)
+* [`net.trajano.ms.core.CryptoOps`](https://site.trajano.net/app-ms/ms-common/apidocs/net/trajano/ms/core/CryptoOps.html)
+* [`net.trajano.ms.core.JsonOps`](https://site.trajano.net/app-ms/ms-common/apidocs/net/trajano/ms/core/JsonOps.html)
+* [`net.trajano.ms.core.JwtClaimsSetPrincipal`](https://site.trajano.net/app-ms/ms-common/apidocs/net/trajano/ms/core/JwtClaimsSetPrincipal.html)
+* [`net.trajano.ms.core.ErrorResponse`](https://site.trajano.net/app-ms/ms-common/apidocs/net/trajano/ms/core/ErrorResponse.html)
 
 ## JOSE support
 
