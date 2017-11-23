@@ -33,7 +33,6 @@ import net.trajano.ms.vertx.beans.GsonProvider;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
 import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwksRouteHandler;
-import net.trajano.ms.vertx.beans.TokenGenerator;
 import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
 
 @Component
@@ -71,8 +70,7 @@ public class VertxMicroserviceEngine implements
 
         return new Object[] {
             VertxConfig.class,
-            VertxMicroserviceEngine.class,
-            TokenGenerator.class
+            VertxMicroserviceEngine.class
         };
     }
 
