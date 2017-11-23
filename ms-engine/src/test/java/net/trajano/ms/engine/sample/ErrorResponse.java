@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
     "error",
     "errorDescription",
     "errorClass",
+    "requestId",
     "threadId",
     "stackTrace",
     "cause"
@@ -77,31 +78,54 @@ public class ErrorResponse {
 
     }
 
+    /**
+     * The cause of this {@link ErrorResponse} or <code>null</code> if the cause is
+     * nonexistent or unknown.
+     */
     @XmlElement(name = "cause",
         required = false)
     private final ErrorResponse cause;
 
+    /**
+     * The error code. This follows OAuth 2.0 error responses.
+     */
     @XmlElement(required = true)
     private final String error;
 
     @XmlElement(name = "error_class")
     private final String errorClass;
 
+    /**
+     * The error description. This follows OAuth 2.0 error responses.
+     */
     @XmlElement(name = "error_description")
     private final String errorDescription;
 
+    /**
+     * The request ID.
+     */
+    @XmlElement(name = "request_id")
+    private final String requestId;
+
+    /**
+     * The stack trace.
+     */
     @XmlElement(name = "stack_trace")
     private final List<LocalStackTraceElement> stackTrace = new LinkedList<>();
 
     @XmlElement(name = "thread_id")
     private final String threadId;
 
+    /**
+     * Constructs an empty ErrorResponse. This is used for {@link #cause}.
+     */
     protected ErrorResponse() {
 
         cause = null;
         error = null;
         errorClass = null;
         errorDescription = null;
+        requestId = null;
         threadId = null;
     }
 
@@ -111,6 +135,7 @@ public class ErrorResponse {
         errorDescription = e.getLocalizedMessage();
         errorClass = e.getClass().getName();
         threadId = Thread.currentThread().getName();
+        requestId = null;
         for (final StackTraceElement ste : e.getStackTrace()) {
             if (!isInternalClass(ste.getClassName())) {
                 stackTrace.add(new LocalStackTraceElement(ste));

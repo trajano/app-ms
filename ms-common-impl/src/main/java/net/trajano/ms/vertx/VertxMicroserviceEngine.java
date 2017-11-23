@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +32,6 @@ import net.trajano.ms.vertx.beans.GsonProvider;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
 import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwksRouteHandler;
-import net.trajano.ms.vertx.beans.TokenGenerator;
 import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
 
 @Component
@@ -43,7 +41,7 @@ public class VertxMicroserviceEngine implements
     private static final Logger LOG = LoggerFactory.getLogger(VertxMicroserviceEngine.class);
 
     @Autowired
-    private ConfigurableApplicationContext baseApplicationContext;
+    private AnnotationConfigApplicationContext applicationContext;
 
     private final Deque<AutoCloseable> handlerStack = new LinkedList<>();
 
@@ -71,8 +69,7 @@ public class VertxMicroserviceEngine implements
 
         return new Object[] {
             VertxConfig.class,
-            VertxMicroserviceEngine.class,
-            TokenGenerator.class
+            VertxMicroserviceEngine.class
         };
     }
 
@@ -94,13 +91,17 @@ public class VertxMicroserviceEngine implements
         final Handler<RoutingContext> notFoundHandler = ctx -> ctx.response().setStatusCode(404).setStatusMessage(Status.NOT_FOUND.getReasonPhrase()).end(Status.NOT_FOUND.getReasonPhrase());
         router.get("/favicon.ico").handler(notFoundHandler);
 
-        final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.setParent(baseApplicationContext);
-        applicationContext.register(GsonJacksonJsonOps.class, GsonProvider.class, JcaCryptoOps.class, JwksProvider.class, JwksRouteHandler.class);
-        applicationContext.register(CommonMsJaxRs.class);
+        // Register engine implementation classes
+        applicationContext.register(GsonJacksonJsonOps.class,
+            GsonProvider.class,
+            JcaCryptoOps.class,
+            JwksProvider.class,
+            JwksRouteHandler.class,
+            CommonMsJaxRs.class);
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, Microservice.getApplicationClass()));
 
-        final JwksRouteHandler jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);
+        final Handler<RoutingContext> jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);
+
         // Prioritize JWKS higher than default router.
         router.route("/.well-known/jwks").order(-1).handler(jwksRouteHandler);
 
@@ -109,7 +110,7 @@ public class VertxMicroserviceEngine implements
         http.requestHandler(router::accept).listen(res -> {
             if (res.failed()) {
                 LOG.error(res.cause().getMessage(), res.cause());
-                SpringApplication.exit(baseApplicationContext, () -> -1);
+                SpringApplication.exit(applicationContext, () -> -1);
             } else {
                 LOG.info("Listening on port {}", http.actualPort());
             }

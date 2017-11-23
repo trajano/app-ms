@@ -203,16 +203,16 @@ public class SpringJaxRsHandler implements
             LOG.debug("baseApplicationContext is null, a new application context will be created.");
             applicationContext = new AnnotationConfigApplicationContext();
         } else if (baseApplicationContext.isActive()) {
-            LOG.debug("baseApplicationContext={} is active, will use as parent.");
+            LOG.debug("baseApplicationContext={} is active, will use as parent.", baseApplicationContext);
             applicationContext = new AnnotationConfigApplicationContext();
             applicationContext.setParent(baseApplicationContext);
         } else if (!(baseApplicationContext instanceof AnnotationConfigApplicationContext)) {
-            LOG.debug("baseApplicationContext={} is not active, but is not an instance of AnnotationConfigApplicationContext, will activate and use as parent.");
+            LOG.debug("baseApplicationContext={} is not active, but is not an instance of AnnotationConfigApplicationContext, will activate and use as parent.", baseApplicationContext);
             baseApplicationContext.refresh();
             applicationContext = new AnnotationConfigApplicationContext();
             applicationContext.setParent(baseApplicationContext);
         } else {
-            LOG.debug("baseApplicationContext={} is not active, will reuse.");
+            LOG.debug("baseApplicationContext={} is not active, will reuse.", baseApplicationContext);
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
         applicationContext.setScopeMetadataResolver(new CdiScopeMetadataResolver());

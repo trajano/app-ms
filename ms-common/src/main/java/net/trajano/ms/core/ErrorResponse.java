@@ -35,19 +35,34 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 @JsonInclude(Include.NON_NULL)
 public class ErrorResponse {
 
+    /**
+     * Local stack trace element.
+     */
     @XmlRootElement
     @SuppressWarnings("unused")
     private static class LocalStackTraceElement {
 
+        /**
+         * Class name.
+         */
         @XmlElement(name = "class")
         private final String className;
 
+        /**
+         * File name.
+         */
         @XmlElement(name = "file")
         private final String fileName;
 
+        /**
+         * Line number.
+         */
         @XmlElement(name = "line")
         private final int lineNumber;
 
+        /**
+         * Method name.
+         */
         @XmlElement(name = "method")
         private final String methodName;
 
@@ -90,32 +105,61 @@ public class ErrorResponse {
 
     }
 
+    /**
+     * The cause of this {@link ErrorResponse} or <code>null</code> if the cause is
+     * nonexistent or unknown.
+     */
     @XmlElement(name = "cause",
         required = false)
     private final ErrorResponse cause;
 
+    /**
+     * The error code. This follows OAuth 2.0 error responses.
+     */
     @XmlElement(required = true)
     private final String error;
 
+    /**
+     * Class name of the error.
+     */
     @XmlElement(name = "error_class")
     private final String errorClass;
 
+    /**
+     * The error description. This follows OAuth 2.0 error responses.
+     */
     @XmlElement(name = "error_description")
     private final String errorDescription;
 
+    /**
+     * The request ID. This is obtained from the header.
+     */
     @XmlElement(name = "request_id")
     private final String requestId;
 
+    /**
+     * Request URI.
+     */
     @XmlElement(name = "request_uri")
     private final URI requestUri;
 
+    /**
+     * The stack trace.
+     */
     @XmlElement(name = "stack_trace",
         type = LocalStackTraceElement.class)
     private final List<LocalStackTraceElement> stackTrace;
 
+    /**
+     * The thread ID.
+     */
     @XmlElement(name = "thread_id")
     private final String threadId;
 
+    /**
+     * Constructs an empty ErrorResponse. This is used for {@link #cause} to prevent
+     * repeating the same information.
+     */
     protected ErrorResponse() {
 
         cause = null;
@@ -236,6 +280,14 @@ public class ErrorResponse {
         return threadId;
     }
 
+    /**
+     * Checks if it is an internal classes so the stack trace does not get too long.
+     * Internal classes are "java.*", "javax.*", "sun.*"
+     *
+     * @param className
+     *            class to check
+     * @return <code>true</code> if it is an internal class.
+     */
     private boolean isInternalClass(final String className) {
 
         return className.startsWith("javax.") || className.startsWith("java.") || className.startsWith("sun.");
