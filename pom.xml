@@ -146,6 +146,13 @@
         </plugin>
         <plugin>
           <groupId>net.trajano.mojo</groupId>
+          <artifactId>linkcheck-maven-plugin</artifactId>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>net.trajano.mojo</groupId>
           <artifactId>m2e-codestyle-maven-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
@@ -161,12 +168,24 @@
   <reporting>
     <plugins>
       <plugin>
+        <groupId>net.trajano.mojo</groupId>
+        <artifactId>linkcheck-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <reportSets>
           <reportSet>
             <reports>
-              <report>dependencies</report>
-              <report>dependency-convergence</report>
               <report>mailing-list</report>
               <report>cim</report>
               <report>issue-tracking</report>

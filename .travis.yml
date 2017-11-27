@@ -4,8 +4,7 @@ branches:
   - "/^app-ms-[\\d\\.]+$/"
 language: java
 jdk:
-- openjdk8
-#- oraclejdk8
+- oraclejdk8
 sudo: false
 cache:
   directories:
@@ -35,10 +34,18 @@ before_script:
 script:
 - mvn -q package sonar:sonar -Dmaven.test.failure.ignore=true
 - docker-compose build
+- mvn -q -e site
+- mvn -q -e site:stage -DstagingDirectory=$HOME/staging/index.html
 deploy:
 - provider: script
   skip_cleanup: true
-  script: mvn -e deploy && mvn -e site-deploy
+  script: mvn -q -e -DskipTests=true deploy
+  on:
+    branch: master
+- provider: pages
+  skip_cleanup: true
+  github_token: $SONAR_GITHUB_TOKEN
+  local_dir: $HOME/staging/app-ms
   on:
     branch: master
 - provider: script
