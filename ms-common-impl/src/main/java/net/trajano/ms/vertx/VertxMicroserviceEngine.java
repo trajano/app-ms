@@ -78,11 +78,11 @@ public class VertxMicroserviceEngine implements
 
         LOG.debug("Application={}", Microservice.getApplicationClass());
 
+        vertx = Vertx.vertx(vertxOptions);
         if (Microservice.getApplicationClass() == null) {
             LOG.warn("No application class specified, assuming running as a unit test");
             return;
         }
-        vertx = Vertx.vertx(vertxOptions);
         final Router router = Router.router(vertx);
 
         handlerStack.push(SwaggerHandler.registerToRouter(router, Microservice.getApplicationClass()));
