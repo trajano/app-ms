@@ -13,7 +13,7 @@ The `Applicaton` class is suffixed with `MS`.
 
 Spring bean implementations go into `beans` subpackage.  This separation helps distinguish the component classes from the exposed resources.
 
-The `@XmlRootElement` classes aka as  domain objects are placed in `domain` subpackage.
+The `@XmlRootElement` classes aka as domain objects are placed in `domain` subpackage.
 
 The separation is intended to make it easier to refactor common groups primarily the domain subpackage into a library of application level domain classes if it appears to be growing too much. 
 

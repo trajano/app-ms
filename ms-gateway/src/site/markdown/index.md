@@ -7,7 +7,7 @@ Although this is a Spring Boot application, it does not use the ms-common archit
 
 Configuration files are stored in the configuration microservice that provides all the configuration for the system.  
 
-Although spring cloud has a notion of centralized configuration, we're going to forgo that for this scenario.
+Although Spring Cloud has a notion of centralized configuration, we're going to forgo that for this scenario.
 
 An token microservice must provide the following API endpoint.
 

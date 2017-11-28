@@ -9,7 +9,7 @@
   </parent>
   <artifactId>sample-ms</artifactId>
   <packaging>jar</packaging>
-  <description>Sample Microservice</description>
+  <name>Sample Microservice</name>
   <properties>
     <microservice.mainClass>net.trajano.ms.example.SampleMS</microservice.mainClass>
   </properties>
