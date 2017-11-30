@@ -1,5 +1,4 @@
 /**
- * Common API and functionality for microservices. This is expected to be
- * included by <code>@ComponentScan(basePackageClasses = CommonMs.class)</code>
+ * Core API and common functionality for microservices.
  */
 package net.trajano.ms.core;

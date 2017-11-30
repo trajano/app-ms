@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Microservices Common API</title>
+</head>
+
+<body>
+    <p>This library provides the API used for developing microservices. The API itself consists of a portion of the Java EE
+        API and other third party APIs. For the most part common annotations used by the Java EE, Spring, Jackson and Swagger
+        APIs are used.</p>
+    <p>The main entry point is
+        <a href="net/trajano/ms/Microservice.html">net.trajano.ms.Microservice</a> and that class documents how to use the API.</p>
+    <p>The complete API stack consists of the following Java EE API:</p>
+    <ul>
+        <li>JAX-RS</li>
+        <li>CDI 1.2</li>
+        <li>Annotations 1.2 (for
+            <code>@PermitAll</code> and
+            <code>@RolesRequired</code> annotations)</li>
+    </ul>
+
+    <p>And the following non-Java EE APIs:</p>
+    <ul>
+        <li>SLF4J</li>
+        <li>Spring Boot AutoConfiguration annotations</li>
+        <li>Spring Context annotations</li>
+        <li>Swagger annotations</li>
+        <li>Jackson Annotations</li>
+        <li>GSON (for simple JSON object building)</li>
+        <li>jose.4.j for JOSE support.</li>
+    </ul>
+</body>
+
+</html>

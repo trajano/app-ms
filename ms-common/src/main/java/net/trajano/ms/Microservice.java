@@ -12,6 +12,27 @@ import org.springframework.boot.SpringApplication;
 
 import net.trajano.ms.spi.MicroserviceEngine;
 
+/**
+ * Class used to bootstrap the Microservice engine. This takes a JAX-RS
+ * {@link javax.ws.rs.core.Application} class as the application entry point.
+ * Here is an example of how it is used.
+ * 
+ * <pre>
+ * import javax.ws.rs.core.Application;
+ * import org.springframework.boot.autoconfigure.SpringBootApplication;
+ * import net.trajano.ms.Microservice;
+ *
+ * &#64;SpringBootApplication
+ * public class SampleMS extends Application {
+ * 
+ *     public static void main(final String[] args) {
+ * 
+ *         Microservice.run(SampleMS.class, args);
+ * 
+ *     }
+ * }
+ * </pre>
+ */
 public class Microservice {
 
     protected static Class<? extends Application> applicationClass;
