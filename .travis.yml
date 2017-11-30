@@ -34,12 +34,20 @@ before_script:
 script:
 - mvn -q package sonar:sonar -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true
 - docker-compose build
-- mvn -q -e site -Dmaven.test.redirectTestOutputToFile=true
-- mvn -q -e site:stage -DstagingDirectory=$HOME/staging/index.html
 deploy:
 - provider: script
   skip_cleanup: true
   script: mvn -q -e -DskipTests=true deploy
+  on:
+    branch: master
+- provider: script
+  skip_cleanup: true
+  script: mvn -q -e site -Dmaven.test.redirectTestOutputToFile=true
+  on:
+    branch: master
+- provider: script
+  skip_cleanup: true
+  script: mvn -q -e site:stage -DstagingDirectory=$HOME/staging/index.html
   on:
     branch: master
 - provider: pages
