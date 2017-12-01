@@ -6,6 +6,7 @@ import java.text.ParseException;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.UriBuilder;
 
+import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
