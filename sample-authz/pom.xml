@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>ms-base</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>sample-authz</artifactId>
