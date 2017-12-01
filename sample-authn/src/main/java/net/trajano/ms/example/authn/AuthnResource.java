@@ -17,6 +17,8 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.core.Qualifiers;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,14 +64,14 @@ public class AuthnResource {
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
         if (!"password".equals(password)) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
         try {
             claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
         } catch (final ParseException e) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
         }
 
         final Form form = new Form();

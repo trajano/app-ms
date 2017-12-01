@@ -2,13 +2,6 @@ package net.trajano.ms.auth.token;
 
 import java.io.Serializable;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -29,50 +22,6 @@ public class OAuthTokenResponse implements
      * serialVersionUID.
      */
     private static final long serialVersionUID = -6845634801856757737L;
-
-    public static BadRequestException badRequest(final String error,
-        final String errorDescription) {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError(error);
-        r.setErrorDescription(errorDescription);
-        return new BadRequestException(Response
-            .ok(r, MediaType.APPLICATION_JSON)
-            .status(Status.BAD_REQUEST).build());
-    }
-
-    public static InternalServerErrorException internalServerError(final String message) {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError("server_error");
-        r.setErrorDescription(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-        return new InternalServerErrorException(message, Response
-            .ok(r, MediaType.APPLICATION_JSON)
-            .status(Status.INTERNAL_SERVER_ERROR).build());
-    }
-
-    public static InternalServerErrorException internalServerError(final Throwable e) {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError("server_error");
-        r.setErrorDescription(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-        return new InternalServerErrorException(Response
-            .ok(r, MediaType.APPLICATION_JSON)
-            .status(Status.INTERNAL_SERVER_ERROR).build(), e);
-    }
-
-    public static NotAuthorizedException unauthorized(final String error,
-        final String errorDescription,
-        final String challenge) {
-
-        final OAuthTokenResponse r = new OAuthTokenResponse();
-        r.setError(error);
-        r.setErrorDescription(errorDescription);
-        return new NotAuthorizedException(Response
-            .ok(r, MediaType.APPLICATION_JSON)
-            .header(HttpHeaders.WWW_AUTHENTICATE, challenge)
-            .status(Status.UNAUTHORIZED).build());
-    }
 
     @XmlElement(name = "access_token")
     private String accessToken;

@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,16 +125,16 @@ public class OpenIdConnectResource {
         @PathParam("issuer_id") final String issuerId) throws MalformedClaimException {
 
         if (issuerId == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing issuer_id");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Missing issuer_id");
         }
         final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);
         if (issuerConfig == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
         }
 
         final ServerState serverState = serverStateCache.get(jwtState, ServerState.class);
         if (serverState == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid state");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid state");
         }
 
         final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();
@@ -149,7 +150,7 @@ public class OpenIdConnectResource {
 
         final JwtClaims idTokenClaims = cryptoOps.toClaimsSet(openIdToken.getIdToken(), openIdConfiguration.getHttpsJwks());
         if (!serverState.getNonce().equals(idTokenClaims.getStringClaimValue("nonce"))) {
-            throw OAuthTokenResponse.internalServerError("nonce did not match");
+            throw ErrorResponses.internalServerError("nonce did not match");
         }
 
         // Add additional claims but throw an error if it already exists.

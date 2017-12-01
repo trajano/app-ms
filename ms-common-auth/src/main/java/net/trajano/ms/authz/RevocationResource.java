@@ -23,10 +23,10 @@ import com.google.gson.JsonObject;
 
 import io.swagger.annotations.Api;
 import net.trajano.ms.auth.spi.ClientValidator;
-import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.authz.internal.TokenCache;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 
 /**
  * Revocation endpoint resource.
@@ -76,17 +76,17 @@ public class RevocationResource {
 
             clientId = clientCredentials[0];
             if (!clientValidator.isValid("revocation", clientId, clientCredentials[1])) {
-                throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
             }
         } catch (final ParseException e) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (token == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing token");
+            throw ErrorResponses.invalidRequest("Missing token");
         }
         if (tokenTypeHint != null && !"refresh_token".equals(tokenTypeHint)) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORTED_TOKEN_TYPE, "Token type is not supported");
+            throw ErrorResponses.badRequest(ErrorCodes.UNSUPPORTED_TOKEN_TYPE, "Token type is not supported");
         }
 
         tokenCache.revokeRefreshToken(token, clientId);

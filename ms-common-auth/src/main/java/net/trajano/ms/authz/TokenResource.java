@@ -16,7 +16,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilderException;
 
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
@@ -44,6 +43,7 @@ import net.trajano.ms.authz.internal.TokenCache;
 import net.trajano.ms.authz.spi.InternalClaimsBuilder;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 
 @Api
 @Configuration
@@ -103,10 +103,10 @@ public class TokenResource {
 
             clientId = clientCredentials[0];
             if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
-                throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
             }
         } catch (final ParseException e) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (GrantTypes.REFRESH_TOKEN.equals(grantType)) {
@@ -117,7 +117,7 @@ public class TokenResource {
             return handleJwtAssertionGrant(assertion, clientId, audience);
 
         } else {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant type");
+            throw ErrorResponses.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, "Invalid grant type");
         }
 
     }
@@ -125,11 +125,11 @@ public class TokenResource {
     private IdTokenResponse handleAuthorizationCodeGrant(final String accessToken) {
 
         if (accessToken == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing access token");
+            throw ErrorResponses.invalidRequest("Missing access token");
         }
         final IdTokenResponse idTokenResponse = tokenCache.get(accessToken);
         if (idTokenResponse == null) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Access token was not valid", "Bearer");
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Access token was not valid", "Bearer");
         }
         return idTokenResponse;
 
@@ -143,8 +143,6 @@ public class TokenResource {
      *            an external JWT assertion
      * @param clientId
      *            client ID
-     * @param jwksUri
-     *            URI pointing to the signatures
      * @return OAuth response
      */
     private OAuthTokenResponse handleJwtAssertionGrant(final String assertion,
@@ -152,10 +150,10 @@ public class TokenResource {
         final String audience) {
 
         if (assertion == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing assertion");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Missing assertion");
         }
         if (clientId == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing client_id");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Missing client_id");
         }
 
         try {
@@ -186,7 +184,7 @@ public class TokenResource {
 
             if (internalClaims.getSubject() == null) {
                 LOG.error("Subject is missing from {}", internalClaims);
-                throw OAuthTokenResponse.internalServerError("Subject is missing from the resulting claims set.");
+                throw ErrorResponses.internalServerError("Subject is missing from the resulting claims set.");
             }
 
             internalClaims.setGeneratedJwtId();
@@ -206,10 +204,7 @@ public class TokenResource {
         } catch (final MalformedClaimException
             | InvalidJwtException e) {
             LOG.error("Unable to parse assertion", e);
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Unable to parse assertion");
-        } catch (final IllegalArgumentException
-            | UriBuilderException e) {
-            throw OAuthTokenResponse.internalServerError(e);
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Unable to parse assertion");
         }
     }
 
@@ -217,7 +212,7 @@ public class TokenResource {
         final String clientId) {
 
         if (refreshToken == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing refresh token");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Missing refresh token");
         }
         return tokenCache.refresh(refreshToken, clientId);
 

@@ -14,6 +14,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.slf4j.MDC;
 
 /**
  * Error response. This is the error response that gets built by the system for
@@ -170,6 +171,21 @@ public class ErrorResponse {
         threadId = null;
         requestId = null;
         requestUri = null;
+    }
+
+    /**
+     * Creates an error response with just the error code and description. The
+     * request ID will be taken from the MDC.
+     * 
+     * @param error
+     *            error code
+     * @param errorDescription
+     *            error description
+     */
+    public ErrorResponse(final String error,
+        final String errorDescription) {
+
+        this(error, errorDescription, MDC.get(REQUEST_ID));
     }
 
     public ErrorResponse(final String error,
