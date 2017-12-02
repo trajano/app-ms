@@ -1,16 +1,18 @@
 package net.trajano.ms.common.test;
 
-import net.trajano.ms.core.ErrorResponse;
-import org.junit.Test;
-
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+
+import java.io.IOException;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.UriInfo;
+
+import org.junit.Test;
+
+import net.trajano.ms.core.ErrorResponse;
 
 public class ErrorResponseTest {
 

@@ -12,8 +12,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.slf4j.MDC;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Error response. This is the error response that gets built by the system for
@@ -134,6 +138,8 @@ public class ErrorResponse {
     /**
      * The request ID. This is obtained from the header.
      */
+    @ApiModelProperty(name = "request_id",
+        value = "Request ID used to track the events for the request.")
     @XmlElement(name = "request_id")
     private final String requestId;
 
@@ -146,6 +152,8 @@ public class ErrorResponse {
     /**
      * The stack trace.
      */
+    @ApiModelProperty(name = "stack_trace",
+        value = "A list of stack trace elements.")
     @XmlElement(name = "stack_trace",
         type = LocalStackTraceElement.class)
     private final List<LocalStackTraceElement> stackTrace;
@@ -170,6 +178,21 @@ public class ErrorResponse {
         threadId = null;
         requestId = null;
         requestUri = null;
+    }
+
+    /**
+     * Creates an error response with just the error code and description. The
+     * request ID will be taken from the MDC.
+     *
+     * @param error
+     *            error code
+     * @param errorDescription
+     *            error description
+     */
+    public ErrorResponse(final String error,
+        final String errorDescription) {
+
+        this(error, errorDescription, MDC.get(REQUEST_ID));
     }
 
     public ErrorResponse(final String error,

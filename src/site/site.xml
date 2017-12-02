@@ -15,9 +15,14 @@
   <body>
     <links>
       <item href="https://travis-ci.org/trajano/app-ms" name="CI"/>
-      <item href="https://sonarqube.com/dashboard?id=net.trajano.ms.app:app-ms" name="Quality"/>
+      <item href="https://sonarcloud.io/dashboard?id=net.trajano.ms.app%3Aapp-ms" name="Quality"/>
     </links>
     <menu ref="parent" inherit="top"/>
+    <menu name="About" href="index.html">
+      <item name="Building" href="building.html"/>
+      <item name="Logging" href="logging.html"/>
+      <item name="Versioning" href="versioning.html"/>
+    </menu>
     <menu ref="reports" inherit="bottom"/>
     <menu ref="modules" inherit="bottom"/>
   </body>

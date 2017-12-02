@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.auth.token.GrantTypes;
@@ -30,6 +33,8 @@ import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.core.ErrorResponses;
 
 /**
  * This works like the FORM based login of Java EE. It allows any user name as
@@ -57,19 +62,23 @@ public class AuthnResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public OAuthTokenResponse json(@FormParam("j_username") final String username,
-        @FormParam("j_password") final String password,
+    @ApiResponses(@ApiResponse(code = 401,
+        message = "Unauthorized Response",
+        response = ErrorResponse.class))
+    public OAuthTokenResponse json(
+        @FormParam("j_username") @ApiParam("User name") final String username,
+        @FormParam("j_password") @ApiParam("Password") final String password,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
         if (!"password".equals(password)) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
         try {
             claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
         } catch (final ParseException e) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
         }
 
         final Form form = new Form();

@@ -17,6 +17,7 @@ import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 
 @Component
 public class TokenCache {
@@ -87,14 +88,14 @@ public class TokenCache {
 
         final TokenCacheEntry cacheEntry = refreshTokenToEntry.get(refreshToken, TokenCacheEntry.class);
         if (cacheEntry == null) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Token rejected", "Bearer");
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Token rejected", "Bearer");
         }
         if (cacheEntry.isExpired()) {
             evictEntry(cacheEntry);
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "JWT has exceeded life time");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "JWT has exceeded life time");
         }
         if (!cacheEntry.getAudiences().contains(clientId)) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
         }
         return updateEntry(cacheEntry);
 
@@ -117,7 +118,7 @@ public class TokenCache {
             return;
         }
         if (!cacheEntry.getAudiences().contains(clientId)) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Client mismatch");
         }
         evictEntry(cacheEntry);
 
@@ -128,8 +129,8 @@ public class TokenCache {
      *
      * @param jwt
      *            JWT to store
-     * @param clientId
-     *            client ID, this is usually the gateway.
+     * @param audiences
+     *            audience client IDs, this is usually the gateway.
      * @param expiresOn
      *            JWT expiration
      * @return OAuth 2.0 token response with the new tokens.

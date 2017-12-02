@@ -4,7 +4,6 @@ import java.net.URI;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -27,6 +26,8 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -37,10 +38,10 @@ import com.google.gson.JsonObject;
 
 import io.swagger.annotations.Api;
 import net.trajano.ms.auth.token.GrantTypes;
-import net.trajano.ms.auth.token.IdTokenResponse;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.internal.AuthenticationUriBuilder;
 import net.trajano.ms.oidc.internal.HazelcastConfiguration;
 import net.trajano.ms.oidc.internal.ServerState;
@@ -52,6 +53,13 @@ import net.trajano.ms.oidc.spi.ServiceConfiguration;
 @Path("/oidc")
 @PermitAll
 public class OpenIdConnectResource {
+
+    /**
+     * "id_token" key in the ID Token response.
+     */
+    private static final String ID_TOKEN = "id_token";
+
+    private static final Logger LOG = LoggerFactory.getLogger(OpenIdConnectResource.class);
 
     @Autowired
     private AuthenticationUriBuilder authenticationUriBuilder;
@@ -124,16 +132,16 @@ public class OpenIdConnectResource {
         @PathParam("issuer_id") final String issuerId) throws MalformedClaimException {
 
         if (issuerId == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing issuer_id");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Missing issuer_id");
         }
         final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);
         if (issuerConfig == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
         }
 
         final ServerState serverState = serverStateCache.get(jwtState, ServerState.class);
         if (serverState == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid state");
+            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid state");
         }
 
         final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();
@@ -142,14 +150,24 @@ public class OpenIdConnectResource {
         form.param("grant_type", GrantTypes.AUTHORIZATION_CODE);
         form.param("code", code);
         final OpenIdConfiguration openIdConfiguration = issuerConfig.getOpenIdConfiguration();
-        final IdTokenResponse openIdToken = client.target(openIdConfiguration.getTokenEndpoint())
+        final URI tokenEndpoint = openIdConfiguration.getTokenEndpoint();
+        final Response clientResponse = client.target(tokenEndpoint)
             .request(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, issuerConfig.buildAuthorization())
-            .post(Entity.form(form), IdTokenResponse.class);
+            .buildPost(Entity.form(form)).invoke();
+        if (clientResponse.getStatus() != Status.OK.getStatusCode()) {
+            throw ErrorResponses.internalServerError("server unable to get id_token");
+        }
+        final JsonObject openIdToken = clientResponse.readEntity(JsonObject.class);
+        if (openIdToken.has("error") || !openIdToken.has(ID_TOKEN)) {
+            // This is a workaround for Google which does not return an error code on failure.
+            LOG.error("Received = {} from {}", openIdToken, tokenEndpoint);
+            throw ErrorResponses.internalServerError("server unable to get id_token");
+        }
 
-        final JwtClaims idTokenClaims = cryptoOps.toClaimsSet(openIdToken.getIdToken(), openIdConfiguration.getHttpsJwks());
+        final JwtClaims idTokenClaims = cryptoOps.toClaimsSet(openIdToken.get(ID_TOKEN).getAsString(), openIdConfiguration.getHttpsJwks());
         if (!serverState.getNonce().equals(idTokenClaims.getStringClaimValue("nonce"))) {
-            throw OAuthTokenResponse.internalServerError("nonce did not match");
+            throw ErrorResponses.internalServerError("nonce did not match");
         }
 
         // Add additional claims but throw an error if it already exists.
@@ -171,9 +189,7 @@ public class OpenIdConnectResource {
         final OAuthTokenResponse tokenResponse = client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, serverState.getClientCredentials())
             .post(Entity.form(storeInternalForm), OAuthTokenResponse.class);
-        if (tokenResponse.isError()) {
-            throw new BadRequestException(Response.status(Status.BAD_REQUEST).entity(tokenResponse).build());
-        }
+
         final URI newUri;
         if (tokenResponse.isExpiring()) {
             newUri = UriBuilder

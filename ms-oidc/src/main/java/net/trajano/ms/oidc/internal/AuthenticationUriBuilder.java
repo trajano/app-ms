@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
 
 import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.token.GrantTypes;
-import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.spi.IssuerConfig;
 import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
@@ -65,23 +65,23 @@ public class AuthenticationUriBuilder {
         final JwtClaims additionalClaims) {
 
         if (issuerId == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing issuer_id");
+            throw ErrorResponses.invalidRequest("Missing issuer_id");
         }
         if (state == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Missing state");
+            throw ErrorResponses.invalidRequest("Missing state");
         }
 
         final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);
         if (issuerConfig == null) {
-            throw OAuthTokenResponse.badRequest(ErrorCodes.INVALID_REQUEST, "Invalid issuer_id");
+            throw ErrorResponses.invalidRequest("Invalid issuer_id");
         }
 
         try {
             if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
-                throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
             }
         } catch (final ParseException e) {
-            throw OAuthTokenResponse.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unable to parse client credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unable to parse client credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();
