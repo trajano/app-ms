@@ -17,14 +17,15 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import net.trajano.ms.core.ErrorResponses;
-import net.trajano.ms.core.Qualifiers;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.auth.token.GrantTypes;
@@ -32,6 +33,8 @@ import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.core.ErrorResponses;
 
 /**
  * This works like the FORM based login of Java EE. It allows any user name as
@@ -59,8 +62,12 @@ public class AuthnResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public OAuthTokenResponse json(@FormParam("j_username") final String username,
-        @FormParam("j_password") final String password,
+    @ApiResponses(@ApiResponse(code = 401,
+        message = "Unauthorized Response",
+        response = ErrorResponse.class))
+    public OAuthTokenResponse json(
+        @FormParam("j_username") @ApiParam("User name") final String username,
+        @FormParam("j_password") @ApiParam("Password") final String password,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
         if (!"password".equals(password)) {

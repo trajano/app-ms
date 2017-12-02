@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.swagger.annotations.ApiModelProperty;
+
 @XmlRootElement
 @XmlType(propOrder = {
     "error",
@@ -89,27 +91,37 @@ public class ErrorResponse {
     /**
      * The error code. This follows OAuth 2.0 error responses.
      */
+    @ApiModelProperty(name = "error",
+        value = "The error code.")
     @XmlElement(required = true)
     private final String error;
 
+    @ApiModelProperty(name = "error_class",
+        value = "The class name of the exception.")
     @XmlElement(name = "error_class")
     private final String errorClass;
 
     /**
      * The error description. This follows OAuth 2.0 error responses.
      */
+    @ApiModelProperty(name = "error_description",
+        value = "A human readable description of the error.")
     @XmlElement(name = "error_description")
     private final String errorDescription;
 
     /**
      * The request ID.
      */
+    @ApiModelProperty(name = "request_id",
+        value = "Request ID used to track the events for the request.")
     @XmlElement(name = "request_id")
     private final String requestId;
 
     /**
      * The stack trace.
      */
+    @ApiModelProperty(name = "stack_trace",
+        value = "A list of stack trace elements.")
     @XmlElement(name = "stack_trace")
     private final List<LocalStackTraceElement> stackTrace = new LinkedList<>();
 

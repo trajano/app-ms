@@ -11,10 +11,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+@ApiModel(description = "OAuth 2.0 Token Response")
 public class OAuthTokenResponse implements
     Serializable {
 
@@ -23,21 +27,29 @@ public class OAuthTokenResponse implements
      */
     private static final long serialVersionUID = -6845634801856757737L;
 
-    @XmlElement(name = "access_token")
+    @ApiModelProperty(name = "access_token",
+        value = "The access token issued by the authorization server.",
+        required = true)
+    @XmlElement(name = "access_token",
+        required = true)
     private String accessToken;
 
-    @XmlElement(name = "error")
-    private String error;
-
-    @XmlElement(name = "error_description")
-    private String errorDescription;
-
+    @ApiModelProperty(name = "expires_in",
+        value = "The lifetime in seconds of the access token.  For example, the value \"3600\" denotes that the access token will expire in one hour from the time the response was generated.",
+        allowableValues = "[1,infinity]",
+        example = "3600")
     @XmlElement(name = "expires_in")
     private Integer expiresIn;
 
+    @ApiModelProperty(name = "refresh_token",
+        value = "The refresh token, which can be used to obtain new access tokens using the same authorization grant")
     @XmlElement(name = "refresh_token")
     private String refreshToken;
 
+    @ApiModelProperty(name = "token_type",
+        value = "The type of the token issued",
+        example = "Bearer",
+        required = true)
     @XmlElement(name = "token_type",
         required = true)
     private String tokenType;
@@ -45,16 +57,6 @@ public class OAuthTokenResponse implements
     public String getAccessToken() {
 
         return accessToken;
-    }
-
-    public String getError() {
-
-        return error;
-    }
-
-    public String getErrorDescription() {
-
-        return errorDescription;
     }
 
     public int getExpiresIn() {
@@ -72,11 +74,6 @@ public class OAuthTokenResponse implements
         return tokenType;
     }
 
-    public boolean isError() {
-
-        return error != null;
-    }
-
     public boolean isExpiring() {
 
         return expiresIn != null;
@@ -85,16 +82,6 @@ public class OAuthTokenResponse implements
     public void setAccessToken(final String accessToken) {
 
         this.accessToken = accessToken;
-    }
-
-    public void setError(final String error) {
-
-        this.error = error;
-    }
-
-    public void setErrorDescription(final String errorDescription) {
-
-        this.errorDescription = errorDescription;
     }
 
     public void setExpiresIn(final int expiresIn) {
