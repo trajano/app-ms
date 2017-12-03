@@ -1,16 +1,20 @@
 package net.trajano.ms.oidc.test;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.net.URI;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 import net.trajano.ms.oidc.spi.IssuerConfig;
 import net.trajano.ms.oidc.spi.ServiceConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.net.URI;
-
-import static org.mockito.Mockito.*;
 
 @Configuration
 public class TestConfig {
