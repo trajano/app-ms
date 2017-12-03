@@ -105,6 +105,12 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>net.trajano.commons</groupId>
+      <artifactId>commons-testing</artifactId>
+      <version>2.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-jaxrs</artifactId>
       <version>${resteasy.version}</version>

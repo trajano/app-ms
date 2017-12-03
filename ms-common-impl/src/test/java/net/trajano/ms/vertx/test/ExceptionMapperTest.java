@@ -16,11 +16,29 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import net.trajano.commons.testing.UtilityClassTestUtil;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.core.Qualifiers;
 import net.trajano.ms.vertx.jaxrs.JsonExceptionMapper;
 
 public class ExceptionMapperTest {
 
     private JsonExceptionMapper mapper;
+
+    @Test
+    public void coverSetDebugFlags() {
+
+        mapper.setDebugFlags();
+    }
+
+    @Test
+    public void coverUtilityClasses() throws Exception {
+
+        UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorCodes.class);
+        UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorResponses.class);
+        UtilityClassTestUtil.assertUtilityClassWellDefined(Qualifiers.class);
+    }
 
     @Before
     public void setupMapper() {

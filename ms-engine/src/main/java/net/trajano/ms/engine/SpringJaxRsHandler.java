@@ -306,6 +306,9 @@ public class SpringJaxRsHandler implements
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handle(final RoutingContext context) {
 

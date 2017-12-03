@@ -7,9 +7,20 @@ import javax.ws.rs.WebApplicationException;
 
 import org.junit.Test;
 
+import net.trajano.commons.testing.UtilityClassTestUtil;
+import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.core.Qualifiers;
 
 public class ErrorResponsesTest {
+
+    @Test
+    public void coverUtilityClasses() throws Exception {
+
+        UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorCodes.class);
+        UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorResponses.class);
+        UtilityClassTestUtil.assertUtilityClassWellDefined(Qualifiers.class);
+    }
 
     @Test
     public void testBadRequestError() {

@@ -51,13 +51,7 @@ public class Hello {
         @Context final RoutingContext context) {
 
         return "Hello" + this + " " + scope + " " + context + " " + req;
-        /*
-         * @Context final Vertx vertx,
-         * @Context final RoutingContext routingContext
-         */
-        //+ scoped.get()
-        //@Context final io.vertx.core.Context vertxContext,
-        //  + routingContext;//+ " " + vertx + " " + vertx.getOrCreateContext() + " " + routingContext;
+
     }
 
     @GET
