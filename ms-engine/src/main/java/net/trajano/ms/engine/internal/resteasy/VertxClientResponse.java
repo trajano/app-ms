@@ -32,6 +32,7 @@ public class VertxClientResponse extends ClientResponse {
         is = new VertxBlockingInputStream();
 
         httpClientRequest.handler(httpClientResponse -> {
+            LOG.debug("Status = {}", httpClientResponse.statusCode());
             setStatus(httpClientResponse.statusCode());
             setHeaders(Conversions.toMultivaluedStringMap(httpClientResponse.headers()));
             httpClientResponse.handler(is::populate)
@@ -67,6 +68,19 @@ public class VertxClientResponse extends ClientResponse {
         LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
         metadataLock.acquireUninterruptibly();
         final MediaType m = super.getMediaType();
+        metadataLock.release();
+        return m;
+    }
+
+    @Override
+    public int getStatus() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        final int m = super.getStatus();
         metadataLock.release();
         return m;
     }

@@ -65,11 +65,13 @@ public class VertxClientEngine implements
     @Override
     public ClientResponse invoke(final ClientInvocation request) {
 
+        LOG.debug("invoke={}", request);
         final RequestOptions options = Conversions.toRequestOptions(request.getUri());
         final HttpClientRequest httpClientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
 
         final VertxClientResponse clientResponse = new VertxClientResponse(request.getClientConfiguration(), httpClientRequest);
 
+        LOG.debug("clientResponse={}", clientResponse);
         request.getHeaders().asMap().forEach(httpClientRequest::putHeader);
 
         try (final VertxOutputStream os = new VertxOutputStream(httpClientRequest)) {
