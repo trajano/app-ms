@@ -18,7 +18,7 @@
       <item href="https://sonarcloud.io/dashboard?id=net.trajano.ms.app%3Aapp-ms" name="Quality"/>
     </links>
     <menu ref="parent" inherit="top"/>
-     <menu name="Overview">
+    <menu name="Overview">
       <item href="index.html" name="About"/>
       <item name="Building" href="building.html"/>
       <item name="Logging" href="logging.html"/>

@@ -154,13 +154,9 @@ public class OpenIdConnectResource {
         final Response clientResponse = client.target(tokenEndpoint)
             .request(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, issuerConfig.buildAuthorization())
-            .buildPost(Entity.form(form)).invoke();
-        if (clientResponse.getStatus() != Status.OK.getStatusCode()) {
-            throw ErrorResponses.internalServerError("server unable to get id_token");
-        }
+            .post(Entity.form(form));
         final JsonObject openIdToken = clientResponse.readEntity(JsonObject.class);
-        if (openIdToken.has("error") || !openIdToken.has(ID_TOKEN)) {
-            // This is a workaround for Google which does not return an error code on failure.
+        if (clientResponse.getStatus() != Status.OK.getStatusCode()) {
             LOG.error("Received = {} from {}", openIdToken, tokenEndpoint);
             throw ErrorResponses.internalServerError("server unable to get id_token");
         }
