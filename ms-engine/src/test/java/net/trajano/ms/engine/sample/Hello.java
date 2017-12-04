@@ -1,7 +1,9 @@
 package net.trajano.ms.engine.sample;
 
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
@@ -29,6 +31,13 @@ public class Hello {
 
     @Inject
     ISomeAppScope scope;
+
+    @GET
+    @Path("/400")
+    public Response badRequest() {
+
+        throw new BadRequestException();
+    }
 
     @GET
     @Path("/cough")
@@ -82,5 +91,12 @@ public class Hello {
         } finally {
             clientResponse.close();
         }
+    }
+
+    @GET
+    @Path("/404")
+    public Response notFound() {
+
+        throw new NotFoundException();
     }
 }

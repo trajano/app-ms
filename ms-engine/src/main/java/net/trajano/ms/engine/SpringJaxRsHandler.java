@@ -51,6 +51,7 @@ import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
+import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
@@ -216,7 +217,7 @@ public class SpringJaxRsHandler implements
             applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;
         }
         applicationContext.setScopeMetadataResolver(new CdiScopeMetadataResolver());
-        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapperProvider.class);
+        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapperProvider.class, WebApplicationExceptionMapper.class);
 
         final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);
         if (annotation != null) {

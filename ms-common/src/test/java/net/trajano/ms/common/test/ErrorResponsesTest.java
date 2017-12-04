@@ -2,6 +2,7 @@ package net.trajano.ms.common.test;
 
 import static org.junit.Assert.assertEquals;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 
@@ -20,6 +21,12 @@ public class ErrorResponsesTest {
         UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorCodes.class);
         UtilityClassTestUtil.assertUtilityClassWellDefined(ErrorResponses.class);
         UtilityClassTestUtil.assertUtilityClassWellDefined(Qualifiers.class);
+    }
+
+    @Test
+    public void jaxrsBadRequesException() {
+
+        assertEquals(400, new BadRequestException().getResponse().getStatus());
     }
 
     @Test
