@@ -4,4 +4,4 @@ RUN apk add --update curl && \
 COPY target/ms-gateway.jar application.yml /
 EXPOSE 80
 CMD ["/usr/bin/java", "-Xmx64m", "-jar", "/ms-gateway.jar"]
-HEALTHCHECK CMD curl --silent --output /dev/null http://localhost/v1
+HEALTHCHECK --start-period=60s CMD curl --silent --output /dev/null http://localhost/v1
