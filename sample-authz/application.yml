@@ -14,3 +14,9 @@ issuer: http://authorization-ms
 
 client_validator:
   file: clients-docker.json
+  
+---
+
+spring.profiles: prod
+spring.profiles.include: docker-compose
+  

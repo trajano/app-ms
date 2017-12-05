@@ -1,67 +1,40 @@
 version: '3.2'
 services:
   web:
-    build: ./quasar-ms
     image: trajano/quasar-ms
-    ports:
-    - "3000:80"
     networks:
     - gateway-web
   gateway-ms:
-    build: ./ms-gateway
+    image: trajano/gateway-ms
     networks:
     - default
     - gateway-web
     - gateway-auth
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
-    ports:
-    - "3001:80"
   authentication-ms:
-    build: ./sample-authn
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
+    image: trajano/authentication-ms
     networks:
     - gateway-auth
     - default
   authorization-ms:
-    build: ./sample-authz
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
+    image: trajano/authorization-ms
     networks:
     - gateway-auth
     - authorization
   oidc-ms:
-    build: ./sample-oidc
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
-    deploy:
-      replicas: 2
+    image: trajano/oidc-ms
     networks:
     - gateway-auth
     - default
   sample-ms:
-    build: ./sample-ms
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
-    deploy:
-      replicas: 2
+    image: trajano/sample-ms
   swagger-ms:
-    build: ./ms-swagger
-    environment:
-    - SPRING_PROFILES_ACTIVE=docker-compose
-    deploy:
-      replicas: 2
+    image: trajano/swagger-ms
   security-cache:
     image: hazelcast/hazelcast:latest
-    deploy:
-      replicas: 2
     networks:
     - authorization
   cache:
     image: hazelcast/hazelcast:latest
-    deploy:
-      replicas: 4
 networks:
   # The default network is used for all the microservices that are not associated with anything infrastructure related.  Primarily where the aplpication specific microservices reside.
   gateway-web:
@@ -69,6 +42,5 @@ networks:
   gateway-auth:
   # This network is used to facilitate the communication between the gateway and the authn/authz microservices.
   authorization:
-  #  driver: overlay
   # authorization-ms has it's own network to prevent other microservices from using the cache 
   
