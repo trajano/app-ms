@@ -7,3 +7,8 @@ spring.profiles: docker-compose
   
 http:
   port: 80
+
+---
+
+spring.profiles: prod
+spring.profiles.include: docker-compose

@@ -13,7 +13,7 @@ http:
 swagger:
 - path: /v1
   info:
-    title: Aggregate
+    title: Trajano Microservice Framework
     version: 1.0
   uris:
   - swagger: ${mappings.sample-ms}
@@ -43,3 +43,8 @@ mappings:
   swagger-ms: http://swagger-ms
   oidc-ms: http://oidc-ms
   
+---
+
+spring.profiles: prod
+spring.profiles.include: docker-compose
+

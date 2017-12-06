@@ -28,8 +28,8 @@ http:
 
 issuer: http://oidc-ms
 oidc:
-  redirect_uri: http://localhost:3001/oidc/cb
-  config_file: openidconnect-config-docker.json
+  redirect_uri: https://localhost:3001/oidc/cb
+  config_file: openidconnect-config.json
 
 authorizationEndpoint: http://authorization-ms/token
 
@@ -42,3 +42,27 @@ mappings:
 
 client_validator:
   file: clients-docker.json
+  
+---
+
+spring:.profiles: prod
+  
+http:
+  port: 80
+
+issuer: http://oidc-ms
+oidc:
+  redirect_uri: https://gw.trajano.net/oidc/cb
+  config_file: openidconnect-config.json
+
+authorizationEndpoint: http://authorization-ms/token
+
+mappings:
+  sample-ms: http://sample-ms
+  authn-ms: http://authentication-ms
+  authz-ms: http://authorization-ms
+  swagger-ms: http://swagger-ms
+  gateway-ms: http://gateway-ms
+
+client_validator:
+  file: clients-prod.json

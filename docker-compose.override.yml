@@ -1,0 +1,32 @@
+version: '3.2'
+services:
+  web:
+    build: ./quasar-ms
+    ports:
+    - "3000:80"
+  gateway-ms:
+    build: ./ms-gateway
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+    ports:
+    - "3001:80"
+  authentication-ms:
+    build: ./sample-authn
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+  authorization-ms:
+    build: ./sample-authz
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+  oidc-ms:
+    build: ./sample-oidc
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+  sample-ms:
+    build: ./sample-ms
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose
+  swagger-ms:
+    build: ./ms-swagger
+    environment:
+    - SPRING_PROFILES_ACTIVE=docker-compose

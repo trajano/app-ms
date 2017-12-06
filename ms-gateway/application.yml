@@ -70,3 +70,7 @@ mappings:
   swagger-ms: http://swagger-ms
   gateway-ms: http://gateway-ms
 
+---
+
+spring.profiles: prod
+spring.profiles.include: docker-compose

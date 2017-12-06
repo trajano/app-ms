@@ -15,3 +15,8 @@ http:
 issuer: http://authentication-ms
 
 authorizationEndpoint: http://authorization-ms/token
+
+---
+
+spring.profiles: prod
+spring.profiles.include: docker-compose

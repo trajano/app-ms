@@ -1,0 +1,90 @@
+version: '3.2'
+services:
+  web:
+    ports:
+    - "3000:80"
+  gateway-ms:
+    ports:
+    - "3001:80"
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  authentication-ms:
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  authorization-ms:
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  oidc-ms:
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  sample-ms:
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  swagger-ms:
+    environment:
+    - SPRING_PROFILES_ACTIVE=prod
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        window: 120s
+  security-cache:
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+      restart_policy:
+        condition: any
+  cache:
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+      restart_policy:
+        condition: any
+      
