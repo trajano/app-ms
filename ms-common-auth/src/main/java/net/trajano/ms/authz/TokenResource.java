@@ -99,16 +99,11 @@ public class TokenResource {
         @FormParam("jwks_uri") final URI jwksUri,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
-        final String clientId;
-        try {
-            final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
+        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
 
-            clientId = clientCredentials[0];
-            if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
-                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
-            }
-        } catch (final ParseException e) {
-            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+        final String clientId = clientCredentials[0];
+        if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (GrantTypes.REFRESH_TOKEN.equals(grantType)) {

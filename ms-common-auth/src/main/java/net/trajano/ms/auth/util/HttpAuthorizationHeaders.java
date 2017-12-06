@@ -1,7 +1,8 @@
 package net.trajano.ms.auth.util;
 
+import net.trajano.ms.core.ErrorResponses;
+
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,13 +34,11 @@ public final class HttpAuthorizationHeaders {
      * @param authorization
      *            authorization
      * @return an array consisting of the user name and password as strings.
-     * @throws ParseException
-     *             problem parsing the authorization data.
      */
-    public static String[] parseBasicAuthorization(final String authorization) throws ParseException {
+    public static String[] parseBasicAuthorization(final String authorization) {
 
         if (authorization == null) {
-            throw new ParseException("authorization is blank", 0);
+            throw ErrorResponses.invalidRequest("authorization is blank");
         }
         final Matcher m = BASIC_AUTHORIZATION_PATTERN.matcher(authorization);
         if (m.matches()) {
@@ -50,7 +49,7 @@ public final class HttpAuthorizationHeaders {
                 decoded.substring(colonPosition + 1)
             };
         } else {
-            throw new ParseException("authorization is blank", 0);
+            throw ErrorResponses.invalidRequest("authorization is not valid");
         }
     }
 

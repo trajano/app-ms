@@ -77,11 +77,7 @@ public class AuthnResource {
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
-        try {
-            claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
-        } catch (final ParseException e) {
-            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", "authz"));
-        }
+        claims.setAudience(HttpAuthorizationHeaders.parseBasicAuthorization(authorization)[0]);
 
         final Form form = new Form();
         form.param("grant_type", GrantTypes.JWT_ASSERTION);

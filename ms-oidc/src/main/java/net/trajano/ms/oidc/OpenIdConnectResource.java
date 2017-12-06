@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
@@ -42,7 +43,6 @@ import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
-import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.internal.AuthenticationUriBuilder;
 import net.trajano.ms.oidc.internal.HazelcastConfiguration;
 import net.trajano.ms.oidc.internal.ServerState;
@@ -72,6 +72,9 @@ public class OpenIdConnectResource {
     private Client client;
 
     @Autowired
+    private ClientValidator clientValidator;
+
+    @Autowired
     private CacheManager cm;
 
     @Autowired
@@ -88,11 +91,9 @@ public class OpenIdConnectResource {
      *
      * @param state
      *            this is a client level state
-     * @param op
-     *            optional server operation identifier
      * @param issuerId
      *            issuer
-     * @return
+     * @return a redirect
      */
     @Path("/auth/{issuer_id}")
     @POST
@@ -188,9 +189,10 @@ public class OpenIdConnectResource {
             .post(Entity.form(storeInternalForm), OAuthTokenResponse.class);
 
         final URI newUri;
+        final URI redirectUri1 = clientValidator.getRedirectUriFromAuthorization(serverState.getClientCredentials());
         if (tokenResponse.isExpiring()) {
             newUri = UriBuilder
-                .fromUri(issuerConfig.getRedirectUri())
+                .fromUri(redirectUri1)
                 .fragment("state={state}&access_token={access_token}&refresh_token={refresh_token}&token_type={token_type}&expires_in={expires_in}")
                 .build(serverState.getClientState(),
                     tokenResponse.getAccessToken(),
@@ -199,7 +201,7 @@ public class OpenIdConnectResource {
                     tokenResponse.getExpiresIn());
         } else {
             newUri = UriBuilder
-                .fromUri(issuerConfig.getRedirectUri())
+                .fromUri(redirectUri1)
                 .fragment("state={state}&access_token={access_token}&refresh_token={refresh_token}&token_type={token_type}")
                 .build(serverState.getClientState(),
                     tokenResponse.getAccessToken(),

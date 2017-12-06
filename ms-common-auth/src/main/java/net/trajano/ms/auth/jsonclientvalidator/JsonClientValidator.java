@@ -49,6 +49,12 @@ public class JsonClientValidator implements
         return getClientInfo(clientId).getJwksUri();
     }
 
+    @Override
+    public URI getRedirectUri(String clientId) {
+
+        return getClientInfo(clientId).getRedirectUri();
+    }
+
     @PostConstruct
     public void init() throws IOException {
 

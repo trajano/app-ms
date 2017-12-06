@@ -32,6 +32,10 @@ public class ClientInfo {
         required = false)
     private URI jwksUri;
 
+    @XmlElement(name = "redirect_uri",
+        required = false)
+    private URI redirectUri;
+
     public String getClientId() {
 
         return clientId;
@@ -79,5 +83,15 @@ public class ClientInfo {
     public void setJwksUri(final URI jwksUri) {
 
         this.jwksUri = jwksUri;
+    }
+
+    public URI getRedirectUri() {
+
+        return redirectUri;
+    }
+
+    public void setRedirectUri(URI redirectUri) {
+
+        this.redirectUri = redirectUri;
     }
 }
