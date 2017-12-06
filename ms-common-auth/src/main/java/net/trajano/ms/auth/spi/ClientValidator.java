@@ -44,15 +44,46 @@ public interface ClientValidator {
     default URI getRedirectUriFromAuthorization(final String authorization) {
 
         final String[] authInfo = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
-        if (!isValid(GrantTypes.OPENID, authInfo[0], authInfo[1])) {
+        if (!isValid(null, authInfo[0], authInfo[1])) {
             throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", "Basic");
         }
         return getRedirectUri(authInfo[0]);
     }
+
+    default boolean isOriginAllowed(final String clientId,
+        String origin) {
+
+        if (origin == null) {
+            return false;
+        }
+        return isOriginAllowed(clientId, URI.create(origin));
+    }
+
+    boolean isOriginAllowed(String clientId,
+        URI origin);
 
     URI getRedirectUri(String clientId);
 
     boolean isValid(String grantType,
         String clientId,
         String clientSecret);
+
+    /**
+     * Checks if the given origin URI is allowed for the given Authorization header
+     * 
+     * @param originUri
+     *            origin URI
+     * @param authorization
+     *            authorization header value
+     * @return true if it is allowed.
+     */
+    default boolean isOriginAllowedFromAuthorization(final URI originUri,
+        final String authorization) {
+
+        final String[] authInfo = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
+        if (!isValid(null, authInfo[0], authInfo[1])) {
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", "Basic");
+        }
+        return isOriginAllowed(authInfo[0], originUri);
+    }
 }
