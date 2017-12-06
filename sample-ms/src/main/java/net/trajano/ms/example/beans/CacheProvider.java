@@ -1,5 +1,6 @@
 package net.trajano.ms.example.beans;
 
+import net.trajano.ms.spi.CacheNames;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -14,13 +15,13 @@ public class CacheProvider {
     @Bean
     public CacheManager cacheManager() {
 
-        final ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(Qualifiers.JWKS_CACHE);
+        final ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(CacheNames.JWKS, CacheNames.NONCE);
         return concurrentMapCacheManager;
     }
 
-    @Bean(name = Qualifiers.JWKS_CACHE)
+    @Bean(name = CacheNames.JWKS)
     public Cache jwsCache(final CacheManager cacheManager) {
 
-        return cacheManager.getCache(Qualifiers.JWKS_CACHE);
+        return cacheManager.getCache(CacheNames.JWKS);
     }
 }

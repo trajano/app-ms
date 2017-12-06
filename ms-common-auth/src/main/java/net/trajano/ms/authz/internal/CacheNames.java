@@ -8,6 +8,8 @@ public class CacheNames {
 
     public static final String JWKS = Qualifiers.JWKS_CACHE;
 
+    public static final String NONCE = "nonce";
+
     public static final String REFRESH_TOKEN_TO_ENTRY = "refresh_token_to_entry";
 
     private CacheNames() {

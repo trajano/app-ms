@@ -30,6 +30,9 @@ public class HazelcastConfiguration {
     @Value("${token.jwk_expiration:1800}")
     private int jwkExpirationInSeconds;
 
+    @Value("${token.nonce_expiration:300}")
+    private int nonceExpirationInSeconds;
+
     @Value("${token.refresh_token_expiration:3600}")
     private int refreshTokenExpirationInSeconds;
 

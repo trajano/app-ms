@@ -1,5 +1,6 @@
 package net.trajano.ms.oidc.internal;
 
+import net.trajano.ms.spi.CacheNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class HazelcastConfiguration {
     @Value("${token.jwk_expiration:1800}")
     private int jwkExpirationInSeconds;
 
+    @Value("${token.nonce:3600}")
+    private int nonceExpirationInSeconds;
+
     @Value("${oidc.server_state_expiration:3600}")
     private int serverStateExpiration;
 
@@ -47,7 +51,11 @@ public class HazelcastConfiguration {
                 .setTimeToLiveSeconds(serverStateExpiration)
                 .setMaxIdleSeconds(serverStateExpiration))
             .addMapConfig(new MapConfig()
-                .setName(Qualifiers.JWKS_CACHE)
+                .setName(CacheNames.NONCE)
+                .setTimeToLiveSeconds(nonceExpirationInSeconds)
+                .setMaxIdleSeconds(nonceExpirationInSeconds))
+            .addMapConfig(new MapConfig()
+                .setName(CacheNames.JWKS)
                 .setTimeToLiveSeconds(jwkExpirationInSeconds)
                 .setMaxIdleSeconds(jwkExpirationInSeconds)
                 .addEntryListenerConfig(listener));

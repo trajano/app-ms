@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.consumer.InvalidJwtException;
@@ -33,7 +34,6 @@ import org.springframework.stereotype.Component;
 
 import net.trajano.ms.core.ErrorResponse;
 import net.trajano.ms.vertx.beans.DefaultAssertionRequiredPredicate;
-import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
 
@@ -70,7 +70,7 @@ public class JwtAssertionInterceptor implements
      */
     private final ConcurrentMap<String, HttpsJwks> jwks = new ConcurrentHashMap<>();
 
-    private JwksProvider jwksProvider;
+    private CachedDataProvider cachedDataProvider;
 
     @Context
     private ResourceInfo resourceInfo;
@@ -105,7 +105,7 @@ public class JwtAssertionInterceptor implements
                 }
             }
             final List<String> audience = Arrays.asList(requestContext.getHeaderString(X_JWT_AUDIENCE).split(", "));
-            claims = jwksProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
+            claims = cachedDataProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
         } catch (final InvalidJwtException e) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("JWT invalid", e);
@@ -161,9 +161,9 @@ public class JwtAssertionInterceptor implements
     }
 
     @Autowired
-    public void setJwksProvider(final JwksProvider jwksProvider) {
+    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
 
-        this.jwksProvider = jwksProvider;
+        this.cachedDataProvider = cachedDataProvider;
     }
 
 }

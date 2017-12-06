@@ -21,20 +21,20 @@ public class JwksRouteHandler implements
     Handler<RoutingContext> {
 
     /**
-     * JWKS provider
+     * Cached data provider which provides the JWKS.
      */
     @Autowired
-    private JwksProvider jwksProvider;
+    private CachedDataProvider cachedDataProvider;
 
     @Override
     public void handle(final RoutingContext context) {
 
-        context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).end(jwksProvider.getKeySet().toJson(JsonWebKey.OutputControlLevel.PUBLIC_ONLY));
+        context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).end(cachedDataProvider.getKeySet().toJson(JsonWebKey.OutputControlLevel.PUBLIC_ONLY));
 
     }
 
-    public void setJwksProvider(final JwksProvider jwksProvider) {
+    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
 
-        this.jwksProvider = jwksProvider;
+        this.cachedDataProvider = cachedDataProvider;
     }
 }

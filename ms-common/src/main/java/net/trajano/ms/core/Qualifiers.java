@@ -1,5 +1,7 @@
 package net.trajano.ms.core;
 
+import net.trajano.ms.spi.CacheNames;
+
 /**
  * Unclassified qualifiers used by the application.
  *
@@ -9,8 +11,11 @@ public final class Qualifiers {
 
     /**
      * JWKS Cache Name.
+     * 
+     * @deprecated use {@link net.trajano.ms.spi.CacheNames#JWKS}
      */
-    public static final String JWKS_CACHE = "jwks_cache";
+    @Deprecated
+    public static final String JWKS_CACHE = CacheNames.JWKS;
 
     /**
      * Request ID HTTP Header.

@@ -7,13 +7,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.jose4j.jwk.JsonWebKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.trajano.ms.vertx.beans.JwksProvider;
 
 /**
  * This endpoint is exposed by every microservice to provide JWKS that is used
@@ -31,7 +31,7 @@ public class JwksResource {
      * JWKS provider
      */
     @Autowired
-    private JwksProvider jwksProvider;
+    private CachedDataProvider cachedDataProvider;
 
     /**
      * Only return the public keys.
@@ -45,11 +45,11 @@ public class JwksResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String getPublicKeySet() {
 
-        return jwksProvider.getKeySet().toJson(JsonWebKey.OutputControlLevel.PUBLIC_ONLY);
+        return cachedDataProvider.getKeySet().toJson(JsonWebKey.OutputControlLevel.PUBLIC_ONLY);
     }
 
-    public void setJwksProvider(final JwksProvider jwksProvider) {
+    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
 
-        this.jwksProvider = jwksProvider;
+        this.cachedDataProvider = cachedDataProvider;
     }
 }

@@ -1,24 +1,15 @@
 package net.trajano.ms.example.authn;
 
 import java.net.URI;
-import java.text.ParseException;
 
 import javax.annotation.security.PermitAll;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.*;
 
+import net.trajano.ms.core.NonceOps;
 import net.trajano.ms.core.ErrorResponses;
-import net.trajano.ms.core.Qualifiers;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +27,6 @@ import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.core.ErrorResponse;
-import net.trajano.ms.core.ErrorResponses;
 
 /**
  * This works like the FORM based login of Java EE. It allows any user name as
@@ -55,11 +45,30 @@ public class AuthnResource {
     @Value("${authorizationEndpoint}")
     private URI authorizationEndpoint;
 
+    /**
+     * configuration value to determine if the cookies should be sent as secure.
+     * This is false when testing on non SSL hosts.
+     */
+    @Value("${secure:#{true}}")
+    private boolean secure;
+
     @Context
     private Client client;
 
     @Autowired
     private CryptoOps cryptoOps;
+
+    @Autowired
+    private NonceOps nonceProvider;
+
+    @GET
+    @Path("/nonce")
+    public Response getNonce() {
+
+        return Response.ok()
+            .cookie(new NewCookie("nonce", nonceProvider.newNonce(), null, null, null, NewCookie.DEFAULT_MAX_AGE, secure, true))
+            .build();
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -67,11 +76,15 @@ public class AuthnResource {
     @ApiResponses(@ApiResponse(code = 401,
         message = "Unauthorized Response",
         response = ErrorResponse.class))
-    public OAuthTokenResponse json(
+    public Response json(
         @FormParam("j_username") @ApiParam("User name") final String username,
         @FormParam("j_password") @ApiParam("Password") final String password,
+        @CookieParam("nonce") final String nonce,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
+        if (!nonceProvider.claimNonce(nonce)) {
+            throw ErrorResponses.invalidRequest("invalid nonce");
+        }
         if (!"password".equals(password)) {
             throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
         }
@@ -83,9 +96,11 @@ public class AuthnResource {
         form.param("grant_type", GrantTypes.JWT_ASSERTION);
         form.param("assertion", cryptoOps.sign(claims));
 
-        return client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON_TYPE)
+        return Response.ok(client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON_TYPE)
             .header(HttpHeaders.AUTHORIZATION, authorization)
-            .post(Entity.form(form), OAuthTokenResponse.class);
+            .post(Entity.form(form), OAuthTokenResponse.class))
+            .cookie(new NewCookie("nonce", "", null, null, null, 0, secure, true))
+            .build();
 
     }
 
