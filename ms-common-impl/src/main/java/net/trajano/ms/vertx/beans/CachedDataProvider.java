@@ -5,8 +5,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.InternalServerErrorException;
 
-import net.trajano.ms.core.NonceOps;
-import net.trajano.ms.spi.CacheNames;
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.JsonWebKeySet;
@@ -25,6 +23,9 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import net.trajano.ms.core.NonceOps;
+import net.trajano.ms.spi.CacheNames;
 
 @Component
 public class CachedDataProvider implements
@@ -113,6 +114,21 @@ public class CachedDataProvider implements
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean claimNonce(final String nonce) {
+
+        final Boolean value = nonceCache.get(nonce, Boolean.class);
+        if (value == null) {
+            return false;
+        } else {
+            nonceCache.evict(nonce);
+            return value;
+        }
+    }
+
+    /**
      * Gets a single signing key.
      *
      * @return an RSA web key that supports signing.
@@ -124,6 +140,17 @@ public class CachedDataProvider implements
             LOG.debug(keySet.toJson());
         }
         return (RsaJsonWebKey) keySet.findJsonWebKey(null, "RSA", "sig", null);
+    }
+
+    private Cache getCache(final String cacheName) {
+
+        Cache cache = cm.getCache(CacheNames.JWKS);
+        if (cache == null) {
+            LOG.warn("A no cache named {} was not provided by the cache manager an in-memory cache will be used", cacheName);
+            cache = new ConcurrentMapCacheManager(cacheName).getCache(cacheName);
+        }
+        return cache;
+
     }
 
     /**
@@ -142,17 +169,6 @@ public class CachedDataProvider implements
             }
         }
         return set;
-    }
-
-    private Cache getCache(String cacheName) {
-
-        Cache cache = cm.getCache(CacheNames.JWKS);
-        if (cache == null) {
-            LOG.warn("A no cache named {} was not provided by the cache manager an in-memory cache will be used", cacheName);
-            cache = new ConcurrentMapCacheManager(cacheName).getCache(cacheName);
-        }
-        return cache;
-
     }
 
     @PostConstruct
@@ -176,24 +192,9 @@ public class CachedDataProvider implements
     @Override
     public String newNonce() {
 
-        String nonce = tokenGenerator.newToken();
+        final String nonce = tokenGenerator.newToken();
         nonceCache.putIfAbsent(nonce, true);
         return nonce;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean claimNonce(final String nonce) {
-
-        final Boolean value = nonceCache.get(nonce, Boolean.class);
-        if (value == null) {
-            return false;
-        } else {
-            nonceCache.evict(nonce);
-            return value;
-        }
     }
 
 }

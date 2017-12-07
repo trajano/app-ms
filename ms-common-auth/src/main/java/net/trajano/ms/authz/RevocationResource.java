@@ -1,7 +1,5 @@
 package net.trajano.ms.authz;
 
-import java.text.ParseException;
-
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -12,8 +10,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import net.trajano.ms.core.ErrorResponses;
-import net.trajano.ms.core.Qualifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

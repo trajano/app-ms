@@ -1,6 +1,5 @@
 package net.trajano.ms.oidc.internal;
 
-import net.trajano.ms.spi.CacheNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MulticastConfig;
 import com.hazelcast.config.NetworkConfig;
 
-import net.trajano.ms.core.Qualifiers;
+import net.trajano.ms.spi.CacheNames;
 
 @Configuration
 public class HazelcastConfiguration {

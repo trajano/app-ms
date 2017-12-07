@@ -1,12 +1,13 @@
 package net.trajano.ms.auth.test;
 
-import net.trajano.ms.authz.ClientInfoResource;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
 import java.net.URL;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import net.trajano.ms.authz.ClientInfoResource;
 
 public class UriTest {
 

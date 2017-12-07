@@ -1,11 +1,11 @@
 package net.trajano.ms.auth.util;
 
-import net.trajano.ms.core.ErrorResponses;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import net.trajano.ms.core.ErrorResponses;
 
 /**
  * Utility class to process HTTP Headers dealing with authorization.

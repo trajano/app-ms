@@ -1,9 +1,8 @@
 package net.trajano.ms.authz;
 
-import io.swagger.annotations.Api;
-import net.trajano.ms.auth.spi.ClientValidator;
-import net.trajano.ms.core.ErrorResponses;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.GET;
@@ -11,9 +10,12 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import io.swagger.annotations.Api;
+import net.trajano.ms.auth.spi.ClientValidator;
+import net.trajano.ms.core.ErrorResponses;
 
 /**
  * Client info endpoint resource.

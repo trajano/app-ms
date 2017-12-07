@@ -46,7 +46,21 @@ export default {
     return {
       username: '',
       password: '',
-      message: null
+      message: null,
+      nonce: null
+    }
+  },
+  async beforeRouteEnter(to, from, next) {
+    const headers = new Headers()
+    headers.set('Accept', 'application/json')
+    headers.set('Authorization', 'Basic YXBwX2lkOmFwcF9zZWNyZXQ=')
+    let response = await fetch(process.env.GATEWAY_URI + '/v1/authn/nonce', {
+      method: 'GET',
+      headers
+    })
+    if (response.status === 200) {
+      let data = await response.json()
+      next(vm => vm.setNonce(data.nonce))
     }
   },
   methods: {
@@ -58,7 +72,7 @@ export default {
       const body = new URLSearchParams()
       body.append('j_username', this.username)
       body.append('j_password', this.password)
-      console.log(process.env)
+      body.append('nonce', this.nonce)
       let response = await fetch(process.env.GATEWAY_URI + '/v1/authn', {
         method: 'POST',
         headers,
@@ -82,7 +96,9 @@ export default {
     },
     async signInWithGoogle() {
       Loading.show()
-      const state = base64url.encode(this.$store.getters['oauthToken/requestedPath'])
+      const state = base64url.encode(
+        this.$store.getters['oauthToken/requestedPath']
+      )
 
       const acceptJson = new Headers()
       acceptJson.set('Accept', 'application/json')
@@ -94,6 +110,9 @@ export default {
       let data = await response.json()
       this.oidcUri = data.uri
       window.location.href = this.oidcUri
+    },
+    setNonce(nonce) {
+      this.nonce = nonce
     },
     noop() {}
   }

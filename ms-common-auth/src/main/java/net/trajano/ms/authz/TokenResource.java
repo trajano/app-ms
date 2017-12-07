@@ -1,7 +1,6 @@
 package net.trajano.ms.authz;
 
 import java.net.URI;
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,8 +16,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import net.trajano.ms.core.ErrorResponses;
-import net.trajano.ms.core.Qualifiers;
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;

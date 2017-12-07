@@ -26,4 +26,16 @@ public interface NonceOps {
      * @return string token
      */
     String newNonce();
+
+    /**
+     * Generates a new nonce wrapped in an object suitable for conversion to JSON.
+     *
+     * @return Nonce object
+     */
+    default NonceObject newNonceObject() {
+
+        final NonceObject obj = new NonceObject();
+        obj.setNonce(newNonce());
+        return obj;
+    }
 }

@@ -3,13 +3,22 @@ package net.trajano.ms.example.authn;
 import java.net.URI;
 
 import javax.annotation.security.PermitAll;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
-import net.trajano.ms.core.NonceOps;
-import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +36,9 @@ import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.core.NonceObject;
+import net.trajano.ms.core.NonceOps;
 
 /**
  * This works like the FORM based login of Java EE. It allows any user name as
@@ -45,13 +57,6 @@ public class AuthnResource {
     @Value("${authorizationEndpoint}")
     private URI authorizationEndpoint;
 
-    /**
-     * configuration value to determine if the cookies should be sent as secure.
-     * This is false when testing on non SSL hosts.
-     */
-    @Value("${secure:#{true}}")
-    private boolean secure;
-
     @Context
     private Client client;
 
@@ -61,13 +66,19 @@ public class AuthnResource {
     @Autowired
     private NonceOps nonceProvider;
 
+    /**
+     * configuration value to determine if the cookies should be sent as secure.
+     * This is false when testing on non SSL hosts.
+     */
+    @Value("${secure:#{true}}")
+    private boolean secure;
+
     @GET
     @Path("/nonce")
-    public Response getNonce() {
+    @Produces(MediaType.APPLICATION_JSON)
+    public NonceObject getNonce() {
 
-        return Response.ok()
-            .cookie(new NewCookie("nonce", nonceProvider.newNonce(), null, null, null, NewCookie.DEFAULT_MAX_AGE, secure, true))
-            .build();
+        return nonceProvider.newNonceObject();
     }
 
     @POST
@@ -79,9 +90,12 @@ public class AuthnResource {
     public Response json(
         @FormParam("j_username") @ApiParam("User name") final String username,
         @FormParam("j_password") @ApiParam("Password") final String password,
-        @CookieParam("nonce") final String nonce,
+        @FormParam("nonce") @ApiParam("nonce") final String nonce,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
+        if (nonce == null) {
+            throw ErrorResponses.invalidRequest("missing nonce");
+        }
         if (!nonceProvider.claimNonce(nonce)) {
             throw ErrorResponses.invalidRequest("invalid nonce");
         }

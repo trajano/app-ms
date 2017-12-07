@@ -1,13 +1,12 @@
 package net.trajano.ms.example.beans;
 
-import net.trajano.ms.spi.CacheNames;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import net.trajano.ms.core.Qualifiers;
+import net.trajano.ms.spi.CacheNames;
 
 @Configuration
 public class CacheProvider {

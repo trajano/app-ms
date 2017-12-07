@@ -11,8 +11,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.EntryListenerConfig;
 import com.hazelcast.config.MapConfig;
 
-import net.trajano.ms.core.Qualifiers;
-
 @Configuration
 public class HazelcastConfiguration {
 
@@ -58,7 +56,7 @@ public class HazelcastConfiguration {
                 .setMaxIdleSeconds(refreshTokenExpirationInSeconds)
                 .addEntryListenerConfig(listener))
             .addMapConfig(new MapConfig()
-                .setName(Qualifiers.JWKS_CACHE)
+                .setName(CacheNames.NONCE)
                 .setTimeToLiveSeconds(jwkExpirationInSeconds)
                 .setMaxIdleSeconds(jwkExpirationInSeconds)
                 .addEntryListenerConfig(listener));
