@@ -1,7 +1,5 @@
 package net.trajano.ms.authz;
 
-import java.text.ParseException;
-
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -70,16 +68,11 @@ public class RevocationResource {
         @FormParam("token_type_hint") final String tokenTypeHint,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
-        final String clientId;
-        try {
-            final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
+        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);
 
-            clientId = clientCredentials[0];
-            if (!clientValidator.isValid("revocation", clientId, clientCredentials[1])) {
-                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
-            }
-        } catch (final ParseException e) {
-            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Invalid or missing authorization", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+        final String clientId = clientCredentials[0];
+        if (!clientValidator.isValid("revocation", clientId, clientCredentials[1])) {
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         if (token == null) {

@@ -23,11 +23,14 @@ public class JcaCryptoOps implements
     CryptoOps {
 
     @Autowired
-    private JwksProvider jwksProvider;
+    private CachedDataProvider cachedDataProvider;
 
     @Autowired
     private TokenGenerator tokenGenerator;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String newToken() {
 
@@ -35,11 +38,14 @@ public class JcaCryptoOps implements
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String sign(final JwtClaims claims) {
 
         try {
-            final RsaJsonWebKey aSigningKey = jwksProvider.getASigningKey();
+            final RsaJsonWebKey aSigningKey = cachedDataProvider.getASigningKey();
             final JsonWebSignature jws = new JsonWebSignature();
             jws.setPayload(claims.toJson());
             jws.setKeyIdHeaderValue(aSigningKey.getKeyId());
@@ -52,6 +58,9 @@ public class JcaCryptoOps implements
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public JwtClaims toClaimsSet(final String jwt,
         final JsonWebKeySet jwks) {
@@ -67,6 +76,9 @@ public class JcaCryptoOps implements
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public JwtClaims toClaimsSet(final String jwt,
         final String audience,

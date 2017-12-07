@@ -15,14 +15,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import net.trajano.ms.authz.internal.CacheNames;
 import net.trajano.ms.authz.internal.LoggingEntryListener;
 import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.TokenGenerator;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
     SampleInternalClaimsBuilder.class,
-    JwksProvider.class,
+    CachedDataProvider.class,
     LoggingEntryListener.class,
     ConcurrentMapCacheManager.class,
     TokenCache.class,

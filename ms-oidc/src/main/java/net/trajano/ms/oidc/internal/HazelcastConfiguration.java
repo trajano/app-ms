@@ -13,7 +13,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MulticastConfig;
 import com.hazelcast.config.NetworkConfig;
 
-import net.trajano.ms.core.Qualifiers;
+import net.trajano.ms.spi.CacheNames;
 
 @Configuration
 public class HazelcastConfiguration {
@@ -27,6 +27,9 @@ public class HazelcastConfiguration {
 
     @Value("${token.jwk_expiration:1800}")
     private int jwkExpirationInSeconds;
+
+    @Value("${token.nonce:3600}")
+    private int nonceExpirationInSeconds;
 
     @Value("${oidc.server_state_expiration:3600}")
     private int serverStateExpiration;
@@ -47,7 +50,11 @@ public class HazelcastConfiguration {
                 .setTimeToLiveSeconds(serverStateExpiration)
                 .setMaxIdleSeconds(serverStateExpiration))
             .addMapConfig(new MapConfig()
-                .setName(Qualifiers.JWKS_CACHE)
+                .setName(CacheNames.NONCE)
+                .setTimeToLiveSeconds(nonceExpirationInSeconds)
+                .setMaxIdleSeconds(nonceExpirationInSeconds))
+            .addMapConfig(new MapConfig()
+                .setName(CacheNames.JWKS)
                 .setTimeToLiveSeconds(jwkExpirationInSeconds)
                 .setMaxIdleSeconds(jwkExpirationInSeconds)
                 .addEntryListenerConfig(listener));

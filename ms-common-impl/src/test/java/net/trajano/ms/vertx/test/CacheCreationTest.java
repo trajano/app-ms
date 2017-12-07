@@ -3,6 +3,7 @@ package net.trajano.ms.vertx.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import net.trajano.ms.sample.JwksResource;
 import net.trajano.ms.vertx.VertxConfig;
-import net.trajano.ms.vertx.beans.JwksProvider;
 
 /**
  * Tests are hanging on Travis for some odd reason.
@@ -25,7 +25,7 @@ import net.trajano.ms.vertx.beans.JwksProvider;
 public class CacheCreationTest {
 
     @Autowired
-    private JwksProvider jwksProvider;
+    private CachedDataProvider cachedDataProvider;
 
     /**
      * Verify that the concurrent cache manager returns something.
@@ -33,7 +33,7 @@ public class CacheCreationTest {
     @Test
     public void springConcurrentMapCacheManagerTest() throws Exception {
 
-        assertNotNull(jwksProvider);
+        assertNotNull(cachedDataProvider);
 
     }
 
@@ -41,18 +41,18 @@ public class CacheCreationTest {
     public void testJwksResource() throws Exception {
 
         final JwksResource jwksResource = new JwksResource();
-        jwksResource.setJwksProvider(jwksProvider);
+        jwksResource.setCachedDataProvider(cachedDataProvider);
         System.out.println(jwksResource.getPublicKeySet());
         //        @SuppressWarnings("unchecked")
         //        final List<JsonWebKey> keys = (List<JsonWebKey>) jwksResource.getPublicKeySet().getEntity();
-        //        assertEquals(JwksProvider.MIN_NUMBER_OF_KEYS, keys.size());
+        //        assertEquals(CachedDataProvider.MIN_NUMBER_OF_KEYS, keys.size());
     }
 
     @Test
     public void testProvider() throws Exception {
 
-        assertNotNull(jwksProvider.getKeySet());
-        assertEquals(JwksProvider.MIN_NUMBER_OF_KEYS, jwksProvider.getKeySet().getJsonWebKeys().size());
+        assertNotNull(cachedDataProvider.getKeySet());
+        assertEquals(CachedDataProvider.MIN_NUMBER_OF_KEYS, cachedDataProvider.getKeySet().getJsonWebKeys().size());
     }
 
 }

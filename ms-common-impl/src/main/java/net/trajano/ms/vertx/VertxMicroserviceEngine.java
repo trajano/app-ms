@@ -30,7 +30,7 @@ import net.trajano.ms.spi.MicroserviceEngine;
 import net.trajano.ms.vertx.beans.GsonJacksonJsonOps;
 import net.trajano.ms.vertx.beans.GsonProvider;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.JwksRouteHandler;
 import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
 
@@ -95,7 +95,7 @@ public class VertxMicroserviceEngine implements
         applicationContext.register(GsonJacksonJsonOps.class,
             GsonProvider.class,
             JcaCryptoOps.class,
-            JwksProvider.class,
+            CachedDataProvider.class,
             JwksRouteHandler.class,
             CommonMsJaxRs.class);
         handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, Microservice.getApplicationClass()));

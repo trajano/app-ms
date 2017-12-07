@@ -2,6 +2,7 @@ package net.trajano.ms.vertx.test;
 
 import static org.junit.Assert.assertNotNull;
 
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.JwksProvider;
 import net.trajano.ms.vertx.beans.TokenGenerator;
 
 /**
@@ -21,7 +21,7 @@ import net.trajano.ms.vertx.beans.TokenGenerator;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
     JcaCryptoOps.class,
-    JwksProvider.class,
+    CachedDataProvider.class,
     TokenGenerator.class
 })
 public class OpsTest {

@@ -18,5 +18,11 @@ client_validator:
 ---
 
 spring.profiles: prod
-spring.profiles.include: docker-compose
+http:
+  port: 80
+
+issuer: http://authorization-ms
+
+client_validator:
+  file: clients-prod.json
   

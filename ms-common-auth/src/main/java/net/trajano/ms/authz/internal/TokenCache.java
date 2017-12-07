@@ -61,6 +61,23 @@ public class TokenCache {
      */
     public IdTokenResponse get(final String accessToken) {
 
+        final TokenCacheEntry cacheEntry = getCacheEntry(accessToken);
+        if (cacheEntry == null) {
+            return null;
+        }
+        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresInSeconds());
+
+    }
+
+    /**
+     * This will return null if a valid entry was not found.
+     *
+     * @param accessToken
+     *            access token
+     * @return OAuth 2.0 ID Token Response
+     */
+    public TokenCacheEntry getCacheEntry(final String accessToken) {
+
         final TokenCacheEntry cacheEntry = accessTokenToEntry.get(accessToken, TokenCacheEntry.class);
         if (cacheEntry == null) {
             LOG.debug("No entry for accessToken={}", accessToken);
@@ -71,7 +88,7 @@ public class TokenCache {
             LOG.debug("Entry was expired for accessToken={}", accessToken);
             return null;
         }
-        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresInSeconds());
+        return cacheEntry;
 
     }
 

@@ -1,11 +1,11 @@
 package net.trajano.ms.oidc.internal;
 
 import java.net.URI;
-import java.text.ParseException;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.UriBuilder;
 
+import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +17,6 @@ import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
-import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.spi.IssuerConfig;
 import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
@@ -76,12 +75,8 @@ public class AuthenticationUriBuilder {
             throw ErrorResponses.invalidRequest("Invalid issuer_id");
         }
 
-        try {
-            if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
-                throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
-            }
-        } catch (final ParseException e) {
-            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unable to parse client credentials", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
+        if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
+            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();

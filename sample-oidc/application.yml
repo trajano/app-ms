@@ -50,7 +50,6 @@ spring:.profiles: prod
 http:
   port: 80
 
-issuer: http://oidc-ms
 oidc:
   redirect_uri: https://gw.trajano.net/oidc/cb
   config_file: openidconnect-config.json

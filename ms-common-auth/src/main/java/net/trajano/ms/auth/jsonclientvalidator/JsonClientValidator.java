@@ -49,6 +49,19 @@ public class JsonClientValidator implements
         return getClientInfo(clientId).getJwksUri();
     }
 
+    @Override
+    public boolean isOriginAllowed(String clientId,
+        URI origin) {
+
+        return getClientInfo(clientId).isOriginAllowed(origin);
+    }
+
+    @Override
+    public URI getRedirectUri(String clientId) {
+
+        return getClientInfo(clientId).getRedirectUri();
+    }
+
     @PostConstruct
     public void init() throws IOException {
 
@@ -62,7 +75,11 @@ public class JsonClientValidator implements
         final String clientSecret) {
 
         final ClientInfo clientInfo = getClientInfo(clientId);
-        return clientInfo != null && clientInfo.matches(grantType, clientId, clientSecret);
+        if (grantType == null) {
+            return clientInfo != null && clientInfo.matches(clientId, clientSecret);
+        } else {
+            return clientInfo != null && clientInfo.matches(grantType, clientId, clientSecret);
+        }
     }
 
 }

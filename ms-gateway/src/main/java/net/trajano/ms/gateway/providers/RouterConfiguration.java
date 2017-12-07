@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -29,12 +28,6 @@ import io.vertx.ext.web.handler.CorsHandler;
 public class RouterConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(RouterConfiguration.class);
-
-    /**
-     * Allowed origins for {@link HttpHeaders#ACCESS_CONTROL_ALLOW_ORIGIN}
-     */
-    @Value("${allowedOrigins:*}")
-    private String allowedOrigins;
 
     @Value("${http.defaultBodyLimit:-1}")
     private long defaultBodyLimit;
@@ -68,7 +61,9 @@ public class RouterConfiguration {
 
         final Router router = Router.router(vertx);
 
-        router.route().handler(CorsHandler.create(allowedOrigins)
+        router.route().handler(handlers.corsHandler());
+
+        router.route().handler(CorsHandler.create(".+")
             .maxAgeSeconds(600)
             .allowedMethod(HttpMethod.GET)
             .allowedMethod(HttpMethod.POST)
@@ -149,6 +144,7 @@ public class RouterConfiguration {
             }
             ++i;
         }
+        router.route().failureHandler(handlers.failureHandler());
 
         return router;
     }

@@ -32,6 +32,14 @@ public class ClientInfo {
         required = false)
     private URI jwksUri;
 
+    @XmlElement(name = "origin",
+        required = false)
+    private URI origin;
+
+    @XmlElement(name = "redirect_uri",
+        required = false)
+    private URI redirectUri;
+
     public String getClientId() {
 
         return clientId;
@@ -50,6 +58,37 @@ public class ClientInfo {
     public URI getJwksUri() {
 
         return jwksUri;
+    }
+
+    public URI getOrigin() {
+
+        return origin;
+    }
+
+    public URI getRedirectUri() {
+
+        return redirectUri;
+    }
+
+    public boolean isOriginAllowed(final URI origin) {
+
+        return this.origin.equals(origin);
+    }
+
+    /**
+     * Matches with no grant type.
+     *
+     * @param clientId
+     *            client ID
+     * @param clientSecret
+     *            client secret
+     * @return true if the ID and secret match the one provided by info.
+     */
+    public boolean matches(final String clientId,
+        final String clientSecret) {
+
+        return this.clientId.equals(clientId) &&
+            this.clientSecret.equals(clientSecret);
     }
 
     public boolean matches(final String grantType,
@@ -79,5 +118,15 @@ public class ClientInfo {
     public void setJwksUri(final URI jwksUri) {
 
         this.jwksUri = jwksUri;
+    }
+
+    public void setOrigin(final URI origin) {
+
+        this.origin = origin;
+    }
+
+    public void setRedirectUri(final URI redirectUri) {
+
+        this.redirectUri = redirectUri;
     }
 }
