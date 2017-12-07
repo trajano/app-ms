@@ -32,13 +32,13 @@ public class ClientInfo {
         required = false)
     private URI jwksUri;
 
-    @XmlElement(name = "redirect_uri",
-        required = false)
-    private URI redirectUri;
-
     @XmlElement(name = "origin",
         required = false)
     private URI origin;
+
+    @XmlElement(name = "redirect_uri",
+        required = false)
+    private URI redirectUri;
 
     public String getClientId() {
 
@@ -60,18 +60,24 @@ public class ClientInfo {
         return jwksUri;
     }
 
-    public boolean matches(final String grantType,
-        final String clientId,
-        final String clientSecret) {
+    public URI getOrigin() {
 
-        return grantTypes.contains(grantType) &&
-            this.clientId.equals(clientId) &&
-            this.clientSecret.equals(clientSecret);
+        return origin;
+    }
+
+    public URI getRedirectUri() {
+
+        return redirectUri;
+    }
+
+    public boolean isOriginAllowed(final URI origin) {
+
+        return this.origin.equals(origin);
     }
 
     /**
      * Matches with no grant type.
-     * 
+     *
      * @param clientId
      *            client ID
      * @param clientSecret
@@ -82,6 +88,15 @@ public class ClientInfo {
         final String clientSecret) {
 
         return this.clientId.equals(clientId) &&
+            this.clientSecret.equals(clientSecret);
+    }
+
+    public boolean matches(final String grantType,
+        final String clientId,
+        final String clientSecret) {
+
+        return grantTypes.contains(grantType) &&
+            this.clientId.equals(clientId) &&
             this.clientSecret.equals(clientSecret);
     }
 
@@ -105,28 +120,13 @@ public class ClientInfo {
         this.jwksUri = jwksUri;
     }
 
-    public URI getRedirectUri() {
-
-        return redirectUri;
-    }
-
-    public void setRedirectUri(URI redirectUri) {
-
-        this.redirectUri = redirectUri;
-    }
-
-    public boolean isOriginAllowed(URI origin) {
-
-        return this.origin.equals(origin);
-    }
-
-    public URI getOrigin() {
-
-        return origin;
-    }
-
-    public void setOrigin(URI origin) {
+    public void setOrigin(final URI origin) {
 
         this.origin = origin;
+    }
+
+    public void setRedirectUri(final URI redirectUri) {
+
+        this.redirectUri = redirectUri;
     }
 }

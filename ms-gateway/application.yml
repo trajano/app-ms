@@ -10,6 +10,7 @@ mappings:
 authorization:
   token_endpoint: ${mappings.authz-ms}/token
   revocation_endpoint: ${mappings.authz-ms}/revoke
+  client_check_endpoint: ${mappings.authz-ms}/check
   refresh_token_path: /refresh
   revocation_path: /logout
   client_id: gateway

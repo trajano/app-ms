@@ -21,6 +21,20 @@ public final class ErrorResponses {
             .build());
     }
 
+    public static InternalServerErrorException internalServerError(final String message) {
+
+        return new InternalServerErrorException(Response
+            .status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(ErrorCodes.SERVER_ERROR, message))
+            .type(MediaType.APPLICATION_JSON)
+            .build());
+
+    }
+
+    public static BadRequestException invalidAuthorization() {
+
+        return invalidRequest("Invalid authorization");
+    }
+
     public static BadRequestException invalidRequest(final String errorDescription) {
 
         return new BadRequestException(Response
@@ -29,13 +43,9 @@ public final class ErrorResponses {
             .build());
     }
 
-    public static InternalServerErrorException internalServerError(final String message) {
+    public static BadRequestException missingAuthorization() {
 
-        return new InternalServerErrorException(Response
-            .status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(ErrorCodes.SERVER_ERROR, message))
-            .type(MediaType.APPLICATION_JSON)
-            .build());
-
+        return invalidRequest("Missing authorization");
     }
 
     public static NotAuthorizedException unauthorized(final String error,
