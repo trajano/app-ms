@@ -19,12 +19,28 @@ public final class HttpAuthorizationHeaders {
      */
     private static final Pattern BASIC_AUTHORIZATION_PATTERN = Pattern.compile("^Basic ((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$");
 
+    private static final Pattern BEARER_AUTHORIZATION_PATTERN = Pattern.compile("^Bearer ([-_A-Za-z0-9]+)$");
+
     public static String buildBasicAuthorization(final String username,
         final String password) {
 
         final StringBuilder b = new StringBuilder("Basic ");
         b.append(Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)));
         return b.toString();
+    }
+
+    public static AuthorizationType getAuthorizationType(final String authorization) {
+
+        if (authorization == null) {
+            throw ErrorResponses.missingAuthorization();
+        }
+        if (authorization.startsWith("Bearer ")) {
+            return AuthorizationType.BEARER;
+        } else if (authorization.startsWith("Basic ")) {
+            return AuthorizationType.BASIC;
+        } else {
+            throw ErrorResponses.invalidAuthorization();
+        }
     }
 
     /**
@@ -38,7 +54,7 @@ public final class HttpAuthorizationHeaders {
     public static String[] parseBasicAuthorization(final String authorization) {
 
         if (authorization == null) {
-            throw ErrorResponses.invalidRequest("authorization is blank");
+            throw ErrorResponses.missingAuthorization();
         }
         final Matcher m = BASIC_AUTHORIZATION_PATTERN.matcher(authorization);
         if (m.matches()) {
@@ -48,6 +64,19 @@ public final class HttpAuthorizationHeaders {
                 decoded.substring(0, colonPosition),
                 decoded.substring(colonPosition + 1)
             };
+        } else {
+            throw ErrorResponses.invalidRequest("authorization is not valid");
+        }
+    }
+
+    public static String parseBeaerAuthorization(final String authorization) {
+
+        if (authorization == null) {
+            throw ErrorResponses.missingAuthorization();
+        }
+        final Matcher m = BEARER_AUTHORIZATION_PATTERN.matcher(authorization);
+        if (m.matches()) {
+            return m.group(1);
         } else {
             throw ErrorResponses.invalidRequest("authorization is not valid");
         }
