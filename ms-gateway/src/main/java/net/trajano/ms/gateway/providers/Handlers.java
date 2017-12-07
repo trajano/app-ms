@@ -11,7 +11,9 @@ import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.net.ConnectException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -38,6 +40,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.RequestOptions;
@@ -70,13 +73,25 @@ public class Handlers {
     }
 
     /**
-     * Allowed origins for {@link HttpHeaders#ACCESS_CONTROL_ALLOW_ORIGIN}
+     * Strips off the path components from a URL.
+     *
+     * @param url
+     *            URL to process
+     * @return a URI suitable for Access-Control-Allow-Origin
+     * @throws MalformedURLException
+     *             invalid URL
      */
-    @Value("${allowedOrigins:*}")
-    private String allowedOrigins;
+    public static URI getPartsForOriginHeader(final URL url) throws MalformedURLException {
+
+        final String tempOriginString = new URL(url, "/").toString();
+        return URI.create(tempOriginString.substring(0, tempOriginString.length() - 1));
+    }
 
     @Value("${authorization.token_endpoint}")
     private URI authorizationEndpoint;
+
+    @Value("${authorization.client_check_endpoint}")
+    private URI clientCheckEndpoint;
 
     /**
      * This is the Authorization header value for the gateway when requesting the
@@ -110,10 +125,72 @@ public class Handlers {
     @Autowired
     private RequestIDProvider requestIDProvider;
 
+    public Handler<RoutingContext> corsHandler() {
+
+        return context -> {
+
+            if (context.request().method() == HttpMethod.OPTIONS) {
+                context.next();
+                return;
+            }
+            final String authorization = context.request().getHeader(HttpHeaders.AUTHORIZATION);
+            if (authorization == null) {
+                context.next();
+                return;
+            }
+
+            final String origin = context.request().getHeader(HttpHeaders.ORIGIN);
+            final String referrer = context.request().getHeader(HttpHeaders.REFERER);
+
+            final URI originUri;
+            try {
+                final URL tempOrigin;
+                if (origin == null && referrer != null) {
+                    tempOrigin = new URL(referrer);
+                } else {
+                    tempOrigin = new URL(origin);
+                }
+                originUri = getPartsForOriginHeader(tempOrigin);
+            } catch (final MalformedURLException e) {
+                context.fail(400);
+                return;
+            }
+            LOG.debug("originUri={}", originUri);
+            LOG.debug("clientCheckEndpoint={}", clientCheckEndpoint);
+            final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(clientCheckEndpoint), authorizationResponse -> {
+                LOG.debug("statusCode={}", authorizationResponse.statusCode());
+                context.request().resume();
+                if (authorizationResponse.statusCode() == 204) {
+                    context.next();
+                } else {
+                    authorizationResponse.headers().forEach(h -> stripTransferEncodingAndLength(context.response(), h));
+                    authorizationResponse.bodyHandler(body -> {
+                        context.response().setStatusCode(authorizationResponse.statusCode())
+                            .setStatusMessage(authorizationResponse.statusMessage())
+                            .setChunked(false)
+                            .end(body);
+                        LOG.debug("response={}", body);
+                    });
+                }
+            });
+            final JsonObject checkRequest = new JsonObject();
+            checkRequest.put("authorization", authorization);
+            checkRequest.put("origin", originUri.toASCIIString());
+            LOG.debug("checkRequest={}", checkRequest);
+            authorizationRequest
+                .putHeader(AUTHORIZATION, gatewayClientAuthorization)
+                .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)
+                .putHeader(HttpHeaders.ACCEPT, APPLICATION_JSON)
+                .end(checkRequest.toBuffer());
+            context.request().pause();
+        };
+
+    }
+
     public Handler<RoutingContext> failureHandler() {
 
         return context -> {
-            LOG.error("Unhandled server exception", context.failure());
+            LOG.error("Unhandled server exception {}", context.failure());
             if (!context.response().ended()) {
                 if (context.failure() instanceof ConnectException) {
                     context.response().setStatusCode(504)
@@ -311,8 +388,6 @@ public class Handlers {
                 contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
                     .setStatusCode(clientResponse.statusCode());
                 clientResponse.headers().forEach(e -> contextRequest.response().putHeader(e.getKey(), e.getValue()));
-                contextRequest.response()
-                    .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, allowedOrigins);
                 clientResponse.handler(contextRequest.response()::write)
                     .endHandler(v -> contextRequest.response().end());
             }).exceptionHandler(context::fail)
