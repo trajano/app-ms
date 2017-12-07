@@ -78,7 +78,7 @@ public class ErrorResponse {
             methodName = null;
         }
 
-        public LocalStackTraceElement(final StackTraceElement ste) {
+        LocalStackTraceElement(final StackTraceElement ste) {
 
             className = ste.getClassName();
             methodName = ste.getMethodName();

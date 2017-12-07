@@ -51,6 +51,20 @@ public class ErrorResponsesTest {
     }
 
     @Test
+    public void testMissingAuthorization() {
+
+        final WebApplicationException e = ErrorResponses.missingAuthorization();
+        assertEquals(400, e.getResponse().getStatus());
+    }
+
+    @Test
+    public void testInvalidAuthrorization() {
+
+        final WebApplicationException e = ErrorResponses.invalidAuthorization();
+        assertEquals(400, e.getResponse().getStatus());
+    }
+
+    @Test
     public void testUnauthorizedError() {
 
         final WebApplicationException e = ErrorResponses.unauthorized("bad", "bad2", "Bearer");
