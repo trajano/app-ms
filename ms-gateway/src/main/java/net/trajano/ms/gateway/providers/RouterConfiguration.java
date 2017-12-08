@@ -4,7 +4,13 @@ import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_FORM_URLENC
 import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
 
 import java.net.URI;
+import java.util.List;
 
+import io.vertx.core.Handler;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.handlers.RefreshHandler;
+import net.trajano.ms.gateway.handlers.RevocationHandler;
+import net.trajano.ms.gateway.handlers.SelfRegisteringRoutingContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +25,14 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 
+import javax.annotation.PostConstruct;
+
 /**
  * Provides the router which will act as the gateway.
  *
  * @author Archimedes Trajano
  */
-@Configuration
+@Deprecated
 public class RouterConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(RouterConfiguration.class);
@@ -45,53 +53,11 @@ public class RouterConfiguration {
     private URI jwksSourceURI;
 
     @Autowired
-    private RefreshHandler refreshHandler;
+    private List<SelfRegisteringRoutingContextHandler> routingContextHandlers;
 
-    @Value("${authorization.refresh_token_path:/refresh}")
-    private String refreshTokenPath;
-
-    @Autowired
-    private RevocationHandler revocationHandler;
-
-    @Value("${authorization.revocation_path:/logoff}")
-    private String revocationPath;
-
-    @Bean
     public Router router(final Vertx vertx) {
 
         final Router router = Router.router(vertx);
-
-        router.route().handler(handlers.corsHandler());
-
-        router.route().handler(CorsHandler.create(".+")
-            .maxAgeSeconds(600)
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.DELETE)
-            .allowedMethod(HttpMethod.OPTIONS)
-            .allowedHeader("Content-Type")
-            .allowedHeader("Accept")
-            .allowedHeader("Accept-Language")
-            .allowedHeader("Authorization"));
-
-        router.post(refreshTokenPath)
-            .consumes(APPLICATION_FORM_URLENCODED)
-            .produces(APPLICATION_JSON)
-            .handler(BodyHandler.create().setBodyLimit(1024));
-        router.post(refreshTokenPath)
-            .consumes(APPLICATION_FORM_URLENCODED)
-            .produces(APPLICATION_JSON)
-            .handler(refreshHandler);
-
-        router.post(revocationPath)
-            .consumes(APPLICATION_FORM_URLENCODED)
-            .produces(APPLICATION_JSON)
-            .handler(BodyHandler.create().setBodyLimit(1024));
-        router.post(revocationPath)
-            .consumes(APPLICATION_FORM_URLENCODED)
-            .produces(APPLICATION_JSON)
-            .handler(revocationHandler);
 
         // Route JWKS path
         router.get(jwksPath)

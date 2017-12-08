@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import net.trajano.ms.gateway.handlers.ClientOriginHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +51,7 @@ import net.trajano.ms.gateway.internal.Conversions;
 import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
 
-@Configuration
-@Component
+@Deprecated
 public class Handlers {
 
     private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
@@ -70,21 +70,6 @@ public class Handlers {
 
     static {
         RESTRICTED_HEADERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(X_JWKS_URI, X_JWT_ASSERTION, X_JWT_AUDIENCE, REQUEST_ID, AUTHORIZATION, DATE)));
-    }
-
-    /**
-     * Strips off the path components from a URL.
-     *
-     * @param url
-     *            URL to process
-     * @return a URI suitable for Access-Control-Allow-Origin
-     * @throws MalformedURLException
-     *             invalid URL
-     */
-    public static URI getPartsForOriginHeader(final URL url) throws MalformedURLException {
-
-        final String tempOriginString = new URL(url, "/").toString();
-        return URI.create(tempOriginString.substring(0, tempOriginString.length() - 1));
     }
 
     @Value("${authorization.token_endpoint}")
@@ -150,7 +135,7 @@ public class Handlers {
                 } else {
                     tempOrigin = new URL(origin);
                 }
-                originUri = getPartsForOriginHeader(tempOrigin);
+                originUri = ClientOriginHandler.getPartsForOriginHeader(tempOrigin);
             } catch (final MalformedURLException e) {
                 context.fail(400);
                 return;

@@ -1,5 +1,6 @@
 package net.trajano.ms.gateway.providers;
 
+import io.vertx.ext.web.Router;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +31,13 @@ public class VertxBeanProvider {
         final HttpServerOptions httpServerOptions) {
 
         return vertx.createHttpServer(httpServerOptions);
+    }
+
+    @Bean
+    public Router router(final Vertx vertx) {
+
+        return Router.router(vertx);
+
     }
 
     @Bean
