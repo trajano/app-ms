@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import javax.ws.rs.InternalServerErrorException;
+
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.Test;
@@ -47,6 +49,17 @@ public class OpsTest {
     @Autowired
     private JsonOps jsonOps;
 
+    @Test(expected = InternalServerErrorException.class)
+    public void testBadCrypto() throws Exception {
+
+        final JwtClaims claims = new JwtClaims();
+        claims.setAudience("mememe");
+        final String jwt = cryptoOps.sign(claims);
+        cachedDataProvider.getKeySet();
+        final HttpsJwks jwks = mock(HttpsJwks.class);
+        cryptoOps.toClaimsSet("XXXXXX", "mememe", jwks);
+    }
+
     @Test
     public void testBinding() {
 
@@ -64,7 +77,14 @@ public class OpsTest {
         cachedDataProvider.getKeySet();
         final HttpsJwks jwks = mock(HttpsJwks.class);
         when(jwks.getJsonWebKeys()).thenReturn(cachedDataProvider.getKeySet().getJsonWebKeys());
-        cryptoOps.toClaimsSet(jwt, "mememe", jwks);
+        {
+            final JwtClaims readClaims = cryptoOps.toClaimsSet(jwt, "mememe", jwks);
+            assertEquals(claims.toJson(), readClaims.toJson());
+        }
+        {
+            final JwtClaims readClaims = cryptoOps.toClaimsSet(jwt, jwks);
+            assertEquals(claims.toJson(), readClaims.toJson());
+        }
     }
 
     @Test

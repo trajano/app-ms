@@ -3,7 +3,6 @@ package net.trajano.ms.vertx.beans;
 import javax.ws.rs.InternalServerErrorException;
 
 import org.jose4j.jwk.HttpsJwks;
-import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
@@ -11,7 +10,6 @@ import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
-import org.jose4j.keys.resolvers.JwksVerificationKeyResolver;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -54,24 +52,6 @@ public class JcaCryptoOps implements
             jws.sign();
             return jws.getCompactSerialization();
         } catch (final JoseException e) {
-            throw new InternalServerErrorException(e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JwtClaims toClaimsSet(final String jwt,
-        final JsonWebKeySet jwks) {
-
-        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-            .setVerificationKeyResolver(new JwksVerificationKeyResolver(jwks.getJsonWebKeys()))
-            .build();
-
-        try {
-            return jwtConsumer.processToClaims(jwt);
-        } catch (final InvalidJwtException e) {
             throw new InternalServerErrorException(e);
         }
     }
