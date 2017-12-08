@@ -1,6 +1,5 @@
 package net.trajano.ms.gateway.providers;
 
-import io.vertx.ext.web.Router;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +9,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Router;
 
 /**
  * Provides Vertx objects.

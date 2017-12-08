@@ -1,31 +1,19 @@
 package net.trajano.ms.gateway.providers;
 
-import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_FORM_URLENCODED;
 import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
 
 import java.net.URI;
 import java.util.List;
 
-import io.vertx.core.Handler;
-import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.gateway.handlers.RefreshHandler;
-import net.trajano.ms.gateway.handlers.RevocationHandler;
-import net.trajano.ms.gateway.handlers.SelfRegisteringRoutingContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CorsHandler;
-
-import javax.annotation.PostConstruct;
+import net.trajano.ms.gateway.handlers.SelfRegisteringRoutingContextHandler;
 
 /**
  * Provides the router which will act as the gateway.

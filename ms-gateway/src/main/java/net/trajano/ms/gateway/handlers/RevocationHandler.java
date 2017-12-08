@@ -11,24 +11,23 @@ import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 import java.net.URI;
 import java.util.regex.Pattern;
 
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import net.trajano.ms.gateway.providers.RequestIDProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.BodyHandler;
 import net.trajano.ms.gateway.internal.Conversions;
 import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
+import net.trajano.ms.gateway.providers.RequestIDProvider;
 
 /**
  * This handler deals with refreshing the OAuth token.
@@ -56,6 +55,9 @@ public class RevocationHandler implements
 
     @Value("${authorization.revocation_endpoint}")
     private URI revocationEndpoint;
+
+    @Value("${authorization.revocation_path:/logoff}")
+    private String revocationPath;
 
     @Override
     public void handle(final RoutingContext context) {
@@ -106,11 +108,8 @@ public class RevocationHandler implements
 
     }
 
-    @Value("${authorization.revocation_path:/logoff}")
-    private String revocationPath;
-
     @Override
-    public void register(Router router) {
+    public void register(final Router router) {
 
         router.post(revocationPath)
             .consumes(APPLICATION_FORM_URLENCODED)

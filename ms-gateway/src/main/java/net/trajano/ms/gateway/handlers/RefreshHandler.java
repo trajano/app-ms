@@ -11,26 +11,23 @@ import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 import java.net.URI;
 import java.util.regex.Pattern;
 
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import net.trajano.ms.gateway.providers.RequestIDProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.BodyHandler;
 import net.trajano.ms.gateway.internal.Conversions;
 import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
-
-import javax.annotation.PostConstruct;
+import net.trajano.ms.gateway.providers.RequestIDProvider;
 
 /**
  * This handler deals with refreshing the OAuth token.
@@ -50,14 +47,14 @@ public class RefreshHandler implements
      */
     private static final Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9]{64}$");
 
-    @Value("${authorization.refresh_token_path:/refresh}")
-    private String refreshTokenPath;
-
     @Value("${authorization.token_endpoint}")
     private URI authorizationEndpoint;
 
     @Autowired
     private HttpClient httpClient;
+
+    @Value("${authorization.refresh_token_path:/refresh}")
+    private String refreshTokenPath;
 
     @Autowired
     private RequestIDProvider requestIDProvider;
@@ -131,7 +128,8 @@ public class RefreshHandler implements
 
     }
 
-    public void register(Router router) {
+    @Override
+    public void register(final Router router) {
 
         router.post(refreshTokenPath)
             .consumes(APPLICATION_FORM_URLENCODED)

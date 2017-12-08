@@ -29,13 +29,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import net.trajano.ms.gateway.handlers.ClientOriginHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
@@ -47,6 +44,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.handlers.AuthenticatedClientValidator;
 import net.trajano.ms.gateway.internal.Conversions;
 import net.trajano.ms.gateway.internal.Errors;
 import net.trajano.ms.gateway.internal.MediaTypes;
@@ -135,7 +133,7 @@ public class Handlers {
                 } else {
                     tempOrigin = new URL(origin);
                 }
-                originUri = ClientOriginHandler.getPartsForOriginHeader(tempOrigin);
+                originUri = AuthenticatedClientValidator.getPartsForOriginHeader(tempOrigin);
             } catch (final MalformedURLException e) {
                 context.fail(400);
                 return;
