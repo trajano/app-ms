@@ -67,7 +67,7 @@ const oauthTokenStore = {
       let body = new URLSearchParams()
       body.append('grant_type', 'refresh_token')
       body.append('refresh_token', state.refreshToken)
-      let response = await fetch('http://localhost:3001/refresh', {
+      let response = await fetch(process.env.GATEWAY_URI + '/refresh', {
         method: 'POST',
         headers,
         body
