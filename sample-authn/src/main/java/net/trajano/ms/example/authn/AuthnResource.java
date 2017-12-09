@@ -96,11 +96,11 @@ public class AuthnResource {
         if (nonce == null) {
             throw ErrorResponses.invalidRequest("missing nonce");
         }
-        if (!nonceProvider.claimNonce(nonce)) {
-            throw ErrorResponses.invalidRequest("invalid nonce");
-        }
         if (!"password".equals(password)) {
             throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "invalid username/password combination", "FORM");
+        }
+        if (!nonceProvider.claimNonce(nonce)) {
+            throw ErrorResponses.invalidRequest("invalid nonce");
         }
         final JwtClaims claims = new JwtClaims();
         claims.setSubject(username);
