@@ -1,28 +1,41 @@
 package net.trajano.ms.gateway.handlers;
 
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.gateway.providers.RequestIDProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.providers.RequestIDProvider;
+
+/**
+ * Adds the request ID data to the context and the response message.
+ *
+ * @author Archimedes Trajano
+ */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL)
 public class RequestIDHandler implements
     SelfRegisteringRoutingContextHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RequestIDHandler.class);
+
     @Autowired
     private RequestIDProvider requestIDProvider;
 
-    public void register(Router router) {
+    @Override
+    public void handle(final RoutingContext context) {
 
-        router.route().handler(this);
+        final String requestID = requestIDProvider.newRequestID(context);
+        LOG.debug("requestID={}", requestID);
+        context.next();
     }
 
     @Override
-    public void handle(RoutingContext context) {
+    public void register(final Router router) {
 
-        requestIDProvider.newRequestID(context);
+        router.route().handler(this);
     }
 }
