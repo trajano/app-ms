@@ -27,10 +27,10 @@ import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
 import net.trajano.ms.spi.MicroserviceEngine;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.GsonJacksonJsonOps;
 import net.trajano.ms.vertx.beans.GsonProvider;
 import net.trajano.ms.vertx.beans.JcaCryptoOps;
-import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.JwksRouteHandler;
 import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
 
@@ -109,7 +109,7 @@ public class VertxMicroserviceEngine implements
 
         http.requestHandler(router::accept).listen(res -> {
             if (res.failed()) {
-                LOG.error(res.cause().getMessage(), res.cause());
+                LOG.error("Listening on port {} failed", httpServerOptions.getPort(), res.cause());
                 SpringApplication.exit(applicationContext, () -> -1);
             } else {
                 LOG.info("Listening on port {}", http.actualPort());
