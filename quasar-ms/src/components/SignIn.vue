@@ -46,21 +46,7 @@ export default {
     return {
       username: '',
       password: '',
-      message: null,
-      nonce: null
-    }
-  },
-  async beforeRouteEnter(to, from, next) {
-    const headers = new Headers()
-    headers.set('Accept', 'application/json')
-    headers.set('Authorization', 'Basic YXBwX2lkOmFwcF9zZWNyZXQ=')
-    let response = await fetch(process.env.GATEWAY_URI + '/v1/authn/nonce', {
-      method: 'GET',
-      headers
-    })
-    if (response.status === 200) {
-      let data = await response.json()
-      next(vm => vm.setNonce(data.nonce))
+      message: null
     }
   },
   methods: {
@@ -68,11 +54,12 @@ export default {
       Loading.show()
       const headers = new Headers()
       headers.set('Accept', 'application/json')
+      headers.set('Content-Type', 'application/json')
       headers.set('Authorization', 'Basic YXBwX2lkOmFwcF9zZWNyZXQ=')
-      const body = new URLSearchParams()
-      body.append('j_username', this.username)
-      body.append('j_password', this.password)
-      body.append('nonce', this.nonce)
+      const body = JSON.stringify({
+        username: this.username,
+        password: this.password
+      })
       let response = await fetch(process.env.GATEWAY_URI + '/v1/authn', {
         method: 'POST',
         headers,
@@ -110,9 +97,6 @@ export default {
       let data = await response.json()
       this.oidcUri = data.uri
       window.location.href = this.oidcUri
-    },
-    setNonce(nonce) {
-      this.nonce = nonce
     },
     noop() {}
   }
