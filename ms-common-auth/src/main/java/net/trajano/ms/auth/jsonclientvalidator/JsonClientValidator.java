@@ -15,6 +15,11 @@ import org.springframework.stereotype.Component;
 import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.core.JsonOps;
 
+/**
+ * A client validator that uses a JSON file for its data.
+ *
+ * @author Archimedes Trajano
+ */
 @Component
 public class JsonClientValidator implements
     ClientValidator {
@@ -50,14 +55,7 @@ public class JsonClientValidator implements
     }
 
     @Override
-    public boolean isOriginAllowed(String clientId,
-        URI origin) {
-
-        return getClientInfo(clientId).isOriginAllowed(origin);
-    }
-
-    @Override
-    public URI getRedirectUri(String clientId) {
+    public URI getRedirectUri(final String clientId) {
 
         return getClientInfo(clientId).getRedirectUri();
     }
@@ -67,6 +65,20 @@ public class JsonClientValidator implements
 
         clients = jsonOps.fromJson(
             new FileReader(clientsFile), Clients.class);
+    }
+
+    @Override
+    public boolean isOriginAllowed(final String clientId,
+        final URI origin) {
+
+        return getClientInfo(clientId).isOriginAllowed(origin);
+    }
+
+    @Override
+    public boolean isOriginAllowed(final URI origin) {
+
+        return clients.getClients().stream()
+            .anyMatch(info -> info.getOrigin().equals(origin));
     }
 
     @Override

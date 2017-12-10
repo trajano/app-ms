@@ -1,12 +1,12 @@
 package net.trajano.ms.gateway.handlers;
 
-import io.vertx.core.http.*;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.CorsHandler;
-import net.trajano.ms.gateway.internal.Conversions;
-import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,28 +14,36 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.Map;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.CorsHandler;
+import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.PathContext;
+import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
 
-import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
-
+/**
+ * <p>
+ * Handles determining what Origin URIs are allowed based on the Origin and
+ * Authorization header. If the authorization is Basic, then the client ID and
+ * secret are verified against the system. If it is a Bearer authorization, it
+ * will use the <code>aud</code> value of the data referenced by the access
+ * token.
+ * </p>
+ *
+ * @author Archimedes Trajano
+ */
 @Component
-@Order(SelfRegisteringRoutingContextHandler.CORE_PATHS + 1)
-public class ClientOriginHandler implements
+@Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL + 1)
+public class AuthenticatedClientValidator implements
     SelfRegisteringRoutingContextHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClientOriginHandler.class);
-
-    @Autowired
-    private HttpClient httpClient;
-
-    @Value("${authorization.client_check_endpoint}")
-    private URI clientCheckEndpoint;
-
-    @Autowired
-    private GatewayClientAuthorization gatewayClientAuthorization;
+    private static final Logger LOG = LoggerFactory.getLogger(AuthenticatedClientValidator.class);
 
     /**
      * Strips off the path components from a URL.
@@ -52,15 +60,20 @@ public class ClientOriginHandler implements
         return URI.create(tempOriginString.substring(0, tempOriginString.length() - 1));
     }
 
-    @Override
-    public void handle(RoutingContext context) {
+    @Value("${authorization.client_check_endpoint}")
+    private URI clientCheckEndpoint;
 
-        if (context.request().method() == HttpMethod.OPTIONS) {
-            context.next();
-            return;
-        }
-        final String authorization = context.request().getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization == null) {
+    @Autowired
+    private GatewayClientAuthorization gatewayClientAuthorization;
+
+    @Autowired
+    private HttpClient httpClient;
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+        final PathContext pathContext = getPathContext(context);
+        if (pathContext == null || !pathContext.isProtected()) {
             context.next();
             return;
         }
@@ -82,11 +95,21 @@ public class ClientOriginHandler implements
             return;
         }
         LOG.debug("originUri={}", originUri);
+        context.put("origin", originUri);
+
+        final String authorization = context.request().getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization == null) {
+            context.next();
+            return;
+        }
+
+        LOG.debug("context={} authorization={}", context, authorization);
+
         LOG.debug("clientCheckEndpoint={}", clientCheckEndpoint);
         final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(clientCheckEndpoint), authorizationResponse -> {
             LOG.debug("statusCode={}", authorizationResponse.statusCode());
-            context.request().resume();
             if (authorizationResponse.statusCode() == 204) {
+                context.put("client_authorized", true);
                 context.next();
             } else {
                 authorizationResponse.headers().forEach(h -> stripTransferEncodingAndLength(context.response(), h));
@@ -111,17 +134,13 @@ public class ClientOriginHandler implements
 
     }
 
-    private void stripTransferEncodingAndLength(final HttpServerResponse contextResponse,
-        final Map.Entry<String, String> h) {
-
-        if ("Content-Length".equalsIgnoreCase(h.getKey()) || "Transfer-Encoding".equalsIgnoreCase(h.getKey())) {
-            return;
-        }
-        contextResponse.putHeader(h.getKey(), h.getValue());
-    }
-
+    /**
+     * Register this but also register the {@link CorsHandler}. The
+     * {@link CorsHandler} will deal with the normal CORS headers after it has been
+     * processed initially by this handler. {@inheritDoc}
+     */
     @Override
-    public void register(Router router) {
+    public void register(final Router router) {
 
         router.route().handler(this);
 
@@ -137,5 +156,14 @@ public class ClientOriginHandler implements
             .allowedHeader("Accept-Language")
             .allowedHeader("Authorization"));
 
+    }
+
+    private void stripTransferEncodingAndLength(final HttpServerResponse contextResponse,
+        final Map.Entry<String, String> h) {
+
+        if ("Content-Length".equalsIgnoreCase(h.getKey()) || "Transfer-Encoding".equalsIgnoreCase(h.getKey())) {
+            return;
+        }
+        contextResponse.putHeader(h.getKey(), h.getValue());
     }
 }
