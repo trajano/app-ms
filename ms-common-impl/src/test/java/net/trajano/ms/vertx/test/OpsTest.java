@@ -54,7 +54,6 @@ public class OpsTest {
 
         final JwtClaims claims = new JwtClaims();
         claims.setAudience("mememe");
-        final String jwt = cryptoOps.sign(claims);
         cachedDataProvider.getKeySet();
         final HttpsJwks jwks = mock(HttpsJwks.class);
         cryptoOps.toClaimsSet("XXXXXX", "mememe", jwks);
