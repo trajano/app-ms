@@ -1,37 +1,44 @@
 package net.trajano.ms.gateway.handlers;
 
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.gateway.internal.Errors;
-import net.trajano.ms.gateway.internal.MediaTypes;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.net.ConnectException;
-import java.net.UnknownHostException;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.internal.Errors;
+import net.trajano.ms.gateway.internal.MediaTypes;
 
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
-
+/**
+ * This provides the error handling for those requests that have not been
+ * handled correctly in the upstream routes.
+ *
+ * @author Archimedes Trajano
+ */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL)
 public class GlobalFailureHandler implements
     SelfRegisteringRoutingContextHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GlobalFailureHandler.class);
-
-    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-
     private static final String GATEWAY_ERROR = "Gateway Error";
 
     private static final String GATEWAY_TIMEOUT = "Gateway Timeout";
 
-    @Override
-    public void handle(RoutingContext context) {
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
-        LOG.error("Unhandled server exception", context.failure());
+    private static final Logger LOG = LoggerFactory.getLogger(GlobalFailureHandler.class);
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+        LOG.error("Unhandled server exception statusCode={} responseEnded={}", context.statusCode(), context.response().ended(), context.failure());
         if (!context.response().ended()) {
             if (context.failure() instanceof ConnectException) {
                 context.response().setStatusCode(504)
@@ -44,7 +51,7 @@ public class GlobalFailureHandler implements
                     .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                     .end(Errors.serverError(GATEWAY_ERROR).toBuffer());
             } else {
-                context.response().setStatusCode(500)
+                context.response().setStatusCode(context.statusCode())
                     .setStatusMessage(INTERNAL_SERVER_ERROR)
                     .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                     .end(Errors.serverError(INTERNAL_SERVER_ERROR).toBuffer());
@@ -54,7 +61,7 @@ public class GlobalFailureHandler implements
     }
 
     @Override
-    public void register(Router router) {
+    public void register(final Router router) {
 
         router.route().failureHandler(this);
     }
