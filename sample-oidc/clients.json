@@ -5,7 +5,7 @@
       "client_secret": "app_secret",
       "grant_types": ["openid"],
       "jwks_uri": "http://localhost:8281/.well-known/jwks",
-      "redirect_uri": "http://localhost:8910/v1/hello"
+      "redirect_uri": "http://localhost:3000/cb"
     }
   ]
 }

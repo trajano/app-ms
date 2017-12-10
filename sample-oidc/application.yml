@@ -45,7 +45,7 @@ client_validator:
   
 ---
 
-spring:.profiles: prod
+spring.profiles: prod
   
 http:
   port: 80

@@ -9,7 +9,8 @@
       "client_id": "app_id",
       "client_secret": "app_secret",
       "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
-      "jwks_uri": "http://localhost:8281/.well-known/jwks"
+      "jwks_uri": "http://localhost:8281/.well-known/jwks",
+      "origin": "http://localhost:3000"      
     },
     {
       "client_id": "oidc_id",
