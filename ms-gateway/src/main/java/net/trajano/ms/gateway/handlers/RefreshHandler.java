@@ -34,8 +34,7 @@ import net.trajano.ms.gateway.providers.RequestIDProvider;
  */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_PATHS)
-public class RefreshHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class RefreshHandler extends SelfRegisteringRoutingContextHandler {
 
     /**
      * Bad request status message.

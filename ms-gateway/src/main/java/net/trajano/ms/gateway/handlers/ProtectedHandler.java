@@ -41,8 +41,7 @@ import net.trajano.ms.gateway.providers.RequestIDProvider;
 
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_PATHS + 5)
-public class ProtectedHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
 
     private static final String BEARER_TOKEN_PATTERN = "^Bearer ([A-Za-z0-9]{64})$";
 

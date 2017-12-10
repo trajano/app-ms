@@ -28,8 +28,7 @@ import net.trajano.ms.gateway.internal.Predicates;
 
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_PATHS + 6)
-public class UnprotectedHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
 
     /**
      * Logger.

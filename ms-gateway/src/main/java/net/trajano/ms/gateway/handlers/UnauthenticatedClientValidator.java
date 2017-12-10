@@ -35,9 +35,8 @@ import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
  * @author Archimedes Trajano
  */
 @Component
-@Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL + 2)
-public class UnauthenticatedClientValidator implements
-    SelfRegisteringRoutingContextHandler {
+@Order(SelfRegisteringRoutingContextHandler.PROXIED)
+public class UnauthenticatedClientValidator extends SelfRegisteringRoutingContextHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnauthenticatedClientValidator.class);
 

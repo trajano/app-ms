@@ -17,8 +17,7 @@ import net.trajano.ms.gateway.providers.RequestIDProvider;
  */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL)
-public class RequestIDHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class RequestIDHandler extends SelfRegisteringRoutingContextHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestIDHandler.class);
 

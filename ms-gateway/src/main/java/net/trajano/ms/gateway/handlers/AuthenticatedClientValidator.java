@@ -40,8 +40,7 @@ import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
  */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL + 1)
-public class AuthenticatedClientValidator implements
-    SelfRegisteringRoutingContextHandler {
+public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticatedClientValidator.class);
 

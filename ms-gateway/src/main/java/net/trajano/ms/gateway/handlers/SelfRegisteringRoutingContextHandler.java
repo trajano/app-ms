@@ -10,18 +10,14 @@ import net.trajano.ms.gateway.internal.PathContext;
  * Defines a callback to handle the registrations. PostConstruct does not work
  * because order is not guaranteed.
  */
-public interface SelfRegisteringRoutingContextHandler extends
+public abstract class SelfRegisteringRoutingContextHandler implements
     Handler<RoutingContext> {
 
-    int CORE_GLOBAL = 0;
+    public static final int CORE_GLOBAL = 0;
 
-    int CORE_PATHS = 100;
+    public static final int CORE_PATHS = 100;
 
-    @Override
-    default void handle(final RoutingContext context) {
-
-        context.next();
-    }
+    public static final int PROXIED = 1000;
 
     /**
      * Obtains the path context from the {@link RoutingContext}.
@@ -30,7 +26,7 @@ public interface SelfRegisteringRoutingContextHandler extends
      *            RoutingContext
      * @return PathContext
      */
-    default PathContext getPathContext(final RoutingContext context) {
+    protected PathContext getPathContext(final RoutingContext context) {
 
         return context.get(ContextSettingHandler.PATH_CONTEXT);
     }
@@ -39,6 +35,7 @@ public interface SelfRegisteringRoutingContextHandler extends
      * Register to router
      *
      * @param router
+     *            router
      */
-    void register(Router router);
+    public abstract void register(Router router);
 }

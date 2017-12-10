@@ -34,8 +34,7 @@ import net.trajano.ms.gateway.providers.RequestIDProvider;
  */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_PATHS)
-public class RevocationHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class RevocationHandler extends SelfRegisteringRoutingContextHandler {
 
     /**
      * Bad request status message.

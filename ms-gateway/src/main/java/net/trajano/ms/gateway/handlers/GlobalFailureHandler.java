@@ -24,8 +24,7 @@ import net.trajano.ms.gateway.internal.MediaTypes;
  */
 @Component
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL)
-public class GlobalFailureHandler implements
-    SelfRegisteringRoutingContextHandler {
+public class GlobalFailureHandler extends SelfRegisteringRoutingContextHandler {
 
     private static final String GATEWAY_ERROR = "Gateway Error";
 
