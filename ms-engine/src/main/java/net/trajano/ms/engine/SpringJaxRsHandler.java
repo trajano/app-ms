@@ -377,9 +377,17 @@ public class SpringJaxRsHandler implements
 
     }
 
+    /**
+     * Get the JAX-RS Client that is present in the vertx context or create a new
+     * one.
+     * 
+     * @param vertx
+     *            vertx
+     * @return JAX-RS client.
+     */
     private Client jaxRsClient(final Vertx vertx) {
 
-        Client jaxRsClient = (Client) vertx.getOrCreateContext().get(Client.class.getName());
+        Client jaxRsClient = vertx.getOrCreateContext().get(Client.class.getName());
         if (jaxRsClient == null) {
             final HttpClient httpClient = vertx.createHttpClient(httpClientOptions);
             jaxRsClient = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(httpClient)).build();
