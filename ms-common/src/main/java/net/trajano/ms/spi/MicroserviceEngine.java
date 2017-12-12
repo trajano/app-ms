@@ -10,4 +10,20 @@ public interface MicroserviceEngine {
      */
     Object[] bootstrap();
 
+    /**
+     * Gets the host name of where the engine is running. This may be
+     * <code>null</code> if the engine has not been initialized.
+     *
+     * @return host name
+     */
+    String hostname();
+
+    /**
+     * Gets the port of where the engine is listening. This may be <code>-1</code>
+     * if the engine has not been initialized.
+     *
+     * @return host name
+     */
+    int port();
+
 }

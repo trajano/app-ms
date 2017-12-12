@@ -54,9 +54,6 @@ public class JsonExceptionMapper implements
     @Context
     private HttpHeaders headers;
 
-    @Value("${microservice.show_request_uri:#{null}}")
-    private Boolean showRequestUri;
-
     @Value("${microservice.show_stack_trace:#{null}}")
     private Boolean showStackTrace;
 
@@ -105,12 +102,10 @@ public class JsonExceptionMapper implements
      */
     public void setContextData(final HttpHeaders headers,
         final UriInfo uriInfo,
-        final boolean showRequestUri,
         final boolean showStackTrace) {
 
         this.headers = headers;
         this.uriInfo = uriInfo;
-        this.showRequestUri = showRequestUri;
         this.showStackTrace = showStackTrace;
 
     }
@@ -122,11 +117,9 @@ public class JsonExceptionMapper implements
     @PostConstruct
     public void setDebugFlags() {
 
-        if (showRequestUri == null) {
-            showRequestUri = LOG.isDebugEnabled();
-        }
         if (showStackTrace == null) {
             showStackTrace = LOG.isDebugEnabled();
+            LOG.debug("stack trace enabled if this is shown");
         }
     }
 
@@ -152,7 +145,7 @@ public class JsonExceptionMapper implements
                 .build();
         } else {
             return Response.status(status)
-                .entity(new ErrorResponse(exception, headers, uriInfo, showStackTrace, showRequestUri))
+                .entity(new ErrorResponse(exception, uriInfo, showStackTrace))
                 .type(mediaType)
                 .build();
         }

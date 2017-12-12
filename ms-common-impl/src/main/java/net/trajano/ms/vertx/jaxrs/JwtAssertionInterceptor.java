@@ -2,7 +2,6 @@ package net.trajano.ms.vertx.jaxrs;
 
 import static net.trajano.ms.core.ErrorCodes.FORBIDDEN;
 import static net.trajano.ms.core.ErrorCodes.UNAUTHORIZED_CLIENT;
-import static net.trajano.ms.core.Qualifiers.REQUEST_ID;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -22,17 +21,20 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
-import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.spi.MDCKeys;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.DefaultAssertionRequiredPredicate;
 import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
 import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
@@ -45,7 +47,7 @@ import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
  */
 @Component
 @Provider
-@Priority(Priorities.AUTHORIZATION)
+@Priority(Priorities.AUTHORIZATION + 1)
 public class JwtAssertionInterceptor implements
     ContainerRequestFilter {
 
@@ -59,6 +61,8 @@ public class JwtAssertionInterceptor implements
 
     private JwtAssertionRequiredPredicate assertionRequiredPredicate;
 
+    private CachedDataProvider cachedDataProvider;
+
     private JwtClaimsProcessor claimsProcessor;
 
     @Autowired(required = false)
@@ -69,8 +73,6 @@ public class JwtAssertionInterceptor implements
      * JWKS Map
      */
     private final ConcurrentMap<String, HttpsJwks> jwks = new ConcurrentHashMap<>();
-
-    private CachedDataProvider cachedDataProvider;
 
     @Context
     private ResourceInfo resourceInfo;
@@ -86,7 +88,7 @@ public class JwtAssertionInterceptor implements
             LOG.warn("Missing assertion on request for {}", requestContext.getUriInfo());
             requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
-                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "Missing assertion", requestContext.getHeaderString(REQUEST_ID)))
+                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "Missing assertion"))
                 .build());
             return;
         }
@@ -106,7 +108,9 @@ public class JwtAssertionInterceptor implements
             }
             final List<String> audience = Arrays.asList(requestContext.getHeaderString(X_JWT_AUDIENCE).split(", "));
             claims = cachedDataProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);
-        } catch (final InvalidJwtException e) {
+            MDC.put(MDCKeys.JWT_ID, claims.getJwtId());
+        } catch (final InvalidJwtException
+            | MalformedClaimException e) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("JWT invalid", e);
             } else {
@@ -114,7 +118,7 @@ public class JwtAssertionInterceptor implements
             }
             requestContext.abortWith(Response.status(Status.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)
-                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "JWT was not valid", requestContext.getHeaderString(REQUEST_ID)))
+                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, "JWT was not valid"))
                 .build());
             return;
         }
@@ -126,7 +130,7 @@ public class JwtAssertionInterceptor implements
             if (!validateClaims) {
                 LOG.warn("Validation of claims failed on request for {}", requestContext.getUriInfo());
                 requestContext.abortWith(Response.status(Status.FORBIDDEN)
-                    .entity(new ErrorResponse(FORBIDDEN, "Claims validation failed", requestContext.getHeaderString(REQUEST_ID)))
+                    .entity(new ErrorResponse(FORBIDDEN, "Claims validation failed"))
                     .build());
             }
         }
@@ -154,16 +158,21 @@ public class JwtAssertionInterceptor implements
         assertionRequiredPredicate = predicate;
     }
 
+    @Autowired
+    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
+
+        this.cachedDataProvider = cachedDataProvider;
+    }
+
     @Autowired(required = false)
     public void setClaimsProcessor(final JwtClaimsProcessor claimsProcessor) {
 
         this.claimsProcessor = claimsProcessor;
     }
 
-    @Autowired
-    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
+    public void setResourceInfo(final ResourceInfo resourceInfo) {
 
-        this.cachedDataProvider = cachedDataProvider;
+        this.resourceInfo = resourceInfo;
     }
 
 }

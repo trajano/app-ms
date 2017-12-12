@@ -47,7 +47,7 @@ public class ExceptionMapperTest {
         mapper.setDebugFlags();
         final HttpHeaders headers = Mockito.mock(HttpHeaders.class);
         Mockito.when(headers.getAcceptableMediaTypes()).thenReturn(Arrays.asList(MediaType.WILDCARD_TYPE));
-        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true, true);
+        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class ExceptionMapperTest {
 
         final HttpHeaders headers = Mockito.mock(HttpHeaders.class);
         Mockito.when(headers.getAcceptableMediaTypes()).thenReturn(Arrays.asList(MediaType.TEXT_HTML_TYPE));
-        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true, true);
+        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true);
 
         final Response response = mapper.toResponse(new IOException("ahem"));
         Assert.assertEquals(500, response.getStatus());
@@ -97,7 +97,7 @@ public class ExceptionMapperTest {
 
         final HttpHeaders headers = Mockito.mock(HttpHeaders.class);
         Mockito.when(headers.getAcceptableMediaTypes()).thenReturn(Arrays.asList(MediaType.TEXT_PLAIN_TYPE));
-        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true, true);
+        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true);
 
         final Response response = mapper.toResponse(new IOException("ahem"));
         Assert.assertEquals(500, response.getStatus());
@@ -110,7 +110,7 @@ public class ExceptionMapperTest {
 
         final HttpHeaders headers = Mockito.mock(HttpHeaders.class);
         Mockito.when(headers.getAcceptableMediaTypes()).thenReturn(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM_TYPE));
-        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true, true);
+        mapper.setContextData(headers, Mockito.mock(UriInfo.class), true);
 
         final Response response = mapper.toResponse(new IOException("ahem"));
         Assert.assertEquals(500, response.getStatus());

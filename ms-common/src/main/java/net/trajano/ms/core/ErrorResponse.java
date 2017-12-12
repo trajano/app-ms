@@ -1,6 +1,6 @@
 package net.trajano.ms.core;
 
-import static net.trajano.ms.core.Qualifiers.REQUEST_ID;
+import static net.trajano.ms.spi.MDCKeys.REQUEST_ID;
 
 import java.net.URI;
 import java.util.LinkedList;
@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.swagger.annotations.ApiModelProperty;
+import net.trajano.ms.spi.MDCKeys;
 
 /**
  * Error response. This is the error response that gets built by the system for
@@ -33,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty;
     "requestId",
     "requestUri",
     "threadId",
+    "host",
+    "jwtId",
     "stackTrace",
     "cause"
 })
@@ -136,6 +139,18 @@ public class ErrorResponse {
     private final String errorDescription;
 
     /**
+     * Host of the server that threw the error. This shows the hostname and port.
+     */
+    @XmlElement(name = "host")
+    private final String host;
+
+    /**
+     * JWT ID. This represents the session.
+     */
+    @XmlElement(name = "jwt_id")
+    private final String jwtId;
+
+    /**
      * The request ID. This is obtained from the header.
      */
     @ApiModelProperty(name = "request_id",
@@ -175,6 +190,8 @@ public class ErrorResponse {
         errorClass = null;
         errorDescription = null;
         stackTrace = null;
+        host = null;
+        jwtId = null;
         threadId = null;
         requestId = null;
         requestUri = null;
@@ -192,22 +209,37 @@ public class ErrorResponse {
     public ErrorResponse(final String error,
         final String errorDescription) {
 
-        this(error, errorDescription, MDC.get(REQUEST_ID));
+        this.error = error;
+        this.errorDescription = errorDescription;
+        requestId = MDC.get(REQUEST_ID);
+
+        cause = null;
+        errorClass = null;
+        host = MDC.get(MDCKeys.HOST);
+        jwtId = MDC.get(MDCKeys.JWT_ID);
+        stackTrace = null;
+        threadId = Thread.currentThread().getName();
+        requestUri = calculateRequestUri();
     }
 
+    /**
+     * Creates an error response with just the error code and description. The
+     * request ID will be taken from the MDC.
+     *
+     * @param error
+     *            error code
+     * @param errorDescription
+     *            error description
+     * @param requestId
+     *            ignored
+     * @deprecated the requestId value is ignored and is taken from the MDC.
+     */
+    @Deprecated
     public ErrorResponse(final String error,
         final String errorDescription,
         final String requestId) {
 
-        this.error = error;
-        this.errorDescription = errorDescription;
-        this.requestId = requestId;
-
-        cause = null;
-        errorClass = null;
-        stackTrace = null;
-        threadId = Thread.currentThread().getName();
-        requestUri = null;
+        this(error, errorDescription);
     }
 
     /**
@@ -230,6 +262,8 @@ public class ErrorResponse {
             }
         }
         error = null;
+        host = null;
+        jwtId = null;
         errorClass = e.getClass().getName();
         errorDescription = e.getMessage();
         threadId = null;
@@ -237,11 +271,46 @@ public class ErrorResponse {
         requestUri = null;
     }
 
+    /**
+     * Wraps a {@link Throwable} in an {@link ErrorResponse} with full stack trace
+     * and cause if requested.
+     *
+     * @param e
+     *            exception to wrap
+     * @param headers
+     *            ignored
+     * @param uriInfo
+     *            URI info
+     * @param showStackTrace
+     *            flag to determine whether the stack trace is to be shown.
+     * @param showRequestUri
+     *            ignored
+     * @deprecated use {@link #ErrorResponse(Throwable, UriInfo, boolean)}
+     */
+    @Deprecated
     public ErrorResponse(final Throwable e,
         final HttpHeaders headers,
         final UriInfo uriInfo,
         final boolean showStackTrace,
         final boolean showRequestUri) {
+
+        this(e, uriInfo, showStackTrace);
+    }
+
+    /**
+     * Wraps a {@link Throwable} in an {@link ErrorResponse} with full stack trace
+     * and cause if requested.
+     *
+     * @param e
+     *            exception to wrap
+     * @param uriInfo
+     *            URI info
+     * @param showStackTrace
+     *            flag to determine whether the stack trace is to be shown.
+     */
+    public ErrorResponse(final Throwable e,
+        final UriInfo uriInfo,
+        final boolean showStackTrace) {
 
         error = ErrorCodes.SERVER_ERROR;
         errorDescription = e.getLocalizedMessage();
@@ -263,9 +332,27 @@ public class ErrorResponse {
             stackTrace = null;
             cause = null;
         }
-        requestId = headers.getHeaderString(REQUEST_ID);
-        requestUri = showRequestUri ? uriInfo.getRequestUri() : null;
+        requestId = MDC.get(REQUEST_ID);
+        host = MDC.get(MDCKeys.HOST);
+        requestUri = calculateRequestUri();
+        jwtId = MDC.get(MDCKeys.JWT_ID);
 
+    }
+
+    /**
+     * Performs a null-check on the request URI data.
+     *
+     * @return request URI
+     */
+    private URI calculateRequestUri() {
+
+        final String requestUriString = MDC.get(MDCKeys.REQUEST_URI);
+        if (requestUriString == null) {
+
+            return null;
+        } else {
+            return URI.create(requestUriString);
+        }
     }
 
     public ErrorResponse getCause() {
@@ -288,9 +375,24 @@ public class ErrorResponse {
         return errorDescription;
     }
 
+    public String getHost() {
+
+        return host;
+    }
+
+    public String getJwtId() {
+
+        return jwtId;
+    }
+
     public String getRequestId() {
 
         return requestId;
+    }
+
+    public URI getRequestUri() {
+
+        return requestUri;
     }
 
     public List<LocalStackTraceElement> getStackTrace() {

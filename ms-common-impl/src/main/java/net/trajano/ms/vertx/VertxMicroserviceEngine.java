@@ -1,6 +1,8 @@
 package net.trajano.ms.vertx;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -48,6 +50,10 @@ public class VertxMicroserviceEngine implements
     @Autowired
     private HttpServerOptions httpServerOptions;
 
+    private String theHostname;
+
+    private int thePort = -1;
+
     private Vertx vertx;
 
     @Autowired
@@ -71,6 +77,18 @@ public class VertxMicroserviceEngine implements
             VertxConfig.class,
             VertxMicroserviceEngine.class
         };
+    }
+
+    @Override
+    public String hostname() {
+
+        return theHostname;
+    }
+
+    @Override
+    public int port() {
+
+        return thePort;
     }
 
     @PostConstruct
@@ -113,8 +131,14 @@ public class VertxMicroserviceEngine implements
                 SpringApplication.exit(applicationContext, () -> -1);
             } else {
                 LOG.info("Listening on port {}", http.actualPort());
+                thePort = http.actualPort();
             }
         });
+        try {
+            theHostname = InetAddress.getLocalHost().getHostName();
+        } catch (final UnknownHostException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     @PreDestroy

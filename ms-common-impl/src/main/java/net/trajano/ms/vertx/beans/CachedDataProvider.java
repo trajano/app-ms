@@ -69,6 +69,8 @@ public class CachedDataProvider implements
         if (jwks != null) {
             builder
                 .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(jwks));
+        } else {
+            builder.setSkipSignatureVerification();
         }
         if (audience != null) {
             builder

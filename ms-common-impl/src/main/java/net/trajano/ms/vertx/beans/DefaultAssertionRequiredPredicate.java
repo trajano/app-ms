@@ -27,6 +27,44 @@ public class DefaultAssertionRequiredPredicate implements
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultAssertionRequiredPredicate.class);
 
+    /**
+     * <p>
+     * The key logic for the test is as follows:
+     * </p>
+     * <p>
+     * Let:
+     * </p>
+     * <table>
+     * <tr>
+     * <td>a =</td>
+     * <td>resourceMethodHasRolesAllowed</td>
+     * </tr>
+     * <tr>
+     * <td>b =</td>
+     * <td>resourceClassHasRolesAllowed</td>
+     * </tr>
+     * <tr>
+     * <td>c =</td>
+     * <td>resourceMethodHasPermitAll</td>
+     * </tr>
+     * <tr>
+     * <td>d =</td>
+     * <td>resourceClassHasPermitAll</td>
+     * </tr>
+     * </table>
+     * <p>
+     * The rules that need to be applied translate to:
+     * </p>
+     *
+     * <pre>
+     * = a || ( b && !c ) || ( !a && !b && !c && !d )
+     * = (a || b || !d) && ( a || !c )
+     * </pre>
+     *
+     * @param resourceInfo
+     *            resource info
+     * @return <code>true</code> if the resource is protected
+     */
     @Override
     public boolean test(final ResourceInfo resourceInfo) {
 
@@ -49,13 +87,6 @@ public class DefaultAssertionRequiredPredicate implements
         } else if (resourceClassHasRolesAllowed && resourceClassHasPermitAll) {
             throw new IllegalArgumentException("The resource class " + resourceClass + " may not have both @RolesAllowed and @PermitAll annotations.");
         } else {
-            // resourceMethodHasRolesAllowed OR
-            // resourceClassHasRolesAllowed && !resourceMethodHasPermitAll OR
-            // !resourceMethodHasRolesAllowed && !resourceClassHasRolesAllowed && !resourceMethodHasPermitAll && !resourceClassHasPermitAll
-
-            // a || ( b && !c ) || ( !a && !b && !c && !d)
-
-            // (a || b || !d) && ( a || !c)
             return (resourceMethodHasRolesAllowed || resourceClassHasRolesAllowed || !resourceClassHasPermitAll) && (resourceMethodHasRolesAllowed || !resourceMethodHasPermitAll);
         }
 
