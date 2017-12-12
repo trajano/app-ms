@@ -16,7 +16,7 @@ import net.trajano.ms.spi.MicroserviceEngine;
  * Class used to bootstrap the Microservice engine. This takes a JAX-RS
  * {@link javax.ws.rs.core.Application} class as the application entry point.
  * Here is an example of how it is used.
- * 
+ *
  * <pre>
  * import javax.ws.rs.core.Application;
  * import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,11 +24,11 @@ import net.trajano.ms.spi.MicroserviceEngine;
  *
  * &#64;SpringBootApplication
  * public class SampleMS extends Application {
- * 
+ *
  *     public static void main(final String[] args) {
- * 
+ *
  *         Microservice.run(SampleMS.class, args);
- * 
+ *
  *     }
  * }
  * </pre>
@@ -38,9 +38,10 @@ public class Microservice {
     protected static Class<? extends Application> applicationClass;
 
     /**
-     * Microservice engine to use.
+     * Microservice engines to use. Made protected so that it can be altered for
+     * testing.
      */
-    private static ServiceLoader<MicroserviceEngine> microserviceEngineLoader = ServiceLoader.load(MicroserviceEngine.class);
+    protected static Iterator<MicroserviceEngine> microserviceEngineIterator = ServiceLoader.load(MicroserviceEngine.class).iterator();
 
     /**
      * This returns the application class that was set, may be <code>null</code>.
@@ -66,13 +67,12 @@ public class Microservice {
         final Class<?>[] extraSources,
         final String... args) {
 
-        final Iterator<MicroserviceEngine> it = microserviceEngineLoader.iterator();
-        if (!it.hasNext()) {
+        if (!microserviceEngineIterator.hasNext()) {
             throw new LinkageError("No MicroserviceEngine was defined");
         }
-        final MicroserviceEngine microserviceEngine = it.next();
-        if (it.hasNext()) {
-            throw new LinkageError(format("Multiple MicroserviceEngine was defined, %s, %s and possibly more", microserviceEngine, it.next()));
+        final MicroserviceEngine microserviceEngine = microserviceEngineIterator.next();
+        if (microserviceEngineIterator.hasNext()) {
+            throw new LinkageError(format("Multiple MicroserviceEngine was defined, %s, %s and possibly more", microserviceEngine, microserviceEngineIterator.next()));
         }
         if (Microservice.applicationClass != null) {
             throw new LinkageError("Another Application class has already been registered in this JVM.");
