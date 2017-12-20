@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ws.rs.core.Response.Status;
 
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,9 @@ public class VertxMicroserviceEngine implements
 
     @Autowired
     private VertxOptions vertxOptions;
+
+    @Autowired
+    private JaxRsRouter jaxRsRouter;
 
     /**
      * Sets the system properties and sets up the logger. {@inheritDoc}
@@ -116,7 +120,11 @@ public class VertxMicroserviceEngine implements
             CachedDataProvider.class,
             JwksRouteHandler.class,
             CommonMsJaxRs.class);
-        handlerStack.push(SpringJaxRsHandler.registerToRouter(router, applicationContext, Microservice.getApplicationClass()));
+        SpringJaxRsHandler springJaxRsHandler = new SpringJaxRsHandler(applicationContext, Microservice.getApplicationClass());
+
+        jaxRsRouter.register(Microservice.getApplicationClass(), router, springJaxRsHandler);
+
+        handlerStack.push(springJaxRsHandler);
 
         final Handler<RoutingContext> jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);
 
