@@ -230,6 +230,7 @@ public class OpenIdConnectResource {
     }
 
     public void setClient(Client client) {
+
         this.client = client;
     }
 }

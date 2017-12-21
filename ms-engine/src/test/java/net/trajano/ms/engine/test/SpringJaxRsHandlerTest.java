@@ -1,5 +1,6 @@
 package net.trajano.ms.engine.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -7,6 +8,9 @@ import static org.mockito.Mockito.*;
 
 import java.util.stream.Collectors;
 
+import net.trajano.ms.engine.jaxrs.JaxRsFailureHandler;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,13 +39,29 @@ public class SpringJaxRsHandlerTest {
     @Rule
     public RunTestOnContext rule = new RunTestOnContext();
 
+    private Router router;
+
+    private SpringJaxRsHandler handler;
+
+    @Before
+    public void setup() {
+
+        router = Router.router(rule.vertx());
+        final JaxRsRouter jaxRsRouter = new JaxRsRouter();
+        handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.setFailureHandler(new JaxRsFailureHandler());
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
+    }
+
+    @After
+    public void teardown() {
+
+        handler.close();
+
+    }
+
     @Test
     public void test400(final TestContext testContext) throws Exception {
-
-        final Router router = Router.router(rule.vertx());
-        final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
-        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/hello/400");
@@ -67,7 +87,7 @@ public class SpringJaxRsHandlerTest {
         when(serverRequest.response()).thenReturn(response);
 
         router.accept(serverRequest);
-        async.await();
+        async.awaitSuccess();
 
         verify(response, times(1)).setStatusCode(400);
     }
@@ -182,6 +202,38 @@ public class SpringJaxRsHandlerTest {
         verify(response, atLeastOnce()).write(captor.capture());
         final String errorMessage = String.join("", captor.getAllValues().stream().map(Buffer::toString).collect(Collectors.toList()));
         assertTrue(errorMessage.contains("server_error"));
+    }
+
+    @Test
+    public void testFailure(final TestContext testContext) throws Exception {
+
+        final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
+        when(serverRequest.absoluteURI()).thenThrow(new RuntimeException("boom"));
+        when(serverRequest.path()).thenReturn("/api/hello/400");
+        when(serverRequest.uri()).thenReturn("/api/hello/400");
+        when(serverRequest.isEnded()).thenReturn(true);
+        when(serverRequest.method()).thenReturn(HttpMethod.GET);
+
+        final HttpServerResponse response = mock(HttpServerResponse.class);
+        when(response.putHeader(anyString(), anyString())).thenReturn(response);
+        when(response.putHeader(any(AsciiString.class), anyString())).thenReturn(response);
+        when(response.headers()).thenReturn(new VertxHttpHeaders());
+
+        final Async async = testContext.async();
+        when(response.setStatusCode(Matchers.any(Integer.class))).then(invocation -> {
+
+            try {
+                return response;
+            } finally {
+                async.complete();
+            }
+        });
+        when(serverRequest.response()).thenReturn(response);
+
+        router.accept(serverRequest);
+        async.await();
+
+        verify(response, times(1)).setStatusCode(500);
     }
 
     @Test

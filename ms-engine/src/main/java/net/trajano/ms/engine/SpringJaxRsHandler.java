@@ -164,26 +164,6 @@ public class SpringJaxRsHandler implements
         providerFactory = deployment.getProviderFactory();
     }
 
-    /**
-     * The base URI set in {@link ApplicationPath} annotation.
-     *
-     * @return the base URI
-     */
-    public URI baseUri() {
-
-        return baseUri;
-    }
-
-    /**
-     * The route path to the base URI. Basically base URI + "/*".
-     *
-     * @return The route path to the base URI.
-     */
-    public String baseUriRoute() {
-
-        return baseUri().toASCIIString() + "/*";
-    }
-
     @Override
     public void close() {
 

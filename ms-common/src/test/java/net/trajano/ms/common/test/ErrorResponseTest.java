@@ -1,5 +1,6 @@
 package net.trajano.ms.common.test;
 
+import static net.trajano.commons.testing.UtilityClassTestUtil.assertUtilityClassWellDefined;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -15,6 +16,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXB;
 
+import net.trajano.commons.testing.UtilityClassTestUtil;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.Qualifiers;
+import net.trajano.ms.spi.CacheNames;
 import org.junit.Test;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.BeanExpressionException;
@@ -23,6 +28,16 @@ import net.trajano.ms.core.ErrorResponse;
 import net.trajano.ms.spi.MDCKeys;
 
 public class ErrorResponseTest {
+
+    @Test
+    public void assertConstClass() throws Exception {
+
+        assertUtilityClassWellDefined(CacheNames.class);
+        assertUtilityClassWellDefined(ErrorCodes.class);
+        assertUtilityClassWellDefined(MDCKeys.class);
+        assertUtilityClassWellDefined(Qualifiers.class);
+
+    }
 
     @Test
     public void chainedError() {

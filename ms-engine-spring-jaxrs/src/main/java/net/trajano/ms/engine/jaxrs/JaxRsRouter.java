@@ -95,4 +95,8 @@ public class JaxRsRouter {
 
     }
 
+    public void setFailureHandler(JaxRsFailureHandler failureHandler) {
+
+        this.failureHandler = failureHandler;
+    }
 }

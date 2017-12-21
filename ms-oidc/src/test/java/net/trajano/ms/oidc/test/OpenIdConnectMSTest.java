@@ -76,7 +76,7 @@ public class OpenIdConnectMSTest {
         when(webTarget.path(anyString())).thenReturn(webTarget);
         final Invocation.Builder builder = mock(Invocation.Builder.class);
         when(webTarget.request(anyString())).thenReturn(builder);
-        when(builder.header(anyString(),anyString())).thenReturn(builder);
+        when(builder.header(anyString(), anyString())).thenReturn(builder);
         when(builder.get(String.class)).thenReturn("http://callback.trajano.net");
         resource.setClient(client);
         final Response auth = resource.auth("abc", "issuer", "jdk");
