@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import api from './stores/api'
-import oauthToken from './stores/oauth_token'
+import api from './stores/apiStore'
+import oauthToken from './stores/oauthTokenStore'
 
 Vue.use(Vuex)
 const store = new Vuex.Store({
