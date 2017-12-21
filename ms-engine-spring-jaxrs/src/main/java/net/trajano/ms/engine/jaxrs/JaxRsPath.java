@@ -1,8 +1,11 @@
 package net.trajano.ms.engine.jaxrs;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.vertx.core.http.HttpMethod;
 
 public class JaxRsPath implements
     Comparable<JaxRsPath> {
@@ -13,40 +16,28 @@ public class JaxRsPath implements
      */
     private final String[] consumes;
 
-    private final boolean delete;
-
     private final boolean exact;
 
     /**
-     * Flag for GET and HEAD requests.
+     * VertX HTTP method.
      */
-    private final boolean get;
+    private final HttpMethod method;
 
     private final String path;
 
     private final String pathRegex;
 
-    private final boolean post;
-
     private final String[] produces;
-
-    private final boolean put;
 
     public JaxRsPath(final String path,
         final String[] consumes,
         final String[] produces,
-        final boolean get,
-        final boolean post,
-        final boolean put,
-        final boolean delete) {
+        final HttpMethod method) {
 
         this.path = path;
         this.consumes = consumes;
         this.produces = produces;
-        this.get = get;
-        this.post = post;
-        this.put = put;
-        this.delete = delete;
+        this.method = method;
         final Pattern placeholderPattern = Pattern.compile("/\\{([^}]+)}");
         final Pattern regexPlaceholderPattern = Pattern.compile("[-A-Za-z_0-9]+:\\s*(.+)");
         final Matcher matcher = placeholderPattern.matcher(path);
@@ -97,44 +88,28 @@ public class JaxRsPath implements
         if (!Arrays.equals(consumes, other.consumes)) {
             return false;
         }
-        if (delete != other.delete) {
+        if (method != other.method) {
             return false;
         }
-        if (exact != other.exact) {
+        if (!Objects.equals(path, other.path)) {
             return false;
         }
-        if (get != other.get) {
-            return false;
-        }
-        if (path == null) {
-            if (other.path != null) {
-                return false;
-            }
-        } else if (!path.equals(other.path)) {
-            return false;
-        }
-        if (pathRegex == null) {
-            if (other.pathRegex != null) {
-                return false;
-            }
-        } else if (!pathRegex.equals(other.pathRegex)) {
-            return false;
-        }
-        if (post != other.post) {
-            return false;
-        }
-        if (!Arrays.equals(produces, other.produces)) {
-            return false;
-        }
-        if (put != other.put) {
-            return false;
-        }
-        return true;
+        return Arrays.equals(produces, other.produces);
     }
 
     public String[] getConsumes() {
 
         return consumes;
+    }
+
+    /**
+     * Gets the VertX HTTP method.
+     *
+     * @return VertX HTTP method
+     */
+    public HttpMethod getMethod() {
+
+        return method;
     }
 
     /**
@@ -168,20 +143,10 @@ public class JaxRsPath implements
         final int prime = 31;
         int result = 1;
         result = prime * result + Arrays.hashCode(consumes);
-        result = prime * result + (delete ? 1231 : 1237);
-        result = prime * result + (exact ? 1231 : 1237);
-        result = prime * result + (get ? 1231 : 1237);
+        result = prime * result + (method == null ? 0 : method.hashCode());
         result = prime * result + (path == null ? 0 : path.hashCode());
-        result = prime * result + (pathRegex == null ? 0 : pathRegex.hashCode());
-        result = prime * result + (post ? 1231 : 1237);
         result = prime * result + Arrays.hashCode(produces);
-        result = prime * result + (put ? 1231 : 1237);
         return result;
-    }
-
-    public boolean isDelete() {
-
-        return delete;
     }
 
     /**
@@ -196,16 +161,7 @@ public class JaxRsPath implements
 
     public boolean isGet() {
 
-        return get;
+        return method == HttpMethod.GET;
     }
 
-    public boolean isPost() {
-
-        return post;
-    }
-
-    public boolean isPut() {
-
-        return put;
-    }
 }

@@ -2,6 +2,7 @@ package net.trajano.ms.engine.jaxrs;
 
 import static java.util.Arrays.stream;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Application;
 import org.reflections.Reflections;
 
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -28,6 +30,21 @@ import io.vertx.ext.web.RoutingContext;
  * VertX router.
  */
 public class JaxRsRouter {
+
+    private HttpMethod getHttpMethod(final Method m) {
+
+        if (m.getAnnotation(GET.class) != null) {
+            return HttpMethod.GET;
+        } else if (m.getAnnotation(POST.class) != null) {
+            return HttpMethod.POST;
+        } else if (m.getAnnotation(PUT.class) != null) {
+            return HttpMethod.PUT;
+        } else if (m.getAnnotation(DELETE.class) != null) {
+            return HttpMethod.DELETE;
+        } else {
+            throw new IllegalStateException("Unabel to determine HTTP Method");
+        }
+    }
 
     public void register(final Class<? extends Application> applicationClass,
         final Router router,
@@ -47,35 +64,16 @@ public class JaxRsRouter {
                     final String[] consumes = Optional.ofNullable(m.getAnnotation(Consumes.class)).map(Consumes::value).orElse(new String[0]);
                     final String[] produces = Optional.ofNullable(m.getAnnotation(Produces.class)).map(Produces::value).orElse(new String[0]);
 
-                    final boolean get = m.getAnnotation(GET.class) != null;
-                    final boolean post = m.getAnnotation(POST.class) != null;
-                    final boolean put = m.getAnnotation(PUT.class) != null;
-                    final boolean delete = m.getAnnotation(DELETE.class) != null;
-                    paths.add(new JaxRsPath(rootPath + classPath + path, consumes, produces, get, post, put, delete));
+                    paths.add(new JaxRsPath(rootPath + classPath + path, consumes, produces, getHttpMethod(m)));
+
                 });
         });
         paths.stream().filter(p -> !p.isGet()).forEach(p -> stream(p.getConsumes()).forEach(consumes -> stream(p.getProduces()).forEach(produces -> {
             final Route route;
-            if (p.isPost()) {
-                if (p.isExact()) {
-                    route = router.post(p.getPath());
-                } else {
-                    route = router.postWithRegex(p.getPathRegex());
-                }
-            } else if (p.isPut()) {
-                if (p.isExact()) {
-                    route = router.put(p.getPath());
-                } else {
-                    route = router.putWithRegex(p.getPathRegex());
-                }
-            } else if (p.isDelete()) {
-                if (p.isExact()) {
-                    route = router.delete(p.getPath());
-                } else {
-                    route = router.deleteWithRegex(p.getPathRegex());
-                }
+            if (p.isExact()) {
+                route = router.route(p.getMethod(), p.getPath());
             } else {
-                throw new IllegalStateException("JaxRsPath=" + p + " does not have a HTTP Method active");
+                route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
             }
             route.consumes(consumes).produces(produces).handler(jaxRsHandler);
 
@@ -83,16 +81,12 @@ public class JaxRsRouter {
         paths.stream().filter(JaxRsPath::isGet).forEach(p -> stream(p.getProduces()).forEach(produces -> {
             final Route getRoute;
             final Route headRoute;
-            if (p.isGet()) {
-                if (p.isExact()) {
-                    getRoute = router.get(p.getPath());
-                    headRoute = router.head(p.getPath());
-                } else {
-                    getRoute = router.getWithRegex(p.getPathRegex());
-                    headRoute = router.head(p.getPathRegex());
-                }
+            if (p.isExact()) {
+                getRoute = router.get(p.getPath());
+                headRoute = router.head(p.getPath());
             } else {
-                throw new IllegalStateException("JaxRsPath=" + p + " does not have a HTTP Method active");
+                getRoute = router.getWithRegex(p.getPathRegex());
+                headRoute = router.headWithRegex(p.getPathRegex());
             }
             getRoute.produces(produces).handler(jaxRsHandler);
             headRoute.handler(jaxRsHandler);
