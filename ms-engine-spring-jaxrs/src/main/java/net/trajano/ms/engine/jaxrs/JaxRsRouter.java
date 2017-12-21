@@ -56,7 +56,7 @@ public class JaxRsRouter {
         final Handler<RoutingContext> jaxRsHandler) {
 
         final Reflections reflections = new Reflections(applicationClass);
-        final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("/");
+        final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("");
         final JaxRsFailureHandler failureHandler = new JaxRsFailureHandler();
 
         final SortedSet<JaxRsPath> paths = new TreeSet<>();
@@ -74,7 +74,10 @@ public class JaxRsRouter {
 
                 });
         });
-        paths.forEach(p -> p.apply(router, jaxRsHandler, failureHandler));
+        paths.forEach(p -> {
+            p.apply(router, jaxRsHandler, failureHandler);
+            LOG.debug("route={}", p);
+        });
 
     }
 }

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -163,14 +164,13 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.write(Matchers.any(Buffer.class))).then(invocation -> {
+        when(response.write(Matchers.any(Buffer.class))).thenReturn(response);
 
-            try {
-                return response;
-            } finally {
-                async.complete();
-            }
-        });
+        doAnswer(i -> {
+            async.complete();
+            return null;
+        }).when(response).end();
+
         when(serverRequest.response()).thenReturn(response);
 
         router.accept(serverRequest);

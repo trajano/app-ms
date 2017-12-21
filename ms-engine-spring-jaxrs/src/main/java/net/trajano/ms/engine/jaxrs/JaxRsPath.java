@@ -1,7 +1,5 @@
 package net.trajano.ms.engine.jaxrs;
 
-import static java.util.Arrays.stream;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -77,43 +75,27 @@ public class JaxRsPath implements
         final Handler<RoutingContext> failureHandler) {
 
         if (isGet()) {
-            final Route getRoute;
-
             if (isExact()) {
-                getRoute = router.get(getPath());
                 router.head(getPath());
             } else {
-                getRoute = router.getWithRegex(getPathRegex());
                 router.headWithRegex(getPathRegex());
             }
-            applyProduce(getRoute, jaxRsHandler, failureHandler);
-        } else {
-            stream(consumes).forEach(c -> {
-                final Route route;
-                if (isExact()) {
-                    route = router.route(getMethod(), getPath()).consumes(c);
-                } else {
-                    route = router.routeWithRegex(getMethod(), getPathRegex()).consumes(c);
-                }
-                applyProduce(route, jaxRsHandler, failureHandler);
-            });
-
         }
 
-    }
-
-    private void applyProduce(final Route route,
-        final Handler<RoutingContext> jaxRsHandler,
-        final Handler<RoutingContext> failureHandler) {
-
-        if (isNoProduces()) {
-            route.handler(jaxRsHandler).failureHandler(failureHandler);
+        Route route;
+        if (isExact()) {
+            route = router.route(getMethod(), getPath());
         } else {
-            stream(produces).forEach(p -> {
-                route.produces(p).handler(jaxRsHandler).failureHandler(failureHandler);
-            });
+            route = router.routeWithRegex(getMethod(), getPathRegex());
         }
 
+        for (final String mimeType : consumes) {
+            route = route.consumes(mimeType);
+        }
+        for (final String mimeType : produces) {
+            route = route.produces(mimeType);
+        }
+        route.handler(jaxRsHandler).failureHandler(failureHandler);
     }
 
     /**

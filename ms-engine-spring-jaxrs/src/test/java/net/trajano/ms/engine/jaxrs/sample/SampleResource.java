@@ -52,8 +52,14 @@ public class SampleResource {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
     public Response root() {
+
+        return null;
+    }
+
+    @GET
+    @Path("/{blah}")
+    public Response rootRegex(@PathParam("blah") final String blah) {
 
         return null;
     }

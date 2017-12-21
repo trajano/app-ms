@@ -210,6 +210,7 @@ public class SpringJaxRsHandler implements
                     try {
                         dispatcher.invokePropagateNotFound(request,
                             response);
+                        context.response().end();
                         future.complete();
                     } finally {
                         ResteasyProviderFactory.clearContextData();
@@ -224,10 +225,6 @@ public class SpringJaxRsHandler implements
                             context.next();
                         } else {
                             context.fail(wae);
-                        }
-                    } else {
-                        if (!context.response().ended()) {
-                            context.response().end();
                         }
                     }
                 });
