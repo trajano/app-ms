@@ -164,4 +164,15 @@ public class JaxRsPath implements
         return method == HttpMethod.GET;
     }
 
+    public boolean isNoProduces() {
+
+        return produces.length == 0;
+    }
+
+    @Override
+    public String toString() {
+
+        return "JaxRsPath [consumes=" + Arrays.toString(consumes) + ", exact=" + exact + ", method=" + method + ", path=" + path + ", pathRegex=" + pathRegex + ", produces=" + Arrays.toString(produces) + "]";
+    }
+
 }

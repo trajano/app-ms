@@ -18,6 +18,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
@@ -29,7 +32,10 @@ import io.vertx.ext.web.RoutingContext;
  * This will take the JAX-RS annotated classes and create individual routes on a
  * VertX router.
  */
+@Component
 public class JaxRsRouter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JaxRsRouter.class);
 
     private HttpMethod getHttpMethod(final Method m) {
 
@@ -78,6 +84,16 @@ public class JaxRsRouter {
             route.consumes(consumes).produces(produces).handler(jaxRsHandler);
 
         })));
+        paths.stream().filter(p -> !p.isGet() && p.isNoProduces()).forEach(p -> stream(p.getConsumes()).forEach(consumes -> {
+            final Route route;
+            if (p.isExact()) {
+                route = router.route(p.getMethod(), p.getPath());
+            } else {
+                route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
+            }
+            route.consumes(consumes).handler(jaxRsHandler);
+
+        }));
         paths.stream().filter(JaxRsPath::isGet).forEach(p -> stream(p.getProduces()).forEach(produces -> {
             final Route getRoute;
             final Route headRoute;
@@ -90,8 +106,22 @@ public class JaxRsRouter {
             }
             getRoute.produces(produces).handler(jaxRsHandler);
             headRoute.handler(jaxRsHandler);
-
+            LOG.debug("path={}", p);
         }));
+        paths.stream().filter(p -> p.isGet() && p.isNoProduces()).forEach(p -> {
+            final Route getRoute;
+            final Route headRoute;
+            if (p.isExact()) {
+                getRoute = router.get(p.getPath());
+                headRoute = router.head(p.getPath());
+            } else {
+                getRoute = router.getWithRegex(p.getPathRegex());
+                headRoute = router.headWithRegex(p.getPathRegex());
+            }
+            getRoute.handler(jaxRsHandler);
+            headRoute.handler(jaxRsHandler);
+            LOG.debug("path={}", p);
+        });
 
     }
 }

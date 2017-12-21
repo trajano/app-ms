@@ -14,6 +14,7 @@ import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 
 @Configuration
 public class EngineSampleMain extends AbstractVerticle {
@@ -48,7 +49,8 @@ public class EngineSampleMain extends AbstractVerticle {
         final HttpServer http = vertx.createHttpServer(httpServerOptions);
 
         SwaggerHandler.registerToRouter(router, MyApp.class);
-        requestHandler = SpringJaxRsHandler.registerToRouter(router, MyApp.class);
+        final JaxRsRouter jaxRsRouter = new JaxRsRouter();
+        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
         ManifestHandler.registerToRouter(router);
 
         http.requestHandler(req -> router.accept(req)).listen(res -> {
