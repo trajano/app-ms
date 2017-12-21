@@ -3,7 +3,6 @@ package net.trajano.ms.engine.jaxrs;
 import static java.util.Arrays.stream;
 
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -20,6 +19,7 @@ import javax.ws.rs.core.Application;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
@@ -36,6 +36,9 @@ public class JaxRsRouter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JaxRsRouter.class);
 
+    @Autowired
+    private JaxRsFailureHandler failureHandler;
+
     private HttpMethod getHttpMethod(final Method m) {
 
         if (m.getAnnotation(GET.class) != null) {
@@ -51,23 +54,27 @@ public class JaxRsRouter {
         }
     }
 
+    /**
+     * Register the routes.
+     * 
+     * @param applicationClass
+     *            application class to get the root
+     * @param router
+     *            router to apply the changes to
+     * @param pathsProvider
+     *            provides a list of Path classes
+     * @param jaxRsHandler
+     *            route handler
+     */
     public void register(final Class<? extends Application> applicationClass,
         final Router router,
-        final Handler<RoutingContext> jaxRsHandler) {
-
-        register(applicationClass, router, Collections.emptySet(), jaxRsHandler);
-    }
-
-    private void register(final Class<? extends Application> applicationClass,
-        final Router router,
-        final Iterable<Class<?>> pathAnnotatedClasses,
+        final PathsProvider pathsProvider,
         final Handler<RoutingContext> jaxRsHandler) {
 
         final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("");
-        final JaxRsFailureHandler failureHandler = new JaxRsFailureHandler();
 
         final SortedSet<JaxRsPath> paths = new TreeSet<>();
-        pathAnnotatedClasses.forEach(clazz -> {
+        pathsProvider.getPathAnnotatedClasses().forEach(clazz -> {
             final String classPath = Optional.ofNullable(clazz.getAnnotation(Path.class)).map(Path::value).orElse("");
             stream(clazz.getMethods()).filter(m -> m.getAnnotation(GET.class) != null
                 || m.getAnnotation(POST.class) != null
@@ -88,11 +95,4 @@ public class JaxRsRouter {
 
     }
 
-    public void register(final Class<? extends Application> applicationClass,
-        final Router router,
-        final PathsProvider pathsProvider,
-        final Handler<RoutingContext> jaxRsHandler) {
-
-        register(applicationClass, router, pathsProvider.getPathAnnotatedClasses(), jaxRsHandler);
-    }
 }

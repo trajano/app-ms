@@ -2,6 +2,7 @@ package net.trajano.ms.engine.jaxrs.test;
 
 import static org.mockito.Mockito.mock;
 
+import net.trajano.ms.engine.jaxrs.PathsProvider;
 import org.junit.Test;
 
 import io.vertx.core.Handler;
@@ -19,6 +20,6 @@ public class JaxRsRouterTest {
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
         final Vertx vertx = Vertx.vertx();
         final Router router = Router.router(vertx);
-        jaxRsRouter.register(SampleApp.class, router, mock(Handler.class));
+        jaxRsRouter.register(SampleApp.class, router, mock(PathsProvider.class), mock(Handler.class));
     }
 }
