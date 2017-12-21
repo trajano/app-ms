@@ -9,16 +9,13 @@ import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -40,9 +37,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
@@ -51,7 +46,6 @@ import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
-import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
 
 public class SpringJaxRsHandler implements
@@ -59,132 +53,6 @@ public class SpringJaxRsHandler implements
     AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
-
-    /**
-     * Convenience method to construct and register the routes to a Vert.x router.
-     *
-     * @param router
-     *            vert.x router
-     * @param applicationClasses
-     *            application classes
-     * @return the handlers
-     * @deprecated use {@link JaxRsRouter}
-     */
-    @Deprecated
-    @SafeVarargs
-    public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
-        final Class<? extends Application>... applicationClasses) {
-
-        return multipleRegisterToRouter(router, null, applicationClasses);
-    }
-
-    /**
-     * Convenience method to construct and register the routes to a Vert.x router
-     * with a base Spring application context.
-     *
-     * @param router
-     *            vert.x router
-     * @param baseApplicationContext
-     *            Spring application context
-     * @param applicationClasses
-     *            application classes
-     * @return the handlers
-     * @deprecated use {@link JaxRsRouter}
-     */
-    @Deprecated
-    @SafeVarargs
-    public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
-        final ConfigurableApplicationContext baseApplicationContext,
-        final Class<? extends Application>... applicationClasses) {
-
-        final SpringJaxRsHandler[] ret = new SpringJaxRsHandler[applicationClasses.length];
-        int i = 0;
-        for (final Class<? extends Application> applicationClass : applicationClasses) {
-            final SpringJaxRsHandler requestHandler = new SpringJaxRsHandler(baseApplicationContext, applicationClass);
-            router.route(requestHandler.baseUriRoute())
-                .useNormalisedPath(true)
-                .handler(requestHandler)
-                .failureHandler(context -> {
-                    final Throwable wae = context.failure();
-                    if (wae instanceof ClientErrorException) {
-                        // Use a lower level of logging when it is a client error exception
-                        final WebApplicationException webAppException = (WebApplicationException) wae;
-                        LOG.debug(wae.getMessage(), wae);
-                        sendErrorResponse(context, webAppException);
-                    } else if (wae instanceof WebApplicationException) {
-                        final WebApplicationException webAppException = (WebApplicationException) wae;
-                        LOG.error(wae.getMessage(), wae);
-                        sendErrorResponse(context, webAppException);
-                    } else {
-                        LOG.error(wae.getMessage(), wae);
-                        context.response().setStatusCode(500);
-                        context.response().setStatusMessage(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                        if (context.request().method() != HttpMethod.HEAD) {
-                            context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-                            context.response().end(Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-                        }
-                    }
-                });
-            ret[i++] = requestHandler;
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Route to {} handled by {}", requestHandler.baseUriRoute(), requestHandler);
-            }
-        }
-        return ret;
-
-    }
-
-    /**
-     * Convenience method to construct and register a single application route to a
-     * Vert.x router.
-     *
-     * @param router
-     *            vert.x router
-     * @param applicationClass
-     *            application class
-     * @return the handler
-     * @deprecated use {@link JaxRsRouter}
-     */
-    @Deprecated
-    public static SpringJaxRsHandler registerToRouter(final Router router,
-        final Class<? extends Application> applicationClass) {
-
-        return multipleRegisterToRouter(router, applicationClass)[0];
-    }
-
-    /**
-     * Convenience method to construct and register a single application route to a
-     * Vert.x router.
-     *
-     * @param router
-     *            vert.x router
-     * @param applicationContext
-     *            application context
-     * @param applicationClass
-     *            application class
-     * @return the handler
-     */
-    public static SpringJaxRsHandler registerToRouter(final Router router,
-        final ConfigurableApplicationContext applicationContext,
-        final Class<? extends Application> applicationClass) {
-
-        return multipleRegisterToRouter(router, applicationContext, applicationClass)[0];
-    }
-
-    private static void sendErrorResponse(final RoutingContext context,
-        final WebApplicationException webAppException) {
-
-        context.response().setStatusCode(webAppException.getResponse().getStatus());
-        context.response().setStatusMessage(webAppException.getResponse().getStatusInfo().getReasonPhrase());
-        if (context.request().method() != HttpMethod.HEAD) {
-            if (webAppException.getResponse().getMediaType() == null) {
-                context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-            } else {
-                context.response().putHeader(HttpHeaders.CONTENT_TYPE, webAppException.getResponse().getMediaType().toString());
-            }
-            context.response().end(webAppException.getResponse().getStatusInfo().getReasonPhrase());
-        }
-    }
 
     private final AnnotationConfigApplicationContext applicationContext;
 

@@ -58,6 +58,7 @@ public class JaxRsRouter {
 
         final Reflections reflections = new Reflections(applicationClass);
         final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("/");
+        final JaxRsFailureHandler failureHandler = new JaxRsFailureHandler();
 
         final SortedSet<JaxRsPath> paths = new TreeSet<>();
         reflections.getTypesAnnotatedWith(Path.class).forEach(clazz -> {
@@ -81,7 +82,7 @@ public class JaxRsRouter {
             } else {
                 route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
             }
-            route.consumes(consumes).produces(produces).handler(jaxRsHandler);
+            route.consumes(consumes).produces(produces).handler(jaxRsHandler).failureHandler(failureHandler);
 
         })));
         paths.stream().filter(p -> !p.isGet() && p.isNoProduces()).forEach(p -> stream(p.getConsumes()).forEach(consumes -> {
@@ -91,7 +92,7 @@ public class JaxRsRouter {
             } else {
                 route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
             }
-            route.consumes(consumes).handler(jaxRsHandler);
+            route.consumes(consumes).handler(jaxRsHandler).failureHandler(failureHandler);
 
         }));
         paths.stream().filter(JaxRsPath::isGet).forEach(p -> stream(p.getProduces()).forEach(produces -> {
@@ -104,8 +105,8 @@ public class JaxRsRouter {
                 getRoute = router.getWithRegex(p.getPathRegex());
                 headRoute = router.headWithRegex(p.getPathRegex());
             }
-            getRoute.produces(produces).handler(jaxRsHandler);
-            headRoute.handler(jaxRsHandler);
+            getRoute.produces(produces).handler(jaxRsHandler).failureHandler(failureHandler);
+            headRoute.handler(jaxRsHandler).failureHandler(failureHandler);
             LOG.debug("path={}", p);
         }));
         paths.stream().filter(p -> p.isGet() && p.isNoProduces()).forEach(p -> {
@@ -118,8 +119,8 @@ public class JaxRsRouter {
                 getRoute = router.getWithRegex(p.getPathRegex());
                 headRoute = router.headWithRegex(p.getPathRegex());
             }
-            getRoute.handler(jaxRsHandler);
-            headRoute.handler(jaxRsHandler);
+            getRoute.handler(jaxRsHandler).failureHandler(failureHandler);
+            headRoute.handler(jaxRsHandler).failureHandler(failureHandler);
             LOG.debug("path={}", p);
         });
 
