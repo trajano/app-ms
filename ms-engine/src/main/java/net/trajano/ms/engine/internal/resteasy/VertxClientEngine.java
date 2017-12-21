@@ -65,7 +65,7 @@ public class VertxClientEngine implements
     @Override
     public ClientResponse invoke(final ClientInvocation request) {
 
-        LOG.debug("invoke={}", request);
+        LOG.debug("{} {}", request.getMethod(), request.getUri());
         final RequestOptions options = Conversions.toRequestOptions(request.getUri());
         final HttpClientRequest httpClientRequest = httpClient.request(HttpMethod.valueOf(request.getMethod()), options);
 
