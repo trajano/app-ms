@@ -20,10 +20,7 @@ public interface ClientValidator {
      *            client ID
      * @return JWKS URI
      */
-    default URI getJwksUri(final String clientId) {
-
-        return null;
-    }
+    URI getJwksUri(final String clientId);
 
     URI getRedirectUri(String clientId);
 
