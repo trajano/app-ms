@@ -1,5 +1,6 @@
 package net.trajano.ms.engine.jaxrs;
 
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,6 +81,57 @@ public class JaxRsPath implements
         return o.path.compareTo(path);
     }
 
+    @Override
+    public boolean equals(final Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final JaxRsPath other = (JaxRsPath) obj;
+        if (!Arrays.equals(consumes, other.consumes)) {
+            return false;
+        }
+        if (delete != other.delete) {
+            return false;
+        }
+        if (exact != other.exact) {
+            return false;
+        }
+        if (get != other.get) {
+            return false;
+        }
+        if (path == null) {
+            if (other.path != null) {
+                return false;
+            }
+        } else if (!path.equals(other.path)) {
+            return false;
+        }
+        if (pathRegex == null) {
+            if (other.pathRegex != null) {
+                return false;
+            }
+        } else if (!pathRegex.equals(other.pathRegex)) {
+            return false;
+        }
+        if (post != other.post) {
+            return false;
+        }
+        if (!Arrays.equals(produces, other.produces)) {
+            return false;
+        }
+        if (put != other.put) {
+            return false;
+        }
+        return true;
+    }
+
     public String[] getConsumes() {
 
         return consumes;
@@ -108,6 +160,23 @@ public class JaxRsPath implements
     public String[] getProduces() {
 
         return produces;
+    }
+
+    @Override
+    public int hashCode() {
+
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(consumes);
+        result = prime * result + (delete ? 1231 : 1237);
+        result = prime * result + (exact ? 1231 : 1237);
+        result = prime * result + (get ? 1231 : 1237);
+        result = prime * result + (path == null ? 0 : path.hashCode());
+        result = prime * result + (pathRegex == null ? 0 : pathRegex.hashCode());
+        result = prime * result + (post ? 1231 : 1237);
+        result = prime * result + Arrays.hashCode(produces);
+        result = prime * result + (put ? 1231 : 1237);
+        return result;
     }
 
     public boolean isDelete() {
