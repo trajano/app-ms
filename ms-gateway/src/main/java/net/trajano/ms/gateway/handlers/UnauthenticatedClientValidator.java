@@ -40,8 +40,8 @@ public class UnauthenticatedClientValidator extends SelfRegisteringRoutingContex
 
     private static final Logger LOG = LoggerFactory.getLogger(UnauthenticatedClientValidator.class);
 
-    @Value("${authorization.client_check_endpoint}")
-    private URI clientCheckEndpoint;
+    @Value("${authorization.endpoint}")
+    private URI authorizationEndpoint;
 
     @Autowired
     private GatewayClientAuthorization gatewayClientAuthorization;
@@ -68,8 +68,8 @@ public class UnauthenticatedClientValidator extends SelfRegisteringRoutingContex
 
         // The origin was already set by the previous step.
         final URI originUri = context.get("origin");
-        LOG.debug("originUri={} clientCheckEndpoint={}", originUri, clientCheckEndpoint);
-        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(clientCheckEndpoint), authorizationResponse -> {
+        LOG.debug("originUri={} clientCheckEndpoint={}", originUri, authorizationEndpoint);
+        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint.resolve("/check")), authorizationResponse -> {
             LOG.debug("statusCode={}", authorizationResponse.statusCode());
             if (authorizationResponse.statusCode() == 204) {
                 context.next();

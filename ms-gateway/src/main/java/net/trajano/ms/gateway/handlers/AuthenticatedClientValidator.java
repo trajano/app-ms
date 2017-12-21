@@ -59,8 +59,8 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
         return URI.create(tempOriginString.substring(0, tempOriginString.length() - 1));
     }
 
-    @Value("${authorization.client_check_endpoint}")
-    private URI clientCheckEndpoint;
+    @Value("${authorization.endpoint}")
+    private URI authorizationEndpoint;
 
     @Autowired
     private GatewayClientAuthorization gatewayClientAuthorization;
@@ -104,8 +104,7 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
 
         LOG.debug("context={} authorization={}", context, authorization);
 
-        LOG.debug("clientCheckEndpoint={}", clientCheckEndpoint);
-        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(clientCheckEndpoint), authorizationResponse -> {
+        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint.resolve("/check")), authorizationResponse -> {
             LOG.debug("statusCode={}", authorizationResponse.statusCode());
             if (authorizationResponse.statusCode() == 204) {
                 context.put("client_authorized", true);

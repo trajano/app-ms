@@ -46,7 +46,7 @@ public class RefreshHandler extends SelfRegisteringRoutingContextHandler {
      */
     private static final Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9]{64}$");
 
-    @Value("${authorization.token_endpoint}")
+    @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
 
     @Autowired
@@ -110,7 +110,7 @@ public class RefreshHandler extends SelfRegisteringRoutingContextHandler {
         }
 
         // Trust the authorization endpoint and use the body handler
-        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint),
+        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint.resolve("/token")),
             authorizationResponse -> authorizationResponse.bodyHandler(contextResponse
                 .setChunked(false)
                 .setStatusCode(authorizationResponse.statusCode())

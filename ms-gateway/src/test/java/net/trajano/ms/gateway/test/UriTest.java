@@ -30,8 +30,16 @@ public class UriTest {
     }
 
     @Test
+    public void testRelative() throws Exception {
+
+        assertEquals(URI.create("https://bugzilla.mozilla.org/foo"), URI.create("https://bugzilla.mozilla.org").resolve("/foo"));
+        assertEquals(URI.create("https://bugzilla.mozilla.org/bar/foo"), URI.create("https://bugzilla.mozilla.org/bar/").resolve("./foo"));
+    }
+
+    @Test
     public void testSimpleOrigin() throws Exception {
 
         assertEquals(URI.create("https://bugzilla.mozilla.org"), AuthenticatedClientValidator.getPartsForOriginHeader(new URL("https://bugzilla.mozilla.org")));
     }
+
 }
