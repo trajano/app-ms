@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
@@ -75,54 +74,7 @@ public class JaxRsRouter {
 
                 });
         });
-        paths.stream().filter(p -> !p.isGet()).forEach(p -> stream(p.getConsumes()).forEach(consumes -> stream(p.getProduces()).forEach(produces -> {
-            final Route route;
-            if (p.isExact()) {
-                route = router.route(p.getMethod(), p.getPath());
-            } else {
-                route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
-            }
-            route.consumes(consumes).produces(produces).handler(jaxRsHandler).failureHandler(failureHandler);
-
-        })));
-        paths.stream().filter(p -> !p.isGet() && p.isNoProduces()).forEach(p -> stream(p.getConsumes()).forEach(consumes -> {
-            final Route route;
-            if (p.isExact()) {
-                route = router.route(p.getMethod(), p.getPath());
-            } else {
-                route = router.routeWithRegex(p.getMethod(), p.getPathRegex());
-            }
-            route.consumes(consumes).handler(jaxRsHandler).failureHandler(failureHandler);
-
-        }));
-        paths.stream().filter(JaxRsPath::isGet).forEach(p -> stream(p.getProduces()).forEach(produces -> {
-            final Route getRoute;
-            final Route headRoute;
-            if (p.isExact()) {
-                getRoute = router.get(p.getPath());
-                headRoute = router.head(p.getPath());
-            } else {
-                getRoute = router.getWithRegex(p.getPathRegex());
-                headRoute = router.headWithRegex(p.getPathRegex());
-            }
-            getRoute.produces(produces).handler(jaxRsHandler).failureHandler(failureHandler);
-            headRoute.handler(jaxRsHandler).failureHandler(failureHandler);
-            LOG.debug("path={}", p);
-        }));
-        paths.stream().filter(p -> p.isGet() && p.isNoProduces()).forEach(p -> {
-            final Route getRoute;
-            final Route headRoute;
-            if (p.isExact()) {
-                getRoute = router.get(p.getPath());
-                headRoute = router.head(p.getPath());
-            } else {
-                getRoute = router.getWithRegex(p.getPathRegex());
-                headRoute = router.headWithRegex(p.getPathRegex());
-            }
-            getRoute.handler(jaxRsHandler).failureHandler(failureHandler);
-            headRoute.handler(jaxRsHandler).failureHandler(failureHandler);
-            LOG.debug("path={}", p);
-        });
+        paths.forEach(p -> p.apply(router, jaxRsHandler, failureHandler));
 
     }
 }

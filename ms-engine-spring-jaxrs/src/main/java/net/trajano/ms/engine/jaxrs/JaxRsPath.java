@@ -1,11 +1,17 @@
 package net.trajano.ms.engine.jaxrs;
 
+import static java.util.Arrays.stream;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.Route;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 
 public class JaxRsPath implements
     Comparable<JaxRsPath> {
@@ -57,8 +63,63 @@ public class JaxRsPath implements
     }
 
     /**
+     * Apply path to router and assign the appropriate handlers.
+     *
+     * @param router
+     *            router
+     * @param jaxRsHandler
+     *            JAX-RS Handler
+     * @param failureHandler
+     *            failure handler
+     */
+    public void apply(final Router router,
+        final Handler<RoutingContext> jaxRsHandler,
+        final Handler<RoutingContext> failureHandler) {
+
+        if (isGet()) {
+            final Route getRoute;
+
+            if (isExact()) {
+                getRoute = router.get(getPath());
+                router.head(getPath());
+            } else {
+                getRoute = router.getWithRegex(getPathRegex());
+                router.headWithRegex(getPathRegex());
+            }
+            applyProduce(getRoute, jaxRsHandler, failureHandler);
+        } else {
+            stream(consumes).forEach(c -> {
+                final Route route;
+                if (isExact()) {
+                    route = router.route(getMethod(), getPath()).consumes(c);
+                } else {
+                    route = router.routeWithRegex(getMethod(), getPathRegex()).consumes(c);
+                }
+                applyProduce(route, jaxRsHandler, failureHandler);
+            });
+
+        }
+
+    }
+
+    private void applyProduce(final Route route,
+        final Handler<RoutingContext> jaxRsHandler,
+        final Handler<RoutingContext> failureHandler) {
+
+        if (isNoProduces()) {
+            route.handler(jaxRsHandler).failureHandler(failureHandler);
+        } else {
+            stream(produces).forEach(p -> {
+                route.produces(p).handler(jaxRsHandler).failureHandler(failureHandler);
+            });
+        }
+
+    }
+
+    /**
      * Compares two JaxRsPath objects such that it is ordered by most specific and
-     * lowest level first. It sorts it in reverse by path. {@inheritDoc}
+     * lowest level first. It sorts it in reverse by path. A path with produces is
+     * order before one than one that does not. {@inheritDoc}
      */
     @Override
     public int compareTo(final JaxRsPath o) {
@@ -69,7 +130,18 @@ public class JaxRsPath implements
             return 1;
         }
 
-        return o.path.compareTo(path);
+        final int c = o.path.compareTo(path);
+        if (c != 0) {
+            return c;
+        }
+
+        if (isNoProduces() && !o.isNoProduces()) {
+            return 1;
+        } else if (!isNoProduces() && o.isNoProduces()) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
