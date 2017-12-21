@@ -229,4 +229,7 @@ public class OpenIdConnectResource {
         serverStateCache = cm.getCache(HazelcastConfiguration.SERVER_STATE);
     }
 
+    public void setClient(Client client) {
+        this.client = client;
+    }
 }

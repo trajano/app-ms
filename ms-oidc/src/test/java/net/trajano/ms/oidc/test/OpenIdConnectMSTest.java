@@ -2,9 +2,16 @@ package net.trajano.ms.oidc.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.URI;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.jose4j.jwt.JwtClaims;
@@ -63,6 +70,15 @@ public class OpenIdConnectMSTest {
     public void testOidcResource() {
 
         Assert.assertNotNull(resource);
+        final Client client = mock(Client.class);
+        final WebTarget webTarget = mock(WebTarget.class);
+        when(client.target(any(URI.class))).thenReturn(webTarget);
+        when(webTarget.path(anyString())).thenReturn(webTarget);
+        final Invocation.Builder builder = mock(Invocation.Builder.class);
+        when(webTarget.request(anyString())).thenReturn(builder);
+        when(builder.header(anyString(),anyString())).thenReturn(builder);
+        when(builder.get(String.class)).thenReturn("http://callback.trajano.net");
+        resource.setClient(client);
         final Response auth = resource.auth("abc", "issuer", "jdk");
         assertEquals("example.trajano.net", URI.create(auth.getHeaderString("Location")).getHost());
         final JsonObject authUriJson = resource.authUriJson("abc", "issuer", "jdk");
