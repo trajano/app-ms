@@ -1,7 +1,7 @@
 Microservice Application
 ========================
 
-[![Build Status](//travis-ci.org/trajano/app-ms.svg?branch=master)](//travis-ci.org/trajano/app-ms) [![Quality Gate](//sonarcloud.io/api/badges/gate?key=net.trajano.ms.app:app-ms)](//sonarcloud.io/dashboard?id=net.trajano.ms.app:app-ms) [![Javadocs](//javadoc.io/badge/net.trajano.ms.app/ms-common.svg)](//javadoc.io/doc/net.trajano.ms.app/ms-common)
+[![Build Status](https://travis-ci.org/trajano/app-ms.svg?branch=master)](//travis-ci.org/trajano/app-ms) [![Quality Gate](https://sonarcloud.io/api/badges/gate?key=net.trajano.ms.app:app-ms)](//sonarcloud.io/dashboard?id=net.trajano.ms.app:app-ms) [![Javadocs](https://javadoc.io/badge/net.trajano.ms.app/ms-common.svg)](//javadoc.io/doc/net.trajano.ms.app/ms-common)
 
 This is an example of a microservice oriented application that a typical enterprise will work with.  It is not meant to be of the scale of NetFlix/Facebook but for more normal loads of a large company where IT is not their primary function.
 
