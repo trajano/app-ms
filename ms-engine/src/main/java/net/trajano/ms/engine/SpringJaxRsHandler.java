@@ -51,6 +51,7 @@ import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
 
 public class SpringJaxRsHandler implements
@@ -67,7 +68,9 @@ public class SpringJaxRsHandler implements
      * @param applicationClasses
      *            application classes
      * @return the handlers
+     * @deprecated use {@link JaxRsRouter}
      */
+    @Deprecated
     @SafeVarargs
     public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
         final Class<? extends Application>... applicationClasses) {
@@ -86,7 +89,9 @@ public class SpringJaxRsHandler implements
      * @param applicationClasses
      *            application classes
      * @return the handlers
+     * @deprecated use {@link JaxRsRouter}
      */
+    @Deprecated
     @SafeVarargs
     public static SpringJaxRsHandler[] multipleRegisterToRouter(final Router router,
         final ConfigurableApplicationContext baseApplicationContext,
@@ -138,7 +143,9 @@ public class SpringJaxRsHandler implements
      * @param applicationClass
      *            application class
      * @return the handler
+     * @deprecated use {@link JaxRsRouter}
      */
+    @Deprecated
     public static SpringJaxRsHandler registerToRouter(final Router router,
         final Class<? extends Application> applicationClass) {
 
@@ -380,7 +387,7 @@ public class SpringJaxRsHandler implements
     /**
      * Get the JAX-RS Client that is present in the vertx context or create a new
      * one.
-     * 
+     *
      * @param vertx
      *            vertx
      * @return JAX-RS client.
