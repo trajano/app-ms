@@ -80,7 +80,7 @@ public class JaxRsRouter {
             route.consumes(consumes).produces(produces).handler(jaxRsHandler);
 
         })));
-        paths.stream().filter(p -> p.isGet()).forEach(p -> stream(p.getProduces()).forEach(produces -> {
+        paths.stream().filter(JaxRsPath::isGet).forEach(p -> stream(p.getProduces()).forEach(produces -> {
             final Route getRoute;
             final Route headRoute;
             if (p.isGet()) {
