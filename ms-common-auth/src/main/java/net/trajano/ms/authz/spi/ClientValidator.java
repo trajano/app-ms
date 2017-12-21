@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.spi;
+package net.trajano.ms.authz.spi;
 
 import java.net.URI;
 

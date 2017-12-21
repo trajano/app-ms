@@ -10,7 +10,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ws.rs.core.Response.Status;
 
-import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +28,7 @@ import net.trajano.ms.Microservice;
 import net.trajano.ms.engine.ManifestHandler;
 import net.trajano.ms.engine.SpringJaxRsHandler;
 import net.trajano.ms.engine.SwaggerHandler;
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import net.trajano.ms.spi.MicroserviceEngine;
 import net.trajano.ms.vertx.beans.CachedDataProvider;
 import net.trajano.ms.vertx.beans.GsonJacksonJsonOps;
@@ -51,6 +51,9 @@ public class VertxMicroserviceEngine implements
     @Autowired
     private HttpServerOptions httpServerOptions;
 
+    @Autowired
+    private JaxRsRouter jaxRsRouter;
+
     private String theHostname;
 
     private int thePort = -1;
@@ -59,9 +62,6 @@ public class VertxMicroserviceEngine implements
 
     @Autowired
     private VertxOptions vertxOptions;
-
-    @Autowired
-    private JaxRsRouter jaxRsRouter;
 
     /**
      * Sets the system properties and sets up the logger. {@inheritDoc}
@@ -120,9 +120,9 @@ public class VertxMicroserviceEngine implements
             CachedDataProvider.class,
             JwksRouteHandler.class,
             CommonMsJaxRs.class);
-        SpringJaxRsHandler springJaxRsHandler = new SpringJaxRsHandler(applicationContext, Microservice.getApplicationClass());
+        final SpringJaxRsHandler springJaxRsHandler = new SpringJaxRsHandler(applicationContext, Microservice.getApplicationClass());
 
-        jaxRsRouter.register(Microservice.getApplicationClass(), router, springJaxRsHandler);
+        jaxRsRouter.register(Microservice.getApplicationClass(), router, springJaxRsHandler, springJaxRsHandler);
 
         handlerStack.push(springJaxRsHandler);
 

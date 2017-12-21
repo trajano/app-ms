@@ -50,7 +50,8 @@ public class EngineSampleMain extends AbstractVerticle {
 
         SwaggerHandler.registerToRouter(router, MyApp.class);
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
         ManifestHandler.registerToRouter(router);
 
         http.requestHandler(req -> router.accept(req)).listen(res -> {

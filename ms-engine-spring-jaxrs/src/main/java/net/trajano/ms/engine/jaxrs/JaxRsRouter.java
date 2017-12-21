@@ -17,9 +17,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.vertx.core.Handler;
@@ -36,6 +36,9 @@ public class JaxRsRouter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JaxRsRouter.class);
 
+    @Autowired
+    private JaxRsFailureHandler failureHandler;
+
     private HttpMethod getHttpMethod(final Method m) {
 
         if (m.getAnnotation(GET.class) != null) {
@@ -51,16 +54,27 @@ public class JaxRsRouter {
         }
     }
 
+    /**
+     * Register the routes.
+     * 
+     * @param applicationClass
+     *            application class to get the root
+     * @param router
+     *            router to apply the changes to
+     * @param pathsProvider
+     *            provides a list of Path classes
+     * @param jaxRsHandler
+     *            route handler
+     */
     public void register(final Class<? extends Application> applicationClass,
         final Router router,
+        final PathsProvider pathsProvider,
         final Handler<RoutingContext> jaxRsHandler) {
 
-        final Reflections reflections = new Reflections(applicationClass);
         final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("");
-        final JaxRsFailureHandler failureHandler = new JaxRsFailureHandler();
 
         final SortedSet<JaxRsPath> paths = new TreeSet<>();
-        reflections.getTypesAnnotatedWith(Path.class).forEach(clazz -> {
+        pathsProvider.getPathAnnotatedClasses().forEach(clazz -> {
             final String classPath = Optional.ofNullable(clazz.getAnnotation(Path.class)).map(Path::value).orElse("");
             stream(clazz.getMethods()).filter(m -> m.getAnnotation(GET.class) != null
                 || m.getAnnotation(POST.class) != null
@@ -80,4 +94,5 @@ public class JaxRsRouter {
         });
 
     }
+
 }

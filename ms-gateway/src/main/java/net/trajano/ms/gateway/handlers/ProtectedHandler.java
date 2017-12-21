@@ -55,7 +55,7 @@ public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
 
     private static final String X_JWT_AUDIENCE = "X-JWT-Audience";
 
-    @Value("${authorization.token_endpoint}")
+    @Value("${authorization.endpoint}")
     private URI authorizationEndpoint;
 
     @Autowired
@@ -139,7 +139,7 @@ public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
         }
 
         final HttpClientRequest authorizationRequest = httpClient
-            .post(Conversions.toRequestOptions(authorizationEndpoint))
+            .post(Conversions.toRequestOptions(authorizationEndpoint.resolve("/token")))
             .handler(authorizationResponse -> {
                 LOG.debug("ended={}", contextRequest.isEnded());
                 authorizationResponse.bodyHandler(buffer -> {

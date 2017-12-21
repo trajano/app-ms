@@ -14,7 +14,7 @@ oidc:
   redirect_uri: ${mappings.oidc-ms}/oidc/cb
 
 authorization:
-  endpoint: ${mappings.authz-ms}/token
+  endpoint: ${mappings.authz-ms}
   refreshTokenPath: /refresh
   client_id: oidc_id
   client_secret: app_secret
@@ -31,7 +31,7 @@ oidc:
   redirect_uri: https://localhost:3001/oidc/cb
   config_file: openidconnect-config.json
 
-authorizationEndpoint: http://authorization-ms/token
+authorizationEndpoint: http://authorization-ms
 
 mappings:
   sample-ms: http://sample-ms
@@ -54,7 +54,7 @@ oidc:
   redirect_uri: https://gw.trajano.net/oidc/cb
   config_file: openidconnect-config.json
 
-authorizationEndpoint: http://authorization-ms/token
+authorizationEndpoint: http://authorization-ms
 
 mappings:
   sample-ms: http://sample-ms

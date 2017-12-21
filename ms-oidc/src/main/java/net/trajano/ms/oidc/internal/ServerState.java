@@ -51,6 +51,9 @@ public class ServerState implements
      *            additional claims
      * @param nonce
      *            nonce
+     * @param clientCredentials
+     *            client credentials suitable for the Authorization header and
+     *            expected to be Basic authorization.
      */
     public ServerState(final String clientState,
         final JwtClaims additionalClaims,

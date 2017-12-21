@@ -3,12 +3,7 @@ package net.trajano.ms.engine.test;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.stream.Collectors;
 
@@ -45,7 +40,8 @@ public class SpringJaxRsHandlerTest {
 
         final Router router = Router.router(rule.vertx());
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/hello/400");
@@ -56,6 +52,7 @@ public class SpringJaxRsHandlerTest {
 
         final HttpServerResponse response = mock(HttpServerResponse.class);
         when(response.putHeader(anyString(), anyString())).thenReturn(response);
+        when(response.putHeader(any(AsciiString.class), anyString())).thenReturn(response);
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
@@ -80,7 +77,8 @@ public class SpringJaxRsHandlerTest {
 
         final Router router = Router.router(rule.vertx());
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/nothello");
@@ -114,7 +112,8 @@ public class SpringJaxRsHandlerTest {
 
         final Router router = Router.router(rule.vertx());
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/hello/404");
@@ -150,7 +149,8 @@ public class SpringJaxRsHandlerTest {
 
         final Router router = Router.router(rule.vertx());
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/hello/cough");
@@ -161,6 +161,7 @@ public class SpringJaxRsHandlerTest {
 
         final HttpServerResponse response = mock(HttpServerResponse.class);
         when(response.putHeader(anyString(), anyString())).thenReturn(response);
+        when(response.putHeader(any(AsciiString.class), anyString())).thenReturn(response);
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
@@ -174,7 +175,7 @@ public class SpringJaxRsHandlerTest {
         when(serverRequest.response()).thenReturn(response);
 
         router.accept(serverRequest);
-        async.await();
+        async.awaitSuccess();
 
         final ArgumentCaptor<Buffer> captor = ArgumentCaptor.forClass(Buffer.class);
         verify(response, times(1)).setStatusCode(500);
@@ -188,7 +189,8 @@ public class SpringJaxRsHandlerTest {
 
         final Router router = Router.router(rule.vertx());
         final JaxRsRouter jaxRsRouter = new JaxRsRouter();
-        jaxRsRouter.register(MyApp.class, router, new SpringJaxRsHandler(MyApp.class));
+        final SpringJaxRsHandler handler = new SpringJaxRsHandler(MyApp.class);
+        jaxRsRouter.register(MyApp.class, router, handler, handler);
 
         final HttpServerRequest serverRequest = mock(HttpServerRequest.class);
         when(serverRequest.absoluteURI()).thenReturn("http://test.trajano.net/api/hello");
@@ -199,6 +201,7 @@ public class SpringJaxRsHandlerTest {
 
         final HttpServerResponse response = mock(HttpServerResponse.class);
         when(response.putHeader(anyString(), anyString())).thenReturn(response);
+        when(response.putHeader(any(AsciiString.class), anyString())).thenReturn(response);
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();

@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JaxRsFailureHandler implements
     Handler<RoutingContext> {
 

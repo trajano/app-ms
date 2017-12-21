@@ -17,7 +17,8 @@
       "client_secret": "app_secret",
       "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "jwks_uri": "http://oidc-ms/.well-known/jwks",
-      "origin": "http://localhost:3000"
+      "origin": "http://localhost:3000",
+      "redirect_uri": "http://localhost:3000/cb"
     }
     
   ]

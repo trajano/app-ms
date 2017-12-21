@@ -38,6 +38,9 @@ public class JaxRsPath implements
         final String[] produces,
         final HttpMethod method) {
 
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("path cannot be empty");
+        }
         this.path = path;
         this.consumes = consumes;
         this.produces = produces;

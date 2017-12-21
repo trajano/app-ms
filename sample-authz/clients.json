@@ -10,13 +10,15 @@
       "client_secret": "app_secret",
       "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "jwks_uri": "http://localhost:8281/.well-known/jwks",
-      "origin": "http://localhost:3000"      
+      "origin": "http://localhost:8888"
     },
     {
       "client_id": "oidc_id",
       "client_secret": "app_secret",
-      "grant_types": ["refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
-      "jwks_uri": "http://localhost:8080/.well-known/jwks"
+      "grant_types": ["openid", "refresh_token", "revocation", "urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "jwks_uri": "http://localhost:8080/.well-known/jwks",
+      "origin": "http://localhost:8888",
+      "redirect_uri": "http://localhost:8888/cb"
     }
   ]
 }
