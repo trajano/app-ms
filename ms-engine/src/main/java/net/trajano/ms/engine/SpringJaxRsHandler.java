@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -46,11 +47,14 @@ import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
+import net.trajano.ms.engine.jaxrs.PathsProvider;
 import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
+import org.springframework.util.ClassUtils;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
-    AutoCloseable {
+    AutoCloseable,
+    PathsProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
@@ -63,6 +67,8 @@ public class SpringJaxRsHandler implements
     private final SynchronousDispatcher dispatcher;
 
     private HttpClientOptions httpClientOptions;
+
+    private final Set<Class<?>> pathAnnotatedClasses;
 
     private final ResteasyProviderFactory providerFactory;
 
@@ -109,6 +115,7 @@ public class SpringJaxRsHandler implements
             throw new ExceptionInInitializerError(e);
         }
 
+        pathAnnotatedClasses = new HashSet<>();
         final Set<Class<?>> resourceClasses = application.getClasses();
         if (resourceClasses.isEmpty()) {
             final String packageName = applicationClass.getPackage().getName();
@@ -145,6 +152,9 @@ public class SpringJaxRsHandler implements
                     }
                 });
         }
+        applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
+            obj) -> pathAnnotatedClasses.add(ClassUtils.getUserClass(obj)));
+
         httpClientOptions = applicationContext.getBean(HttpClientOptions.class);
         if (httpClientOptions == null) {
             httpClientOptions = new HttpClientOptions();
@@ -180,6 +190,12 @@ public class SpringJaxRsHandler implements
         deployment.stop();
         applicationContext.close();
 
+    }
+
+    @Override
+    public Iterable<Class<?>> getPathAnnotatedClasses() {
+
+        return pathAnnotatedClasses;
     }
 
     /**

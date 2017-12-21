@@ -3,6 +3,7 @@ package net.trajano.ms.engine.jaxrs;
 import static java.util.Arrays.stream;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -17,7 +18,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -55,12 +55,19 @@ public class JaxRsRouter {
         final Router router,
         final Handler<RoutingContext> jaxRsHandler) {
 
-        final Reflections reflections = new Reflections(applicationClass);
+        register(applicationClass, router, Collections.emptySet(), jaxRsHandler);
+    }
+
+    private void register(final Class<? extends Application> applicationClass,
+        final Router router,
+        final Iterable<Class<?>> pathAnnotatedClasses,
+        final Handler<RoutingContext> jaxRsHandler) {
+
         final String rootPath = Optional.ofNullable(applicationClass.getAnnotation(ApplicationPath.class)).map(ApplicationPath::value).orElse("");
         final JaxRsFailureHandler failureHandler = new JaxRsFailureHandler();
 
         final SortedSet<JaxRsPath> paths = new TreeSet<>();
-        reflections.getTypesAnnotatedWith(Path.class).forEach(clazz -> {
+        pathAnnotatedClasses.forEach(clazz -> {
             final String classPath = Optional.ofNullable(clazz.getAnnotation(Path.class)).map(Path::value).orElse("");
             stream(clazz.getMethods()).filter(m -> m.getAnnotation(GET.class) != null
                 || m.getAnnotation(POST.class) != null
@@ -79,5 +86,13 @@ public class JaxRsRouter {
             LOG.debug("route={}", p);
         });
 
+    }
+
+    public void register(final Class<? extends Application> applicationClass,
+        final Router router,
+        final PathsProvider pathsProvider,
+        final Handler<RoutingContext> jaxRsHandler) {
+
+        register(applicationClass, router, pathsProvider.getPathAnnotatedClasses(), jaxRsHandler);
     }
 }
