@@ -11,10 +11,14 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 
 @Configuration
 @ComponentScan
-@ComponentScan(basePackageClasses = SpringConfiguration.class)
+@ComponentScan(basePackageClasses = {
+    SpringConfiguration.class,
+    JaxRsRouter.class
+})
 public class VertxConfig {
 
     @Value("${http.client.proxy.host:#{null}}")

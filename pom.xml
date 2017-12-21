@@ -90,6 +90,11 @@
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>ms-engine-spring-jaxrs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>ms-gateway</artifactId>
         <version>${project.version}</version>
       </dependency>
