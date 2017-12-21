@@ -1,4 +1,4 @@
-package net.trajano.ms.example.oidc.sample;
+package net.trajano.ms.example.oidc;
 
 import java.io.File;
 import java.net.URI;
