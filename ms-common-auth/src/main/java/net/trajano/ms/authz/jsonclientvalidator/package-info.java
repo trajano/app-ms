@@ -3,4 +3,4 @@
  *
  * @author Archimedes Trajano
  */
-package net.trajano.ms.auth.jsonclientvalidator;
+package net.trajano.ms.authz.jsonclientvalidator;

@@ -5,7 +5,6 @@ import java.net.URI;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.UriBuilder;
 
-import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,10 +12,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import net.trajano.ms.auth.spi.ClientValidator;
-import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.core.CryptoOps;
-import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.spi.IssuerConfig;
 import net.trajano.ms.oidc.spi.ServiceConfiguration;
 
@@ -27,9 +24,6 @@ import net.trajano.ms.oidc.spi.ServiceConfiguration;
  */
 @Component
 public class AuthenticationUriBuilder {
-
-    @Autowired
-    private ClientValidator clientValidator;
 
     @Autowired
     private CacheManager cm;
@@ -73,10 +67,6 @@ public class AuthenticationUriBuilder {
         final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);
         if (issuerConfig == null) {
             throw ErrorResponses.invalidRequest("Invalid issuer_id");
-        }
-
-        if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
-            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, "Unauthorized client", String.format("Basic realm=\"%s\", encoding=\"UTF-8\"", realmName));
         }
 
         final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();

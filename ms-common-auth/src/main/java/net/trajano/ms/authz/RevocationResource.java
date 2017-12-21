@@ -20,9 +20,9 @@ import org.springframework.stereotype.Component;
 import com.google.gson.JsonObject;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.core.ErrorResponses;
 

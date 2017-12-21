@@ -5,8 +5,8 @@ import javax.ws.rs.core.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import net.trajano.ms.Microservice;
-import net.trajano.ms.auth.jsonclientvalidator.JsonClientValidator;
 import net.trajano.ms.authz.Authorization;
+import net.trajano.ms.authz.jsonclientvalidator.JsonClientValidator;
 
 @SpringBootApplication(
     scanBasePackageClasses = {

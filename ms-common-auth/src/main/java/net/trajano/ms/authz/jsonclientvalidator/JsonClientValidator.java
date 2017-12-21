@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.jsonclientvalidator;
+package net.trajano.ms.authz.jsonclientvalidator;
 
 import java.io.File;
 import java.io.FileReader;
@@ -12,7 +12,7 @@ import javax.inject.Inject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import net.trajano.ms.auth.spi.ClientValidator;
+import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.core.JsonOps;
 
 /**

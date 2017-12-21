@@ -10,8 +10,8 @@ import java.net.URI;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import net.trajano.ms.auth.spi.ClientValidator;
 import net.trajano.ms.auth.token.GrantTypes;
+import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.oidc.OpenIdConfiguration;
 import net.trajano.ms.oidc.spi.IssuerConfig;
 import net.trajano.ms.oidc.spi.ServiceConfiguration;

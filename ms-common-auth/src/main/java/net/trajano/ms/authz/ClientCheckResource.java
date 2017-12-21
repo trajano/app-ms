@@ -4,20 +4,25 @@ import java.net.URI;
 
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import net.trajano.ms.auth.util.AuthorizationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.swagger.annotations.Api;
-import net.trajano.ms.auth.spi.ClientValidator;
+import net.trajano.ms.auth.token.GrantTypes;
+import net.trajano.ms.auth.util.AuthorizationType;
 import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
 import net.trajano.ms.authz.internal.TokenCache;
 import net.trajano.ms.authz.internal.TokenCacheEntry;
+import net.trajano.ms.authz.spi.ClientValidator;
 import net.trajano.ms.core.ErrorResponses;
 
 /**
@@ -36,6 +41,27 @@ public class ClientCheckResource {
 
     @Autowired
     private TokenCache tokenCache;
+
+    /**
+     * Obtains the redirect URI that can receive the OpenID token as a fragment. It
+     * requires that the client supports the openid grant type.
+     *
+     * @param authorization
+     *            authorization header
+     * @return
+     */
+    @GET
+    @Path("/openid-redirect-uri")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String redirectUri(@HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+        if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
+            throw ErrorResponses.invalidAuthorization();
+        }
+
+        return clientValidator.getRedirectUriFromAuthorization(authorization).toASCIIString();
+
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -64,4 +90,5 @@ public class ClientCheckResource {
         }
 
     }
+
 }

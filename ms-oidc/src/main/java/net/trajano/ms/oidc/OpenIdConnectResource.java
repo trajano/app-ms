@@ -24,8 +24,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
-import net.trajano.ms.auth.spi.ClientValidator;
-import net.trajano.ms.core.ErrorResponses;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.slf4j.Logger;
@@ -43,6 +41,7 @@ import net.trajano.ms.auth.token.GrantTypes;
 import net.trajano.ms.auth.token.OAuthTokenResponse;
 import net.trajano.ms.core.CryptoOps;
 import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
 import net.trajano.ms.oidc.internal.AuthenticationUriBuilder;
 import net.trajano.ms.oidc.internal.HazelcastConfiguration;
 import net.trajano.ms.oidc.internal.ServerState;
@@ -70,9 +69,6 @@ public class OpenIdConnectResource {
 
     @Context
     private Client client;
-
-    @Autowired
-    private ClientValidator clientValidator;
 
     @Autowired
     private CacheManager cm;
@@ -112,6 +108,7 @@ public class OpenIdConnectResource {
         @PathParam("issuer_id") final String issuerId,
         @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
+        getRedirectUri(authorization);
         return authenticationUriBuilder.build(state, issuerId, authorization, new JwtClaims());
     }
 
@@ -184,12 +181,12 @@ public class OpenIdConnectResource {
         storeInternalForm.param("assertion", cryptoOps.sign(idTokenClaims));
         storeInternalForm.param("aud", issuerConfig.getClientId());
 
-        final OAuthTokenResponse tokenResponse = client.target(authorizationEndpoint).request(MediaType.APPLICATION_JSON)
+        final OAuthTokenResponse tokenResponse = client.target(authorizationEndpoint).path("/token").request(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, serverState.getClientCredentials())
             .post(Entity.form(storeInternalForm), OAuthTokenResponse.class);
 
         final URI newUri;
-        final URI redirectUri1 = clientValidator.getRedirectUriFromAuthorization(serverState.getClientCredentials());
+        final URI redirectUri1 = getRedirectUri(serverState.getClientCredentials());
         if (tokenResponse.isExpiring()) {
             newUri = UriBuilder
                 .fromUri(redirectUri1)
@@ -210,6 +207,20 @@ public class OpenIdConnectResource {
         }
         return Response.temporaryRedirect(newUri).build();
 
+    }
+
+    /**
+     * Gets the redirect URI from authorization endpoint.
+     *
+     * @param authorization
+     *            authorization header
+     * @return
+     */
+    private URI getRedirectUri(final String authorization) {
+
+        return URI.create(client.target(authorizationEndpoint).path("/check/openid-redirect-uri").request(MediaType.TEXT_PLAIN)
+            .header(HttpHeaders.AUTHORIZATION, authorization)
+            .get(String.class));
     }
 
     @PostConstruct

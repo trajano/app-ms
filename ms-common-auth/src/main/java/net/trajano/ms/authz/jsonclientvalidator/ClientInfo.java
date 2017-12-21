@@ -1,4 +1,4 @@
-package net.trajano.ms.auth.jsonclientvalidator;
+package net.trajano.ms.authz.jsonclientvalidator;
 
 import java.net.URI;
 import java.util.HashSet;
