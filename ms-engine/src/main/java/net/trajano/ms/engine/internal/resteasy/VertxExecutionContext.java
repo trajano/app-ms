@@ -53,7 +53,7 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     @Override
     public ResteasyAsynchronousResponse suspend() {
 
-        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, vertxResponse, routingContext);
+        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
         return asynchronousResponse;
     }
@@ -68,7 +68,7 @@ public class VertxExecutionContext extends AbstractExecutionContext {
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) {
 
-        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, vertxResponse, routingContext);
+        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
         asynchronousResponse.setTimeout(time, unit);
         return asynchronousResponse;

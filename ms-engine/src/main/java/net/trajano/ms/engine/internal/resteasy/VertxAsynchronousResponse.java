@@ -1,23 +1,32 @@
 package net.trajano.ms.engine.internal.resteasy;
 
-import java.util.Date;
+import io.vertx.ext.web.RoutingContext;
+import org.jboss.resteasy.core.Dispatcher;
+import org.jboss.resteasy.core.ResourceMethodInvoker;
+import org.jboss.resteasy.core.ServerResponseWriter;
+import org.jboss.resteasy.specimpl.BuiltResponse;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.container.CompletionCallback;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.WriterInterceptor;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.jboss.resteasy.core.AbstractAsynchronousResponse;
-import org.jboss.resteasy.core.SynchronousDispatcher;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.vertx.ext.web.RoutingContext;
-
-public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
+public class VertxAsynchronousResponse implements
+    ResteasyAsynchronousResponse {
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxAsynchronousResponse.class);
 
@@ -29,17 +38,37 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
 
     private final AtomicBoolean suspended = new AtomicBoolean(true);
 
-    private long timeoutTimerID = -1;
+    /**
+     * Completion callbacks.
+     */
+    private final List<CompletionCallback> completionCallbacks = new LinkedList<>();
+
+    /**
+     * RestEasy dispatcher.
+     */
+    private final Dispatcher dispatcher;
+
+    private final HttpRequest request;
+
+    private ResourceMethodInvoker invoker;
 
     private final Semaphore writeLock = new Semaphore(1);
 
-    public VertxAsynchronousResponse(final SynchronousDispatcher dispatcher,
-        final HttpRequest request,
-        final VertxHttpResponse response,
-        final RoutingContext routingContext) {
+    private long timeoutTimerID = -1;
 
-        super(dispatcher, request, response);
+    /**
+     * JAX RS Timeout Handler.
+     */
+    private TimeoutHandler timeoutHandler;
+
+    public VertxAsynchronousResponse(final Dispatcher dispatcher,
+        final HttpRequest request,
+        RoutingContext routingContext) {
+
+        this.dispatcher = dispatcher;
+        this.request = request;
         this.routingContext = routingContext;
+
     }
 
     @Override
@@ -91,16 +120,6 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
         if (timeoutHandler != null) {
             timeoutHandler.handleTimeout(this);
         }
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialRequestThreadFinished() {
-
-        LOG.debug("initialRequestThreadFinished");
 
     }
 
@@ -156,16 +175,34 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
                 LOG.error("Semaphore locked", timeoutTimerID);
                 writeLock.acquire();
             }
-            internalResume(entity);
+
+            final Response response;
+            if (entity == null) {
+                response = Response.noContent().build();
+            } else if (entity instanceof Response) {
+                response = (Response) entity;
+            } else {
+                response = Response.ok(entity, invoker.resolveContentType(request, entity)).build();
+            }
+
+            writeResponse(response);
+
             done.set(true);
             cancelTimer();
             return true;
+        } catch (final IOException e) {
+            throw new InternalServerErrorException(e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         } finally {
             writeLock.release();
         }
+    }
+
+    private void writeResponse(Response response) throws IOException {
+
+        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), dispatcher.getProviderFactory());
     }
 
     /**
@@ -194,4 +231,121 @@ public class VertxAsynchronousResponse extends AbstractAsynchronousResponse {
         }
     }
 
+    /**
+     * {@inheritDoc}.
+     */
+    @Override
+    public void setTimeoutHandler(TimeoutHandler handler) {
+
+        this.timeoutHandler = handler;
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection<Class<?>> register(Class<?> callback) {
+
+        return Collections.emptySet();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map<Class<?>, Collection<Class<?>>> register(Class<?> callback,
+        Class<?>... callbacks) {
+
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection<Class<?>> register(Object callback) {
+
+        return Collections.emptySet();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map<Class<?>, Collection<Class<?>>> register(Object callback,
+        Object... callbacks) {
+
+        return Collections.emptyMap();
+    }
+
+    /**
+     * {@inheritDoc}. This system supports async HTTP and this is a noop.
+     */
+    @Override
+    public void initialRequestThreadFinished() {
+
+        // does nothing
+    }
+
+    @Override
+    public ContainerResponseFilter[] getResponseFilters() {
+
+        return responseFilters;
+    }
+
+    @Override
+    public void setResponseFilters(ContainerResponseFilter[] responseFilters) {
+
+        this.responseFilters = responseFilters;
+    }
+
+    private ContainerResponseFilter[] responseFilters;
+
+    @Override
+    public WriterInterceptor[] getWriterInterceptors() {
+
+        return writerInterceptors;
+    }
+
+    @Override
+    public void setWriterInterceptors(WriterInterceptor[] writerInterceptors) {
+
+        this.writerInterceptors = writerInterceptors;
+    }
+
+    private WriterInterceptor[] writerInterceptors;
+
+    @Override
+    public Annotation[] getAnnotations() {
+
+        return annotations;
+    }
+
+    @Override
+    public void setAnnotations(Annotation[] annotations) {
+
+        this.annotations = annotations;
+    }
+
+    private Annotation[] annotations;
+
+    @Override
+    public ResourceMethodInvoker getMethod() {
+
+        return invoker;
+    }
+
+    @Override
+    public void setMethod(ResourceMethodInvoker invoker) {
+
+        this.invoker = invoker;
+    }
 }
