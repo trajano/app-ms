@@ -16,12 +16,12 @@ scenarios:
 - flow:
   - post:
       url: "/v1/authn"
-      form:
-        j_username: archie
-        j_password: password
+      json:
+        username: archie
+        password: password
       headers:
         Accept: application/json
-        Content-Type: application/x-www-form-urlencoded
+        Content-Type: application/json
         Authorization: Basic YXBwX2lkOmFwcF9zZWNyZXQ=
       capture:
       - json: "$.access_token"
@@ -59,4 +59,3 @@ scenarios:
       headers:
         Accept: application/json
         Authorization: "Bearer {{ access_token }}"
-        
