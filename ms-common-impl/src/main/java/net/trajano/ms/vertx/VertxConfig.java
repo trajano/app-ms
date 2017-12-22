@@ -6,6 +6,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.ProxyOptions;
@@ -13,6 +14,11 @@ import io.vertx.core.net.ProxyType;
 import net.trajano.ms.engine.internal.spring.SpringConfiguration;
 import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 
+/**
+ * Vert.X Microservice Engine Configuration.
+ *
+ * @author Archimedes Trajano
+ */
 @Configuration
 @ComponentScan
 @ComponentScan(basePackageClasses = {
@@ -51,6 +57,19 @@ public class VertxConfig {
     @Value("${vertx.workerPoolSize:50}")
     private int vertxWorkerPoolSize;
 
+    /**
+     * DNS Address resolver options where the max queries is increased to 10 to
+     * support more environments.
+     *
+     * @return address resolver options
+     */
+    @Bean
+    public AddressResolverOptions addressResolverOptions() {
+
+        return new AddressResolverOptions()
+            .setMaxQueries(10);
+    }
+
     @Bean
     public HttpClientOptions httpClientOptions() {
 
@@ -76,9 +95,10 @@ public class VertxConfig {
     }
 
     @Bean
-    public VertxOptions vertxOptions() {
+    public VertxOptions vertxOptions(final AddressResolverOptions addressResolverOptions) {
 
         return new VertxOptions()
+            .setAddressResolverOptions(addressResolverOptions)
             .setWarningExceptionTime(vertxWarningExceptionTime)
             .setWorkerPoolSize(vertxWorkerPoolSize);
     }

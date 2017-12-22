@@ -69,7 +69,6 @@ public class VertxMicroserviceEngine implements
     @Override
     public Object[] bootstrap() {
 
-        System.setProperty("vertx.disableDnsResolver", "true");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
 
         final File logbackFile = new File("logback.xml");
