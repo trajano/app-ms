@@ -7,6 +7,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 
+import net.trajano.ms.gateway.internal.Errors;
+import net.trajano.ms.gateway.internal.MediaTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +79,8 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
             return;
         }
 
+        LOG.debug("Handling {} ended={} path is protected", context, context.request().isEnded());
+
         final String origin = context.request().getHeader(HttpHeaders.ORIGIN);
         final String referrer = context.request().getHeader(HttpHeaders.REFERER);
 
@@ -90,7 +94,10 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
             }
             originUri = getPartsForOriginHeader(tempOrigin);
         } catch (final MalformedURLException e) {
-            context.fail(400);
+            context.response().setStatusCode(400)
+                .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
+                .end(Errors.missingOrigin().toBuffer());
+
             return;
         }
         LOG.debug("originUri={}", originUri);
