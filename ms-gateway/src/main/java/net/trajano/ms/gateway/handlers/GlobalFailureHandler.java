@@ -37,7 +37,7 @@ public class GlobalFailureHandler extends SelfRegisteringRoutingContextHandler {
     @Override
     public void handle(final RoutingContext context) {
 
-        LOG.error("Unhandled server exception statusCode={} responseEnded={}", context.statusCode(), context.response().ended(), context.failure());
+        LOG.error("Unhandled server exception statusCode={} responseEnded={} uri={}", context.statusCode(), context.response().ended(), context.request().uri(), context.failure());
         if (!context.response().ended()) {
             if (context.failure() instanceof ConnectException) {
                 context.response().setStatusCode(504)
