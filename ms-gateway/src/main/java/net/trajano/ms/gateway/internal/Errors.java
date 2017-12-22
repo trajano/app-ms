@@ -22,6 +22,15 @@ public final class Errors {
         return build("invalid_request", errorDescription);
     }
 
+    /**
+     * Missing origin.
+     */
+    public static JsonObject missingOrigin() {
+
+        return invalidRequest("missing origin");
+
+    }
+
     public static JsonObject serverError(final String errorDescription) {
 
         return build("server_error", errorDescription);
@@ -36,4 +45,5 @@ public final class Errors {
     private Errors() {
 
     }
+
 }
