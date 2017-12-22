@@ -1,5 +1,39 @@
 package net.trajano.ms.engine;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.core.Dispatcher;
+import org.jboss.resteasy.core.ResourceInvoker;
+import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
+import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.util.ClassUtils;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -15,47 +49,20 @@ import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
 import net.trajano.ms.engine.jaxrs.PathsProvider;
 import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.core.Dispatcher;
-import org.jboss.resteasy.core.ResourceInvoker;
-import org.jboss.resteasy.core.SynchronousDispatcher;
-import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
-import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyDeployment;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.util.ClassUtils;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
     AutoCloseable,
     PathsProvider {
 
+    /**
+     * Logger.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
+    /**
+     * Spring application context.
+     */
     private final AnnotationConfigApplicationContext applicationContext;
 
     private final URI baseUri;
@@ -64,11 +71,14 @@ public class SpringJaxRsHandler implements
 
     private final Dispatcher dispatcher;
 
+    private HttpClientOptions httpClientOptions;
+
+    /**
+     * Path annotated classes.
+     */
     private final Set<Class<?>> pathAnnotatedClasses;
 
     private final ResteasyProviderFactory providerFactory;
-
-    private HttpClientOptions httpClientOptions;
 
     public SpringJaxRsHandler(
         final Class<? extends Application> applicationClass) {
@@ -186,7 +196,7 @@ public class SpringJaxRsHandler implements
         final HttpServerRequest serverRequest = context.request();
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
 
-        final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, (SynchronousDispatcher) dispatcher);
+        final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, dispatcher);
 
         context.request().setExpectMultipart(isMultipartExpected(request));
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
