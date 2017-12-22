@@ -1,14 +1,16 @@
 package net.trajano.ms.engine.internal.resteasy;
 
-import io.vertx.ext.web.RoutingContext;
-import org.jboss.resteasy.core.Dispatcher;
-import org.jboss.resteasy.core.ResourceMethodInvoker;
-import org.jboss.resteasy.core.ServerResponseWriter;
-import org.jboss.resteasy.specimpl.BuiltResponse;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.container.CompletionCallback;
@@ -18,25 +20,29 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.WriterInterceptor;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.*;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.jboss.resteasy.core.Dispatcher;
+import org.jboss.resteasy.core.ResourceMethodInvoker;
+import org.jboss.resteasy.core.ServerResponseWriter;
+import org.jboss.resteasy.specimpl.BuiltResponse;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.ext.web.RoutingContext;
 
 public class VertxAsynchronousResponse implements
     ResteasyAsynchronousResponse {
 
+    /**
+     * Logger.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(VertxAsynchronousResponse.class);
 
+    private Annotation[] annotations;
+
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
-
-    private final AtomicBoolean done = new AtomicBoolean(false);
-
-    private final RoutingContext routingContext;
-
-    private final AtomicBoolean suspended = new AtomicBoolean(true);
 
     /**
      * Completion callbacks.
@@ -48,22 +54,35 @@ public class VertxAsynchronousResponse implements
      */
     private final Dispatcher dispatcher;
 
-    private final HttpRequest request;
+    private final AtomicBoolean done = new AtomicBoolean(false);
 
     private ResourceMethodInvoker invoker;
 
-    private final Semaphore writeLock = new Semaphore(1);
+    private final HttpRequest request;
 
-    private long timeoutTimerID = -1;
+    private ContainerResponseFilter[] responseFilters;
+
+    /**
+     * Vert.X routing context.
+     */
+    private final RoutingContext routingContext;
+
+    private final AtomicBoolean suspended = new AtomicBoolean(true);
 
     /**
      * JAX RS Timeout Handler.
      */
     private TimeoutHandler timeoutHandler;
 
+    private long timeoutTimerID = -1;
+
+    private final Semaphore writeLock = new Semaphore(1);
+
+    private WriterInterceptor[] writerInterceptors;
+
     public VertxAsynchronousResponse(final Dispatcher dispatcher,
         final HttpRequest request,
-        RoutingContext routingContext) {
+        final RoutingContext routingContext) {
 
         this.dispatcher = dispatcher;
         this.request = request;
@@ -113,6 +132,30 @@ public class VertxAsynchronousResponse implements
         }
     }
 
+    @Override
+    public Annotation[] getAnnotations() {
+
+        return annotations;
+    }
+
+    @Override
+    public ResourceMethodInvoker getMethod() {
+
+        return invoker;
+    }
+
+    @Override
+    public ContainerResponseFilter[] getResponseFilters() {
+
+        return responseFilters;
+    }
+
+    @Override
+    public WriterInterceptor[] getWriterInterceptors() {
+
+        return writerInterceptors;
+    }
+
     private void handleTimeout() {
 
         LOG.warn("Timeout has occurred for timerId={}", timeoutTimerID);
@@ -121,6 +164,15 @@ public class VertxAsynchronousResponse implements
             timeoutHandler.handleTimeout(this);
         }
 
+    }
+
+    /**
+     * {@inheritDoc}. This system supports async HTTP and this is a noop.
+     */
+    @Override
+    public void initialRequestThreadFinished() {
+
+        // does nothing
     }
 
     @Override
@@ -142,6 +194,52 @@ public class VertxAsynchronousResponse implements
     public boolean isSuspended() {
 
         return suspended.get();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection<Class<?>> register(final Class<?> callback) {
+
+        return Collections.emptySet();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map<Class<?>, Collection<Class<?>>> register(final Class<?> callback,
+        final Class<?>... callbacks) {
+
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection<Class<?>> register(final Object callback) {
+
+        return Collections.emptySet();
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map<Class<?>, Collection<Class<?>>> register(final Object callback,
+        final Object... callbacks) {
+
+        return Collections.emptyMap();
     }
 
     /**
@@ -189,6 +287,9 @@ public class VertxAsynchronousResponse implements
 
             done.set(true);
             cancelTimer();
+            completionCallbacks.forEach(callback -> {
+                callback.onComplete(null);
+            });
             return true;
         } catch (final IOException e) {
             throw new InternalServerErrorException(e);
@@ -200,9 +301,26 @@ public class VertxAsynchronousResponse implements
         }
     }
 
-    private void writeResponse(Response response) throws IOException {
+    @Override
+    public void setAnnotations(final Annotation[] annotations) {
 
-        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), dispatcher.getProviderFactory());
+        this.annotations = annotations;
+    }
+
+    /**
+     * Set the resource method invoker.
+     */
+    @Override
+    public void setMethod(final ResourceMethodInvoker invoker) {
+
+        this.invoker = invoker;
+
+    }
+
+    @Override
+    public void setResponseFilters(final ContainerResponseFilter[] responseFilters) {
+
+        this.responseFilters = responseFilters;
     }
 
     /**
@@ -235,117 +353,29 @@ public class VertxAsynchronousResponse implements
      * {@inheritDoc}.
      */
     @Override
-    public void setTimeoutHandler(TimeoutHandler handler) {
+    public void setTimeoutHandler(final TimeoutHandler handler) {
 
-        this.timeoutHandler = handler;
-    }
+        timeoutHandler = handler;
 
-    /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty set.
-     */
-    @Override
-    public Collection<Class<?>> register(Class<?> callback) {
-
-        return Collections.emptySet();
-    }
-
-    /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty map.
-     */
-    @Override
-    public Map<Class<?>, Collection<Class<?>>> register(Class<?> callback,
-        Class<?>... callbacks) {
-
-        return Collections.emptyMap();
-    }
-
-    /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty set.
-     */
-    @Override
-    public Collection<Class<?>> register(Object callback) {
-
-        return Collections.emptySet();
-    }
-
-    /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty map.
-     */
-    @Override
-    public Map<Class<?>, Collection<Class<?>>> register(Object callback,
-        Object... callbacks) {
-
-        return Collections.emptyMap();
-    }
-
-    /**
-     * {@inheritDoc}. This system supports async HTTP and this is a noop.
-     */
-    @Override
-    public void initialRequestThreadFinished() {
-
-        // does nothing
     }
 
     @Override
-    public ContainerResponseFilter[] getResponseFilters() {
-
-        return responseFilters;
-    }
-
-    @Override
-    public void setResponseFilters(ContainerResponseFilter[] responseFilters) {
-
-        this.responseFilters = responseFilters;
-    }
-
-    private ContainerResponseFilter[] responseFilters;
-
-    @Override
-    public WriterInterceptor[] getWriterInterceptors() {
-
-        return writerInterceptors;
-    }
-
-    @Override
-    public void setWriterInterceptors(WriterInterceptor[] writerInterceptors) {
+    public void setWriterInterceptors(final WriterInterceptor[] writerInterceptors) {
 
         this.writerInterceptors = writerInterceptors;
+
     }
 
-    private WriterInterceptor[] writerInterceptors;
+    /**
+     * Write the response.
+     *
+     * @param response
+     *            response
+     * @throws IOException
+     */
+    private void writeResponse(final Response response) throws IOException {
 
-    @Override
-    public Annotation[] getAnnotations() {
+        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), dispatcher.getProviderFactory());
 
-        return annotations;
-    }
-
-    @Override
-    public void setAnnotations(Annotation[] annotations) {
-
-        this.annotations = annotations;
-    }
-
-    private Annotation[] annotations;
-
-    @Override
-    public ResourceMethodInvoker getMethod() {
-
-        return invoker;
-    }
-
-    @Override
-    public void setMethod(ResourceMethodInvoker invoker) {
-
-        this.invoker = invoker;
     }
 }

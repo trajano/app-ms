@@ -1,14 +1,17 @@
 package net.trajano.ms.engine.test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.stream.Collectors;
 
-import net.trajano.ms.engine.jaxrs.JaxRsFailureHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,18 +33,19 @@ import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.Router;
 import net.trajano.ms.engine.SpringJaxRsHandler;
+import net.trajano.ms.engine.jaxrs.JaxRsFailureHandler;
 import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 import net.trajano.ms.engine.sample.MyApp;
 
 @RunWith(VertxUnitRunner.class)
 public class SpringJaxRsHandlerTest {
 
-    @Rule
-    public RunTestOnContext rule = new RunTestOnContext();
+    private SpringJaxRsHandler handler;
 
     private Router router;
 
-    private SpringJaxRsHandler handler;
+    @Rule
+    public RunTestOnContext rule = new RunTestOnContext();
 
     @Before
     public void setup() {
