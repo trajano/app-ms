@@ -1,24 +1,25 @@
 package net.trajano.ms.engine.test;
 
-import static org.junit.Assert.assertEquals;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.AddressResolverOptions;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.junit.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.junit.Test;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
+import static org.junit.Assert.assertEquals;
 
 public class VertxClientTest {
 
     @Test
     public void testWellKnown() {
 
-        final Vertx vertx = Vertx.vertx();
+        final Vertx vertx = Vertx.vertx(new VertxOptions().setAddressResolverOptions(new AddressResolverOptions().setMaxQueries(10)));
 
         final HttpClientOptions options = new HttpClientOptions()
             .setPipelining(true);
