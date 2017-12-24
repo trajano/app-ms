@@ -16,17 +16,22 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXB;
 
-import net.trajano.commons.testing.UtilityClassTestUtil;
-import net.trajano.ms.core.ErrorCodes;
-import net.trajano.ms.core.Qualifiers;
-import net.trajano.ms.spi.CacheNames;
 import org.junit.Test;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.BeanExpressionException;
 
+import net.trajano.ms.core.ErrorCodes;
 import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.core.Qualifiers;
+import net.trajano.ms.spi.CacheNames;
 import net.trajano.ms.spi.MDCKeys;
 
+/**
+ * Tests {@link ErrorResponses}.
+ *
+ * @author Archimedes Trajano
+ */
 public class ErrorResponseTest {
 
     @Test
@@ -87,6 +92,15 @@ public class ErrorResponseTest {
 
     }
 
+    @Test
+    public void testConstructor() {
+
+        final ErrorResponse response = new ErrorResponse("error", "error_description");
+        assertEquals("error", response.getError());
+        assertEquals("error_description", response.getErrorDescription());
+
+    }
+
     @Deprecated
     @Test
     public void thrownError() {
@@ -99,11 +113,18 @@ public class ErrorResponseTest {
     @Test
     public void thrownErrorWithMDC() {
 
+        MDC.put(MDCKeys.REQUEST_ID, "abc");
+        MDC.put(MDCKeys.HOST, "localhost");
         MDC.put(MDCKeys.REQUEST_URI, "http://hello");
+        MDC.put(MDCKeys.JWT_ID, "def");
         final ErrorResponse response = new ErrorResponse(new IOException("ahem"), mock(UriInfo.class), true);
         assertNotNull(response.getStackTrace());
         assertNull(response.getCause());
         assertEquals(URI.create("http://hello"), response.getRequestUri());
+        assertEquals("abc", response.getRequestId());
+        assertEquals("def", response.getJwtId());
+        assertEquals("localhost", response.getHost());
+
     }
 
 }
