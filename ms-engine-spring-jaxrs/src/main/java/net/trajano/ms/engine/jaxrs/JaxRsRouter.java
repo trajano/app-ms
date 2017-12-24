@@ -16,6 +16,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,14 @@ public class JaxRsRouter {
     @Autowired
     private JaxRsFailureHandler failureHandler;
 
+    /**
+     * Gets the {@link HttpMethod} based on the annotation associated with the
+     * method. Only GET, POST, PUT, DELETE are supported.
+     *
+     * @param m
+     *            method
+     * @return {@link HttpMethod}
+     */
     private HttpMethod getHttpMethod(final Method m) {
 
         if (m.getAnnotation(GET.class) != null) {
@@ -56,7 +65,7 @@ public class JaxRsRouter {
 
     /**
      * Register the routes.
-     * 
+     *
      * @param applicationClass
      *            application class to get the root
      * @param router
@@ -84,7 +93,7 @@ public class JaxRsRouter {
                     final String[] consumes = Optional.ofNullable(m.getAnnotation(Consumes.class)).map(Consumes::value).orElse(new String[0]);
                     final String[] produces = Optional.ofNullable(m.getAnnotation(Produces.class)).map(Produces::value).orElse(new String[0]);
 
-                    paths.add(new JaxRsPath(rootPath + classPath + path, consumes, produces, getHttpMethod(m)));
+                    paths.add(new JaxRsPath(UriBuilder.fromPath(rootPath).path(classPath).path(path).toTemplate(), consumes, produces, getHttpMethod(m)));
 
                 });
         });
@@ -95,7 +104,7 @@ public class JaxRsRouter {
 
     }
 
-    public void setFailureHandler(JaxRsFailureHandler failureHandler) {
+    public void setFailureHandler(final JaxRsFailureHandler failureHandler) {
 
         this.failureHandler = failureHandler;
     }

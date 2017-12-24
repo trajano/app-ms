@@ -11,7 +11,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Application;
@@ -20,8 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.ResourceInvoker;
-import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -33,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.util.ClassUtils;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -49,25 +49,33 @@ import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
 import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
 import net.trajano.ms.engine.jaxrs.PathsProvider;
 import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
-import org.springframework.util.ClassUtils;
 
 public class SpringJaxRsHandler implements
     Handler<RoutingContext>,
     AutoCloseable,
     PathsProvider {
 
+    /**
+     * Logger.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);
 
+    /**
+     * Spring application context.
+     */
     private final AnnotationConfigApplicationContext applicationContext;
 
     private final URI baseUri;
 
     private final ResteasyDeployment deployment;
 
-    private final SynchronousDispatcher dispatcher;
+    private final Dispatcher dispatcher;
 
     private HttpClientOptions httpClientOptions;
 
+    /**
+     * Path annotated classes.
+     */
     private final Set<Class<?>> pathAnnotatedClasses;
 
     private final ResteasyProviderFactory providerFactory;
@@ -160,7 +168,7 @@ public class SpringJaxRsHandler implements
             httpClientOptions = new HttpClientOptions();
         }
         deployment.start();
-        dispatcher = (SynchronousDispatcher) deployment.getDispatcher();
+        dispatcher = deployment.getDispatcher();
         providerFactory = deployment.getProviderFactory();
     }
 
@@ -204,8 +212,7 @@ public class SpringJaxRsHandler implements
                     ResteasyProviderFactory.pushContext(HttpHeaders.class, request.getHttpHeaders());
 
                     try {
-                        dispatcher.invokePropagateNotFound(request,
-                            response);
+                        dispatcher.invoke(request, response);
                         context.response().end();
                         future.complete();
                     } finally {
@@ -215,13 +222,7 @@ public class SpringJaxRsHandler implements
                 }, false,
                 res -> {
                     if (res.failed()) {
-                        final Throwable wae = res.cause();
-                        if (wae instanceof NotFoundException) {
-                            LOG.debug("uri={} was not found", serverRequest.uri());
-                            context.next();
-                        } else {
-                            context.fail(wae);
-                        }
+                        context.fail(res.cause());
                     }
                 });
         } catch (final IOException e) {
@@ -239,7 +240,7 @@ public class SpringJaxRsHandler implements
      */
     private boolean isMultipartExpected(final HttpRequest request) {
 
-        final ResourceInvoker invoker = dispatcher.getInvoker(request);
+        final ResourceInvoker invoker = dispatcher.getRegistry().getResourceInvoker(request);
         final Consumes consumes = invoker.getMethod().getAnnotation(Consumes.class);
         return consumes != null && Arrays.asList(consumes.value()).contains(MediaType.MULTIPART_FORM_DATA);
 
