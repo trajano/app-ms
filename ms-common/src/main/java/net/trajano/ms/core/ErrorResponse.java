@@ -90,26 +90,6 @@ public class ErrorResponse {
 
         }
 
-        public String getClassName() {
-
-            return className;
-        }
-
-        public String getFileName() {
-
-            return fileName;
-        }
-
-        public int getLineNumber() {
-
-            return lineNumber;
-        }
-
-        public String getMethodName() {
-
-            return methodName;
-        }
-
     }
 
     /**
