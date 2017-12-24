@@ -191,7 +191,7 @@ public class HelloResource {
         asyncResponse.resume(Response.ok("hello").build());
     }
 
-    @ApiOperation(value = "displays hello world after 5 seconds")
+    @ApiOperation(value = "displays hello world after 2 seconds")
     @GET
     @Path("/suspend")
     @Produces(MediaType.TEXT_PLAIN)
