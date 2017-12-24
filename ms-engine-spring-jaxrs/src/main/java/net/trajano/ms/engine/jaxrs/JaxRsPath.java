@@ -15,8 +15,7 @@ public class JaxRsPath implements
     Comparable<JaxRsPath> {
 
     /**
-     * Mime types that get consumed by the path. This is expected to be empty for
-     * GET requests.
+     * Content types that get consumed by the path.
      */
     private final String[] consumes;
 
@@ -27,12 +26,33 @@ public class JaxRsPath implements
      */
     private final HttpMethod method;
 
+    /**
+     * Path.
+     */
     private final String path;
 
+    /**
+     * Path regular expression applies when {@link #exact} is false.
+     */
     private final String pathRegex;
 
+    /**
+     * Content types that are produced by the path.
+     */
     private final String[] produces;
 
+    /**
+     * Constructs JaxRsPath.
+     *
+     * @param path
+     *            path
+     * @param consumes
+     *            content types consumed
+     * @param produces
+     *            content types produced
+     * @param method
+     *            HTTP method.
+     */
     public JaxRsPath(final String path,
         final String[] consumes,
         final String[] produces,
@@ -154,11 +174,6 @@ public class JaxRsPath implements
         return Arrays.equals(produces, other.produces);
     }
 
-    public String[] getConsumes() {
-
-        return consumes;
-    }
-
     /**
      * Gets the VertX HTTP method.
      *
@@ -189,11 +204,6 @@ public class JaxRsPath implements
         return pathRegex;
     }
 
-    public String[] getProduces() {
-
-        return produces;
-    }
-
     @Override
     public int hashCode() {
 
@@ -216,12 +226,12 @@ public class JaxRsPath implements
         return exact;
     }
 
-    public boolean isGet() {
+    private boolean isGet() {
 
         return method == HttpMethod.GET;
     }
 
-    public boolean isNoProduces() {
+    private boolean isNoProduces() {
 
         return produces.length == 0;
     }
