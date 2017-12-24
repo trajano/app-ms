@@ -4,6 +4,7 @@ import java.net.URI;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -218,9 +219,14 @@ public class OpenIdConnectResource {
      */
     private URI getRedirectUri(final String authorization) {
 
-        return URI.create(client.target(authorizationEndpoint).path("/check/openid-redirect-uri").request(MediaType.TEXT_PLAIN)
-            .header(HttpHeaders.AUTHORIZATION, authorization)
-            .get(String.class));
+        try {
+            LOG.debug("Obtaining redirect URI using authorization={}", authorization);
+            return URI.create(client.target(authorizationEndpoint).path("/check/openid-redirect-uri").request(MediaType.TEXT_PLAIN)
+                .header(HttpHeaders.AUTHORIZATION, authorization)
+                .get(String.class));
+        } catch (final BadRequestException e) {
+            throw ErrorResponses.invalidAuthorization();
+        }
     }
 
     @PostConstruct
@@ -229,7 +235,7 @@ public class OpenIdConnectResource {
         serverStateCache = cm.getCache(HazelcastConfiguration.SERVER_STATE);
     }
 
-    public void setClient(Client client) {
+    public void setClient(final Client client) {
 
         this.client = client;
     }
