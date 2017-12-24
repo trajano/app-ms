@@ -183,6 +183,7 @@ public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
             .putHeader(REQUEST_ID, requestID)
             .putHeader(DATE, now)
             .end("grant_type=authorization_code&code=" + accessToken);
+        contextRequest.pause();
         LOG.debug("access_token={} ended={}", accessToken, contextRequest.isEnded());
     }
 

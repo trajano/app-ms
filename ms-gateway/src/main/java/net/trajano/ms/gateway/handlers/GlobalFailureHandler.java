@@ -52,7 +52,7 @@ public class GlobalFailureHandler extends SelfRegisteringRoutingContextHandler {
                     .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                     .end(Errors.serverError(GATEWAY_ERROR).toBuffer());
             } else {
-                context.response().setStatusCode(context.statusCode())
+                context.response().setStatusCode(context.statusCode() == -1 ? 500 : context.statusCode())
                     .setStatusMessage(INTERNAL_SERVER_ERROR)
                     .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
                     .end(Errors.serverError(INTERNAL_SERVER_ERROR).toBuffer());
