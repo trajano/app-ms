@@ -36,6 +36,7 @@ public class ConfigurationProvider {
     public HttpServerOptions httpServerOptions() {
 
         return new HttpServerOptions()
+            .setCompressionSupported(true)
             .setPort(httpPort);
     }
 

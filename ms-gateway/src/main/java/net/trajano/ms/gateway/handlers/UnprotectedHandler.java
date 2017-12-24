@@ -20,6 +20,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.gateway.internal.Conversions;
@@ -35,6 +36,9 @@ public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
      */
     private static final Logger LOG = LoggerFactory.getLogger(UnprotectedHandler.class);
 
+    /**
+     * HTTP Client to connect to remote resource.
+     */
     @Autowired
     private HttpClient httpClient;
 
@@ -54,13 +58,15 @@ public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
 
         contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() && "multipart".equals(context.parsedHeaders().contentType().component()));
         final RequestOptions clientRequestOptions = Conversions.toRequestOptions(pathContext.getTo(), contextRequest.uri().substring(pathContext.getFrom().length()));
-        final HttpClientRequest clientRequest = httpClient.request(contextRequest.method(), clientRequestOptions, clientResponse -> {
-            contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
-                .setStatusCode(clientResponse.statusCode());
-            clientResponse.headers().forEach(e -> contextRequest.response().putHeader(e.getKey(), e.getValue()));
-            clientResponse.handler(contextRequest.response()::write)
-                .endHandler(v -> contextRequest.response().end());
-        }).exceptionHandler(context::fail)
+
+        final HttpClientRequest clientRequest = httpClient
+            .request(contextRequest.method(), clientRequestOptions, clientResponse -> {
+                contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)
+                    .setStatusCode(clientResponse.statusCode());
+                clientResponse.headers().forEach(e -> contextRequest.response().putHeader(e.getKey(), e.getValue()));
+                clientResponse.endHandler(v -> contextRequest.response().end());
+                Pump.pump(clientResponse, contextRequest.response()).start();
+            }).exceptionHandler(context::fail)
             .setChunked(true);
 
         StreamSupport.stream(contextRequest.headers().spliterator(), false)
@@ -73,8 +79,8 @@ public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
         if (additionalHeaders != null) {
             additionalHeaders.forEach(clientRequest::putHeader);
         }
-        contextRequest.handler(clientRequest::write)
-            .endHandler(v -> clientRequest.end());
+        contextRequest.endHandler(v -> clientRequest.end());
+        Pump.pump(contextRequest, clientRequest).start();
         contextRequest.resume();
 
     }

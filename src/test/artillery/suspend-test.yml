@@ -11,6 +11,15 @@ config:
   environments:
     docker:
       target: "http://localhost:3001"
+      variables:
+        origin: "http://localhost:3000"
+    prod:
+      phases:
+      - duration: 60
+        arrivalRate: 10
+      target: "https://gw.trajano.net"
+      variables:
+        origin: "https://ms.trajano.net"
 scenarios:
 - flow:
   - post:
@@ -28,7 +37,7 @@ scenarios:
       - json: "$.refresh_token"
         as: "refresh_token"
   - get:
-      url: "/v1/hello/suspend"
+      url: "/v1/secure/suspend/2"
       headers:
         Accept: text/plain
         Authorization: "Bearer {{ access_token }}"

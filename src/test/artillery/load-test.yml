@@ -9,6 +9,15 @@ config:
   environments:
     docker:
       target: "http://localhost:3001"
+      variables:
+        origin: "http://localhost:3000"
+    prod:
+      phases:
+      - duration: 60
+        arrivalRate: 10
+      target: "https://gw.trajano.net"
+      variables:
+        origin: "https://ms.trajano.net"
 scenarios:
 - flow:
   - get:
