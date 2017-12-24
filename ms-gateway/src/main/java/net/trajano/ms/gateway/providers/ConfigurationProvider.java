@@ -11,6 +11,9 @@ import io.vertx.core.http.HttpServerOptions;
 @Configuration
 public class ConfigurationProvider {
 
+    @Value("${http.client.max_pool_size:50}")
+    private int httpClientMaxPoolSize;
+
     @Value("${http.client.proxy.host:#{null}}")
     private String httpClientProxyHost;
 
@@ -29,7 +32,8 @@ public class ConfigurationProvider {
     @Bean
     public HttpClientOptions httpClientOptions() {
 
-        return new HttpClientOptions();
+        return new HttpClientOptions()
+            .setMaxPoolSize(httpClientMaxPoolSize);
     }
 
     @Bean
