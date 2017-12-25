@@ -4,9 +4,20 @@ config:
   - duration: 120
     arrivalRate: 50
   processor: "./processor.js"
+  variables:
+    origin: "http://localhost:8888"
   environments:
     docker:
       target: "http://localhost:3001"
+      variables:
+        origin: "http://localhost:3000"
+    prod:
+      phases:
+      - duration: 60
+        arrivalRate: 10
+      target: "https://gw.trajano.net"
+      variables:
+        origin: "https://ms.trajano.net"
 scenarios:
 - flow:
   - get:
@@ -33,6 +44,7 @@ scenarios:
       headers:
         Accept: application/json
         Authorization: "Bearer {{ access_token }}"
+        Origin: "{{ origin }}"
   - post:
       url: "/refresh"
 #      beforeRequest: "logRequest"
@@ -44,6 +56,7 @@ scenarios:
         Accept: application/json
         Content-Type: application/x-www-form-urlencoded
         Authorization: Basic YXBwX2lkOmFwcF9zZWNyZXQ=
+        Origin: "{{ origin }}"
       capture:
       - json: "$.access_token"
         as: "access_token"
@@ -54,8 +67,11 @@ scenarios:
       headers:
         Accept: application/json
         Authorization: "Bearer {{ access_token }}"
+        Origin: "{{ origin }}"
   - get:
       url: "/v1/hello/openid"
       headers:
         Accept: application/json
         Authorization: "Bearer {{ access_token }}"
+        Origin: "{{ origin }}"
+  

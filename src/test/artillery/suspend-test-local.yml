@@ -1,0 +1,13 @@
+config:
+  target: "http://localhost:8900"
+  phases:
+  - duration: 60
+    arrivalRate: 5
+scenarios:
+- flow:
+  - get:
+      url: "/hello/suspend"
+      headers:
+        Accept: text/plain
+        Origin: "{{ origin }}"
+        

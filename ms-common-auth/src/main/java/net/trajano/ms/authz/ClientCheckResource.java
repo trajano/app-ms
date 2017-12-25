@@ -13,6 +13,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +38,8 @@ import net.trajano.ms.core.ErrorResponses;
 @PermitAll
 public class ClientCheckResource {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ClientCheckResource.class);
+
     @Autowired
     private ClientValidator clientValidator;
 
@@ -48,13 +52,14 @@ public class ClientCheckResource {
      *
      * @param authorization
      *            authorization header
-     * @return
+     * @return redirect URI
      */
     @GET
     @Path("/openid-redirect-uri")
     @Produces(MediaType.TEXT_PLAIN)
     public String redirectUri(@HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
 
+        LOG.debug("redirect URI for authorization={}", authorization);
         if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {
             throw ErrorResponses.invalidAuthorization();
         }

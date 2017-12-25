@@ -1,0 +1,44 @@
+config:
+  target: "http://localhost:8910"
+  http:
+    pool: 10
+  phases:
+  - duration: 60
+    arrivalRate: 5
+  processor: "./processor.js"
+  variables:
+    origin: "http://localhost:8888"
+  environments:
+    docker:
+      target: "http://localhost:3001"
+      variables:
+        origin: "http://localhost:3000"
+    prod:
+      phases:
+      - duration: 60
+        arrivalRate: 10
+      target: "https://gw.trajano.net"
+      variables:
+        origin: "https://ms.trajano.net"
+scenarios:
+- flow:
+  - post:
+      url: "/v1/authn"
+      json:
+        username: archie
+        password: password
+      headers:
+        Accept: application/json
+        Content-Type: application/json
+        Authorization: Basic YXBwX2lkOmFwcF9zZWNyZXQ=
+      capture:
+      - json: "$.access_token"
+        as: "access_token"
+      - json: "$.refresh_token"
+        as: "refresh_token"
+  - get:
+      url: "/v1/secure/suspend/2"
+      headers:
+        Accept: text/plain
+        Authorization: "Bearer {{ access_token }}"
+        Origin: "{{ origin }}"

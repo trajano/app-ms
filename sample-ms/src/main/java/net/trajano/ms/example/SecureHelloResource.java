@@ -4,10 +4,14 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.gson.JsonObject;
@@ -70,6 +74,17 @@ public class SecureHelloResource {
         json.add("principal", new JsonPrimitive(userPrincipal.getName()));
         json.add("claims", jsonOps.toJsonElement(userPrincipal.getClaimsSet().toJson()));
         return json;
+    }
+
+    @ApiOperation(value = "displays hello world after a given amount of seconds seconds")
+    @GET
+    @Path("/suspend/{seconds}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public void suspend(@Suspended final AsyncResponse asyncResponse,
+        @PathParam("seconds") final int seconds) throws InterruptedException {
+
+        Thread.sleep(seconds * 1000L);
+        asyncResponse.resume(Response.ok("hello").build());
     }
 
 }
