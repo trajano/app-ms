@@ -237,7 +237,7 @@ public class ErrorResponse {
         }
         stackTrace = new LinkedList<>();
         for (final StackTraceElement ste : e.getStackTrace()) {
-            if (!isInternalClass(ste.getClassName())) {
+            if (!isFiltered(ste)) {
                 stackTrace.add(new LocalStackTraceElement(ste));
             }
         }
@@ -299,7 +299,7 @@ public class ErrorResponse {
         if (showStackTrace) {
             stackTrace = new LinkedList<>();
             for (final StackTraceElement ste : e.getStackTrace()) {
-                if (!isInternalClass(ste.getClassName())) {
+                if (!isFiltered(ste)) {
                     stackTrace.add(new LocalStackTraceElement(ste));
                 }
             }
@@ -386,16 +386,18 @@ public class ErrorResponse {
     }
 
     /**
-     * Checks if it is an internal classes so the stack trace does not get too long.
-     * Internal classes are "java.*", "javax.*", "sun.*"
+     * <p>
+     * Checks if it is an internal call so the stack trace does not get too long.
+     * Internal classes such as "sun.*" are filtered.
+     * </p>
      *
-     * @param className
-     *            class to check
+     * @param ste
+     *            stack trace element
      * @return <code>true</code> if it is an internal class.
      */
-    private boolean isInternalClass(final String className) {
+    private boolean isFiltered(final StackTraceElement ste) {
 
-        return className.startsWith("javax.") || className.startsWith("java.") || className.startsWith("sun.");
+        return ste.getClassName().startsWith("sun.");
     }
 
 }
