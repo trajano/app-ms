@@ -2,10 +2,10 @@ package net.trajano.ms.engine.internal.resteasy;
 
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,18 +18,21 @@ public class VertxExecutionContext implements
 
     private VertxAsynchronousResponse asynchronousResponse;
 
-    private final Dispatcher dispatcher;
+    /**
+     * RestEasy provider factory.
+     */
+    private final ResteasyProviderFactory providerFactory;
 
     private final HttpRequest request;
 
     private final RoutingContext routingContext;
 
     public VertxExecutionContext(final RoutingContext routingContext,
-        final Dispatcher dispatcher,
+        final ResteasyProviderFactory providerFactory,
         final HttpRequest request) {
 
         this.request = request;
-        this.dispatcher = dispatcher;
+        this.providerFactory = providerFactory;
         this.routingContext = routingContext;
     }
 
@@ -55,7 +58,7 @@ public class VertxExecutionContext implements
     @Override
     public ResteasyAsynchronousResponse suspend() {
 
-        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, routingContext);
+        asynchronousResponse = new VertxAsynchronousResponse(providerFactory, request, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
         return asynchronousResponse;
     }
@@ -70,7 +73,7 @@ public class VertxExecutionContext implements
     public ResteasyAsynchronousResponse suspend(final long time,
         final TimeUnit unit) {
 
-        asynchronousResponse = new VertxAsynchronousResponse(dispatcher, request, routingContext);
+        asynchronousResponse = new VertxAsynchronousResponse(providerFactory, request, routingContext);
         LOG.debug("asynchronousResponse={} created", asynchronousResponse);
         asynchronousResponse.setTimeout(time, unit);
         return asynchronousResponse;

@@ -21,12 +21,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.ServerResponseWriter;
 import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +49,14 @@ public class VertxAsynchronousResponse implements
      */
     private final List<CompletionCallback> completionCallbacks = new LinkedList<>();
 
-    /**
-     * RestEasy dispatcher.
-     */
-    private final Dispatcher dispatcher;
-
     private final AtomicBoolean done = new AtomicBoolean(false);
 
     private ResourceMethodInvoker invoker;
+
+    /**
+     * RestEasy provider factory.
+     */
+    private final ResteasyProviderFactory providerFactory;
 
     private final HttpRequest request;
 
@@ -80,11 +80,11 @@ public class VertxAsynchronousResponse implements
 
     private WriterInterceptor[] writerInterceptors;
 
-    public VertxAsynchronousResponse(final Dispatcher dispatcher,
+    public VertxAsynchronousResponse(final ResteasyProviderFactory providerFactory,
         final HttpRequest request,
         final RoutingContext routingContext) {
 
-        this.dispatcher = dispatcher;
+        this.providerFactory = providerFactory;
         this.request = request;
         this.routingContext = routingContext;
 
@@ -373,7 +373,7 @@ public class VertxAsynchronousResponse implements
      */
     private void writeResponse(final Response response) throws IOException {
 
-        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), dispatcher.getProviderFactory());
+        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory);
 
     }
 }
