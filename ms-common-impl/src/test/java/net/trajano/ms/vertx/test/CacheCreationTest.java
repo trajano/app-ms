@@ -1,9 +1,10 @@
 package net.trajano.ms.vertx.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import net.trajano.ms.vertx.beans.CachedDataProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import net.trajano.ms.sample.JwksResource;
 import net.trajano.ms.vertx.VertxConfig;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
 
 /**
  * Tests are hanging on Travis for some odd reason.
@@ -49,10 +51,20 @@ public class CacheCreationTest {
     }
 
     @Test
+    public void testNonce() throws Exception {
+
+        final String nonce = cachedDataProvider.newNonce();
+        assertNotNull(nonce);
+        assertTrue(cachedDataProvider.claimNonce(nonce));
+        assertFalse(cachedDataProvider.claimNonce(nonce));
+    }
+
+    @Test
     public void testProvider() throws Exception {
 
         assertNotNull(cachedDataProvider.getKeySet());
         assertEquals(CachedDataProvider.MIN_NUMBER_OF_KEYS, cachedDataProvider.getKeySet().getJsonWebKeys().size());
+
     }
 
 }
