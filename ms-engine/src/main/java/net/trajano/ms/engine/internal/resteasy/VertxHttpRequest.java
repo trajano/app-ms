@@ -7,9 +7,9 @@ import java.util.Enumeration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
     public VertxHttpRequest(final RoutingContext context,
         final ResteasyUriInfo uriInfo,
-        final Dispatcher dispatcher) {
+        final ResteasyProviderFactory providerFactory) {
 
         super(uriInfo);
 
@@ -67,7 +67,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
             is = NullInputStream.nullInputStream();
         }
 
-        asynchronousContext = new VertxExecutionContext(context, dispatcher, this);
+        asynchronousContext = new VertxExecutionContext(context, providerFactory, this);
     }
 
     @Override
