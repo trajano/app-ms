@@ -197,7 +197,6 @@ public class SpringJaxRsHandler implements
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
 
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, providerFactory);
-
         context.request().setExpectMultipart(isMultipartExpected(request));
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
             context.vertx().executeBlocking(

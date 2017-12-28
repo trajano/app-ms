@@ -65,7 +65,7 @@ public class SpringJaxrsHandlerTest {
         assertNotNull(engine);
         final Response response = ClientBuilder.newClient().target(baseUri).path("/api/hello/async").request().get();
         assertEquals(200, response.getStatus());
-        assertTrue(response.readEntity(String.class).startsWith("{"));
+        assertTrue(response.readEntity(String.class).contains("accounts.google.com"));
 
     }
 

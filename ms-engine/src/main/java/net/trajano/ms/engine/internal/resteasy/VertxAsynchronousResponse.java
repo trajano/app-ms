@@ -133,6 +133,25 @@ public class VertxAsynchronousResponse implements
     }
 
     @Override
+    public void complete() {
+
+        if (done.get()) {
+            return;
+        }
+        if (cancelled.get()) {
+            return;
+        }
+        done.compareAndSet(false, true);
+
+    }
+
+    @Override
+    public void completionCallbacks(final Throwable throwable) {
+
+        completionCallbacks.forEach(callback -> callback.onComplete(throwable));
+    }
+
+    @Override
     public Annotation[] getAnnotations() {
 
         return annotations;
@@ -373,7 +392,8 @@ public class VertxAsynchronousResponse implements
      */
     private void writeResponse(final Response response) throws IOException {
 
-        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory);
+        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory, t -> {
+        }, true);
 
     }
 }

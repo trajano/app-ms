@@ -40,6 +40,13 @@ public class VertxHttpResponse implements
 
     }
 
+    @Override
+    public void flushBuffer() throws IOException {
+
+        os.flush();
+
+    }
+
     /**
      * {@inheritDoc}
      */

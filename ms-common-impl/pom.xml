@@ -9,7 +9,7 @@
   <artifactId>ms-common-impl</artifactId>
   <name>Common Microservice Implementation</name>
   <properties>
-    <resteasy.version>3.1.4.Final</resteasy.version>
+    <resteasy.version>4.0.0.Beta1</resteasy.version>
     <reuseForks>false</reuseForks>
     <slf4j.version>1.7.16</slf4j.version>
   </properties>
