@@ -72,6 +72,7 @@ public class HelloResource {
     public void async(@Suspended final AsyncResponse asyncResponse) throws InterruptedException,
         ExecutionException {
 
+        asyncResponse.register(new TestCallback());
         final Future<Response> futureResponseFromClient = jaxrsClient.target("https://accounts.google.com/.well-known/openid-configuration").request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, "curl/7.55.1").async().get();
 
         final Response responseFromClient = futureResponseFromClient.get();

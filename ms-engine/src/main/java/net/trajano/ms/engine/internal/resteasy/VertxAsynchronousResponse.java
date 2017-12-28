@@ -3,8 +3,8 @@ package net.trajano.ms.engine.internal.resteasy;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -209,6 +209,9 @@ public class VertxAsynchronousResponse implements
         return done.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSuspended() {
 
@@ -216,49 +219,58 @@ public class VertxAsynchronousResponse implements
     }
 
     /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty set.
+     * {@inheritDoc}
      */
     @Override
-    public Collection<Class<?>> register(final Class<?> callback) {
+    public Collection<Class<?>> register(final Class<?> callbackClass) {
 
-        return Collections.emptySet();
+        final Object cb = providerFactory.createProviderInstance(callbackClass);
+        return register(cb);
     }
 
     /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty map.
+     * {@inheritDoc}
      */
     @Override
     public Map<Class<?>, Collection<Class<?>>> register(final Class<?> callback,
         final Class<?>... callbacks) {
 
-        return Collections.emptyMap();
+        final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
+        map.put(callback, register(callback));
+        for (final Class<?> other : callbacks) {
+            map.put(other, register(other));
+        }
+        return map;
     }
 
     /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty set.
+     * {@inheritDoc}
      */
     @Override
     public Collection<Class<?>> register(final Object callback) {
 
-        return Collections.emptySet();
+        final List<Class<?>> registered = new LinkedList<>();
+        if (callback instanceof CompletionCallback) {
+            completionCallbacks.add((CompletionCallback) callback);
+            registered.add(CompletionCallback.class);
+        }
+        return registered;
     }
 
     /**
-     * Not used. {@inheritDoc}
-     *
-     * @return empty map.
+     * {@inheritDoc}
      */
     @Override
     public Map<Class<?>, Collection<Class<?>>> register(final Object callback,
         final Object... callbacks) {
 
-        return Collections.emptyMap();
+        final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
+        map.put(callback.getClass(), register(callback));
+        for (final Object other : callbacks) {
+            map.put(other.getClass(), register(other));
+        }
+        return map;
+
     }
 
     /**
@@ -306,7 +318,6 @@ public class VertxAsynchronousResponse implements
 
             done.set(true);
             cancelTimer();
-            completionCallbacks.forEach(callback -> callback.onComplete(null));
             return true;
         } catch (final IOException e) {
             throw new InternalServerErrorException(e);
@@ -392,8 +403,7 @@ public class VertxAsynchronousResponse implements
      */
     private void writeResponse(final Response response) throws IOException {
 
-        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory, t -> {
-        }, true);
+        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory, throwable -> completionCallbacks.forEach(c -> c.onComplete(throwable)), true);
 
     }
 }
