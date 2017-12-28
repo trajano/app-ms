@@ -60,6 +60,16 @@ public class SpringJaxrsHandlerTest {
     private HttpClientOptions httpClientOptions;
 
     @Test
+    public void testAsync() {
+
+        assertNotNull(engine);
+        final Response response = ClientBuilder.newClient().target(baseUri).path("/api/hello/async").request().get();
+        assertEquals(200, response.getStatus());
+        assertTrue(response.readEntity(String.class).startsWith("{"));
+
+    }
+
+    @Test
     public void testEngine() {
 
         assertNotNull(engine);
