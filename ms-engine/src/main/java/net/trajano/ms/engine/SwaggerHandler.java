@@ -44,7 +44,7 @@ public class SwaggerHandler implements
         int i = 0;
         for (final Class<? extends Application> applicationClass : applicationClasses) {
             final SwaggerHandler requestHandler = new SwaggerHandler(applicationClass);
-            router.route(requestHandler.baseUriRoute())
+            router.get(requestHandler.baseUriRoute())
                 .useNormalisedPath(true)
                 .handler(requestHandler);
             ret[i++] = requestHandler;
