@@ -1,9 +1,11 @@
 package net.trajano.ms.gateway.internal;
 
 import static io.vertx.core.http.HttpHeaders.AUTHORIZATION;
+import static io.vertx.core.http.HttpHeaders.CONTENT_LENGTH;
 import static io.vertx.core.http.HttpHeaders.COOKIE;
 import static io.vertx.core.http.HttpHeaders.DATE;
 import static io.vertx.core.http.HttpHeaders.SET_COOKIE;
+import static io.vertx.core.http.HttpHeaders.TRANSFER_ENCODING;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 
 import java.util.Map;
@@ -23,6 +25,13 @@ public final class Predicates {
     public static final Predicate<Map.Entry<String, String>> HEADER_FORWARDABLE;
 
     /**
+     * The {@link io.vertx.core.http.HttpHeaders#CONTENT_LENGTH} and
+     * {@link io.vertx.core.http.HttpHeaders#TRANSFER_ENCODING} causes problems when
+     * both are sent.
+     */
+    public static final Predicate<Map.Entry<String, String>> STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING;
+
+    /**
      * Set of restricted headers.
      */
     private static final Set<String> RESTRICTED_HEADERS;
@@ -37,8 +46,11 @@ public final class Predicates {
     private static final String X_JWT_AUDIENCE = "X-JWT-Audience";
 
     static {
+
         RESTRICTED_HEADERS = Stream.of(X_JWKS_URI, X_JWT_ASSERTION, X_JWT_AUDIENCE, REQUEST_ID, DATE, AUTHORIZATION, COOKIE, SET_COOKIE).map(CharSequence::toString).collect(Collectors.toSet());
         HEADER_FORWARDABLE = e -> e.getKey().contentEquals(AUTHORIZATION) && e.getValue().startsWith("Basic ") || !RESTRICTED_HEADERS.contains(e.getKey());
+        STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING = e -> !(e.getKey().contentEquals(CONTENT_LENGTH) || e.getKey().contentEquals(TRANSFER_ENCODING));
+
     }
 
     /**

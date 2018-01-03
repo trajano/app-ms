@@ -17,7 +17,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import net.trajano.ms.gateway.internal.Predicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,7 +147,9 @@ public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
                 authorizationResponse.bodyHandler(buffer -> {
                     LOG.debug("isended={}", contextRequest.isEnded());
                     if (authorizationResponse.statusCode() != 200) {
-                        authorizationResponse.headers().forEach(h -> stripTransferEncodingAndLength(contextResponse, h));
+                        StreamSupport.stream(authorizationResponse.headers().spliterator(), false)
+                            .filter(Predicates.STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING)
+                            .forEach(h -> contextResponse.putHeader(h.getKey(), h.getValue()));
                         contextResponse.setStatusCode(authorizationResponse.statusCode())
                             .setStatusMessage(authorizationResponse.statusMessage())
                             .setChunked(false)
@@ -194,15 +198,6 @@ public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {
         router.post().handler(this);
         router.put().handler(this);
         router.delete().handler(this);
-    }
-
-    private void stripTransferEncodingAndLength(final HttpServerResponse contextResponse,
-        final Map.Entry<String, String> h) {
-
-        if ("Content-Length".equalsIgnoreCase(h.getKey()) || "Transfer-Encoding".equalsIgnoreCase(h.getKey())) {
-            return;
-        }
-        contextResponse.putHeader(h.getKey(), h.getValue());
     }
 
 }

@@ -1,6 +1,7 @@
 package net.trajano.ms.gateway.test;
 
 import static junit.framework.TestCase.assertTrue;
+import static net.trajano.commons.testing.UtilityClassTestUtil.assertUtilityClassWellDefined;
 import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -65,6 +66,22 @@ public class HeaderForwardablePredicateTest {
     }
 
     /**
+     * Tests stripping content length and transfer encoding.
+     */
+    @Test
+    public void testStripping() {
+
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Allowed", "asdf");
+        headers.put("Content-Length", "1234");
+        headers.put("Transfer-Encoding", "chunked");
+        final Map<String, String> y = headers.entrySet().stream().filter(Predicates.STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        assertTrue(y.containsKey("Allowed"));
+        assertEquals("Map should only have one entry " + y, 1, y.size());
+
+    }
+
+    /**
      * Tests that basic authorization is not filtered.
      */
     @Test
@@ -79,6 +96,13 @@ public class HeaderForwardablePredicateTest {
         assertTrue(y.containsKey("Allowed"));
         assertTrue(y.containsKey("Authorization"));
         assertEquals("Map should only have two entries" + y, 2, y.size());
+
+    }
+
+    @Test
+    public void validateUtilityClass() throws Exception {
+
+        assertUtilityClassWellDefined(Predicates.class);
 
     }
 }
