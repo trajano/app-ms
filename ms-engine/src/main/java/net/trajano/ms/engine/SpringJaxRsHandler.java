@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.URLConnectionEngine;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.ResourceInvoker;
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
@@ -36,11 +37,9 @@ import org.springframework.util.ClassUtils;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
-import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
 import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
@@ -258,8 +257,8 @@ public class SpringJaxRsHandler implements
 
         Client jaxRsClient = vertx.getOrCreateContext().get(Client.class.getName());
         if (jaxRsClient == null) {
-            final HttpClient httpClient = vertx.createHttpClient(httpClientOptions);
-            jaxRsClient = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(httpClient)).build();
+            //            final HttpClient httpClient = vertx.createHttpClient(httpClientOptions);
+            jaxRsClient = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new URLConnectionEngine()).build();
             vertx.getOrCreateContext().put(Client.class.getName(), jaxRsClient);
         }
         return jaxRsClient;
