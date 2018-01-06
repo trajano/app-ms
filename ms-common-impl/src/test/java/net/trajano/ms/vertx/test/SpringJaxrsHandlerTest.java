@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -19,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.google.gson.JsonObject;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -26,6 +30,7 @@ import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.sample.MyApp;
 import net.trajano.ms.spi.MicroserviceEngine;
 import net.trajano.ms.vertx.VertxConfig;
+import net.trajano.ms.vertx.jaxrs.GsonMessageBodyHandler;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
@@ -87,5 +92,23 @@ public class SpringJaxrsHandlerTest {
 
         client.target("https://httpbin.org/status/400").request().get(Map.class);
 
+    }
+
+    @Test
+    public void testEngineWithInjectedClientPost() {
+
+        final HttpClient httpClient = Vertx.vertx().createHttpClient(httpClientOptions);
+        final Client client = new ResteasyClientBuilder().httpEngine(new VertxClientEngine(httpClient))
+            .register(GsonMessageBodyHandler.class).build();
+        final Form xform = new Form();
+        xform.param("userName", "ca1\\\\meowmix");
+        xform.param("password", "mingnamulan");
+        xform.param("state", "authenticate");
+        xform.param("style", "xml");
+        xform.param("xsl", "none");
+
+        final JsonObject arsString = client.target("https://httpbin.org/post").request()
+            .post(Entity.form(xform), JsonObject.class);
+        assertEquals("xml", arsString.getAsJsonObject("form").get("style").getAsString());
     }
 }
