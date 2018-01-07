@@ -2,13 +2,7 @@ package net.trajano.ms.engine.internal.resteasy;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NewCookie;
 
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
@@ -28,57 +22,40 @@ public class VertxClientResponse extends ClientResponse {
 
     private final VertxBlockingInputStream is;
 
-    private final Semaphore metadataLock = new Semaphore(0);
+    final SemaphoredHeaders<Object> semaphoredHeaders;
 
+    @SuppressWarnings({
+        "unchecked",
+        "rawtypes"
+    })
     public VertxClientResponse(final ClientConfiguration configuration,
         final HttpClientRequest httpClientRequest) {
 
         super(configuration);
+        semaphoredHeaders = new SemaphoredHeaders<>();
+
+        // Used in the base classes
+        metadata = semaphoredHeaders;
         is = new VertxBlockingInputStream();
 
         httpClientRequest.handler(httpClientResponse -> {
             LOG.debug("Status = {}", httpClientResponse.statusCode());
             setStatus(httpClientResponse.statusCode());
             final MultiMap headers = httpClientResponse.headers();
-            setHeaders(Conversions.toMultivaluedStringMap(headers));
+            metadata.putAll((Map) Conversions.toMultivaluedStringMap(headers));
             httpClientResponse.handler(is::populate)
                 .endHandler(aVoid -> is.end());
             LOG.trace("prepared HTTP client response handler");
-            metadataLock.release();
+
+            semaphoredHeaders.releaseLock();
         }).exceptionHandler(e -> {
             LOG.error("exception handling response", e);
             is.error(e);
             exception = e;
-            metadataLock.release();
+            semaphoredHeaders.releaseLock();
         });
         LOG.trace("prepared HTTP client request handler");
 
-    }
-
-    @Override
-    public Map<String, NewCookie> getCookies() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get cookies, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final Map<String, NewCookie> m = super.getCookies();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
-    public MultivaluedMap<String, Object> getHeaders() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get headers, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final MultivaluedMap<String, Object> m = super.getHeaders();
-        metadataLock.release();
-        return m;
     }
 
     @Override
@@ -92,70 +69,14 @@ public class VertxClientResponse extends ClientResponse {
     }
 
     @Override
-    public Locale getLanguage() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get cookies, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final Locale m = super.getLanguage();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
-    public MediaType getMediaType() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final MediaType m = super.getMediaType();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
     public int getStatus() {
 
-        if (exception != null) {
-            throw new IllegalStateException(exception);
+        semaphoredHeaders.acquireUninterruptibly();
+        try {
+            return super.getStatus();
+        } finally {
+            semaphoredHeaders.releaseLock();
         }
-        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final int m = super.getStatus();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
-    public MultivaluedMap<String, String> getStringHeaders() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get string headers, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final MultivaluedMap<String, String> m = super.getStringHeaders();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
-    public boolean hasEntity() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to check entity, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        abortIfClosed();
-        final boolean m = entity != null || super.getMediaType() != null;
-        metadataLock.release();
-        return m;
-
     }
 
     @Override
