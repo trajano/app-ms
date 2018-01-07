@@ -4,9 +4,14 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -26,13 +31,16 @@ import net.trajano.ms.gateway.internal.MediaTypes;
 @Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL)
 public class GlobalFailureHandler extends SelfRegisteringRoutingContextHandler {
 
-    private static final String GATEWAY_ERROR = "Gateway Error";
+    private static final MessageSourceResolvable GATEWAY_ERROR = new DefaultMessageSourceResolvable("err.gateway_error");
 
-    private static final String GATEWAY_TIMEOUT = "Gateway Timeout";
+    private static final MessageSourceResolvable GATEWAY_TIMEOUT = new DefaultMessageSourceResolvable("err.gateway_timeout");
 
-    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+    private static final MessageSourceResolvable INTERNAL_SERVER_ERROR = new DefaultMessageSourceResolvable("err.internal_server_error");
 
     private static final Logger LOG = LoggerFactory.getLogger(GlobalFailureHandler.class);
+
+    @Autowired
+    private MessageSource r;
 
     @Override
     public void handle(final RoutingContext context) {
@@ -43,19 +51,19 @@ public class GlobalFailureHandler extends SelfRegisteringRoutingContextHandler {
         if (!context.response().ended()) {
             if (context.failure() instanceof ConnectException) {
                 context.response().setStatusCode(504)
-                    .setStatusMessage(GATEWAY_TIMEOUT)
+                    .setStatusMessage(r.getMessage(GATEWAY_TIMEOUT, Locale.getDefault()))
                     .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                    .end(Errors.serverError(GATEWAY_TIMEOUT).toBuffer());
+                    .end(Errors.serverError(r.getMessage(GATEWAY_TIMEOUT, Locale.getDefault())).toBuffer());
             } else if (context.failure() instanceof UnknownHostException) {
                 context.response().setStatusCode(503)
-                    .setStatusMessage(GATEWAY_ERROR)
+                    .setStatusMessage(r.getMessage(GATEWAY_ERROR, Locale.getDefault()))
                     .putHeader(CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                    .end(Errors.serverError(GATEWAY_ERROR).toBuffer());
+                    .end(Errors.serverError(r.getMessage(GATEWAY_ERROR, Locale.getDefault())).toBuffer());
             } else {
                 context.response().setStatusCode(context.statusCode() == -1 ? 500 : context.statusCode())
-                    .setStatusMessage(INTERNAL_SERVER_ERROR)
+                    .setStatusMessage(r.getMessage(INTERNAL_SERVER_ERROR, Locale.getDefault()))
                     .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
-                    .end(Errors.serverError(INTERNAL_SERVER_ERROR).toBuffer());
+                    .end(Errors.serverError(r.getMessage(INTERNAL_SERVER_ERROR, Locale.getDefault())).toBuffer());
             }
         }
 
