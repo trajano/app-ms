@@ -142,15 +142,15 @@ public class SwaggerCollator {
 
         int j = 0;
         while (env.containsProperty(String.format("swagger[%d].uris[%d].swagger", i, j))) {
+            final URL swaggerUrl = env.getProperty(String.format("swagger[%d].uris[%d].swagger", i, j), URL.class);
             try {
-                final URL swaggerUrl = env.getProperty(String.format("swagger[%d].uris[%d].swagger", i, j), URL.class);
 
                 final Swagger remoteSwagger = io.swagger.util.Json.mapper().readerFor(Swagger.class).readValue(swaggerUrl.openConnection().getInputStream());
 
                 processPaths(swagger, definitionsMap, securityDefinitionsMap, remoteSwagger, i, j);
                 ++j;
             } catch (final IOException e) {
-                throw new UncheckedIOException(e);
+                throw new UncheckedIOException("IOException processing " + swaggerUrl, e);
             }
 
         }
@@ -159,7 +159,7 @@ public class SwaggerCollator {
 
     /**
      * Update the current definition maps.
-     * 
+     *
      * @param currentDefinitionsMap
      *            current definitions map
      * @param currentSecurityDefinitionsMap
