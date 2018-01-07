@@ -2,15 +2,20 @@ package net.trajano.ms.engine.internal.resteasy;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
 
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClientRequest;
 import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
@@ -34,7 +39,8 @@ public class VertxClientResponse extends ClientResponse {
         httpClientRequest.handler(httpClientResponse -> {
             LOG.debug("Status = {}", httpClientResponse.statusCode());
             setStatus(httpClientResponse.statusCode());
-            setHeaders(Conversions.toMultivaluedStringMap(httpClientResponse.headers()));
+            final MultiMap headers = httpClientResponse.headers();
+            setHeaders(Conversions.toMultivaluedStringMap(headers));
             httpClientResponse.handler(is::populate)
                 .endHandler(aVoid -> is.end());
             LOG.trace("prepared HTTP client response handler");
@@ -50,6 +56,32 @@ public class VertxClientResponse extends ClientResponse {
     }
 
     @Override
+    public Map<String, NewCookie> getCookies() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get cookies, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        final Map<String, NewCookie> m = super.getCookies();
+        metadataLock.release();
+        return m;
+    }
+
+    @Override
+    public MultivaluedMap<String, Object> getHeaders() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get headers, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        final MultivaluedMap<String, Object> m = super.getHeaders();
+        metadataLock.release();
+        return m;
+    }
+
+    @Override
     protected InputStream getInputStream() {
 
         if (exception != null) {
@@ -57,6 +89,19 @@ public class VertxClientResponse extends ClientResponse {
         }
         LOG.trace("inputStream={}", is);
         return is;
+    }
+
+    @Override
+    public Locale getLanguage() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get cookies, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        final Locale m = super.getLanguage();
+        metadataLock.release();
+        return m;
     }
 
     @Override
@@ -83,6 +128,34 @@ public class VertxClientResponse extends ClientResponse {
         final int m = super.getStatus();
         metadataLock.release();
         return m;
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getStringHeaders() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to get string headers, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        final MultivaluedMap<String, String> m = super.getStringHeaders();
+        metadataLock.release();
+        return m;
+    }
+
+    @Override
+    public boolean hasEntity() {
+
+        if (exception != null) {
+            throw new IllegalStateException(exception);
+        }
+        LOG.debug("attempting to check entity, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        abortIfClosed();
+        final boolean m = entity != null || super.getMediaType() != null;
+        metadataLock.release();
+        return m;
+
     }
 
     @Override

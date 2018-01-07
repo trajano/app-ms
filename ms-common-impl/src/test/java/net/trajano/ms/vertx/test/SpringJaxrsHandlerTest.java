@@ -1,6 +1,7 @@
 package net.trajano.ms.vertx.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -11,9 +12,12 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -109,6 +113,36 @@ public class SpringJaxrsHandlerTest {
 
         final JsonObject arsString = client.target("https://httpbin.org/post").request()
             .post(Entity.form(xform), JsonObject.class);
+        assertEquals("xml", arsString.getAsJsonObject("form").get("style").getAsString());
+    }
+
+    @Test
+    public void testEngineWithInjectedClientPost2() {
+
+        final ResteasyDeployment deployment = new ResteasyDeployment();
+        deployment.start();
+        final ResteasyProviderFactory providerFactory = deployment.getProviderFactory();
+        final HttpClient httpClient = Vertx.vertx().createHttpClient(httpClientOptions);
+        final Client client = new ResteasyClientBuilder()
+            .providerFactory(providerFactory)
+            .httpEngine(new VertxClientEngine(httpClient))
+            .register(GsonMessageBodyHandler.class)
+            .build();
+        final Form xform = new Form();
+        xform.param("userName", "ca1\\\\meowmix");
+        xform.param("password", "mingnamulan");
+        xform.param("state", "authenticate");
+        xform.param("style", "xml");
+        xform.param("xsl", "none");
+
+        final Response response = client.target("https://httpbin.org/post").request(MediaType.APPLICATION_JSON)
+            .post(Entity.form(xform), Response.class);
+        assertFalse(response.getStringHeaders().isEmpty());
+        System.out.println(response.getStringHeaders());
+        assertFalse(response.getHeaders().isEmpty());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertTrue(response.hasEntity());
+        final JsonObject arsString = response.readEntity(JsonObject.class);
         assertEquals("xml", arsString.getAsJsonObject("form").get("style").getAsString());
     }
 }
