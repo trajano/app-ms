@@ -2,15 +2,14 @@ package net.trajano.ms.engine.internal.resteasy;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Semaphore;
-
-import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClientRequest;
 import net.trajano.ms.engine.internal.Conversions;
 import net.trajano.ms.engine.internal.VertxBlockingInputStream;
@@ -23,27 +22,37 @@ public class VertxClientResponse extends ClientResponse {
 
     private final VertxBlockingInputStream is;
 
-    private final Semaphore metadataLock = new Semaphore(0);
+    final SemaphoredHeaders<Object> semaphoredHeaders;
 
+    @SuppressWarnings({
+        "unchecked",
+        "rawtypes"
+    })
     public VertxClientResponse(final ClientConfiguration configuration,
         final HttpClientRequest httpClientRequest) {
 
         super(configuration);
+        semaphoredHeaders = new SemaphoredHeaders<>();
+
+        // Used in the base classes
+        metadata = semaphoredHeaders;
         is = new VertxBlockingInputStream();
 
         httpClientRequest.handler(httpClientResponse -> {
             LOG.debug("Status = {}", httpClientResponse.statusCode());
             setStatus(httpClientResponse.statusCode());
-            setHeaders(Conversions.toMultivaluedStringMap(httpClientResponse.headers()));
+            final MultiMap headers = httpClientResponse.headers();
+            metadata.putAll((Map) Conversions.toMultivaluedStringMap(headers));
             httpClientResponse.handler(is::populate)
                 .endHandler(aVoid -> is.end());
             LOG.trace("prepared HTTP client response handler");
-            metadataLock.release();
+
+            semaphoredHeaders.releaseLock();
         }).exceptionHandler(e -> {
             LOG.error("exception handling response", e);
             is.error(e);
             exception = e;
-            metadataLock.release();
+            semaphoredHeaders.releaseLock();
         });
         LOG.trace("prepared HTTP client request handler");
 
@@ -60,29 +69,14 @@ public class VertxClientResponse extends ClientResponse {
     }
 
     @Override
-    public MediaType getMediaType() {
-
-        if (exception != null) {
-            throw new IllegalStateException(exception);
-        }
-        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final MediaType m = super.getMediaType();
-        metadataLock.release();
-        return m;
-    }
-
-    @Override
     public int getStatus() {
 
-        if (exception != null) {
-            throw new IllegalStateException(exception);
+        semaphoredHeaders.acquireUninterruptibly();
+        try {
+            return super.getStatus();
+        } finally {
+            semaphoredHeaders.releaseLock();
         }
-        LOG.debug("attempting to get media type, available permits on lock={}", metadataLock.availablePermits());
-        metadataLock.acquireUninterruptibly();
-        final int m = super.getStatus();
-        metadataLock.release();
-        return m;
     }
 
     @Override
