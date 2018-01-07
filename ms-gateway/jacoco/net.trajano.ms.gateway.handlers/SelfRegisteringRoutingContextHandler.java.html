@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelfRegisteringRoutingContextHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.handlers</a> &gt; <span class="el_source">SelfRegisteringRoutingContextHandler.java</span></div><h1>SelfRegisteringRoutingContextHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.handlers;
+
+import io.vertx.core.Handler;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.internal.ContextSettingHandler;
+import net.trajano.ms.gateway.internal.PathContext;
+
+/**
+ * Defines a callback to handle the registrations. PostConstruct does not work
+ * because order is not guaranteed.
+ */
+<span class="fc" id="L13">public abstract class SelfRegisteringRoutingContextHandler implements</span>
+    Handler&lt;RoutingContext&gt; {
+
+    public static final int CORE_GLOBAL = 0;
+
+    public static final int CORE_PATHS = 100;
+
+    public static final int PROXIED = 1000;
+
+    /**
+     * Obtains the path context from the {@link RoutingContext}.
+     *
+     * @param context
+     *            RoutingContext
+     * @return PathContext
+     */
+    protected PathContext getPathContext(final RoutingContext context) {
+
+<span class="nc" id="L31">        return context.get(ContextSettingHandler.PATH_CONTEXT);</span>
+    }
+
+    /**
+     * Register to router
+     *
+     * @param router
+     *            router
+     */
+    public abstract void register(Router router);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

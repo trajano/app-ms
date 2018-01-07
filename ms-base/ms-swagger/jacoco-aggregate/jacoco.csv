@@ -1,0 +1,14 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Swagger Microservice/ms-common,net.trajano.ms.spi,MDCKeys,0,3,0,0,0,2,0,1,0,1
+Swagger Microservice/ms-common,net.trajano.ms.spi,CacheNames,0,3,0,0,0,2,0,1,0,1
+Swagger Microservice/ms-common,net.trajano.ms,Microservice,0,98,0,6,0,24,0,8,0,5
+Swagger Microservice/ms-common,net.trajano.ms.core,ErrorResponse.LocalStackTraceElement,0,34,0,0,0,12,0,2,0,2
+Swagger Microservice/ms-common,net.trajano.ms.core,Qualifiers,0,3,0,0,0,2,0,1,0,1
+Swagger Microservice/ms-common,net.trajano.ms.core,CryptoOps,8,0,0,0,2,0,2,0,2,0
+Swagger Microservice/ms-common,net.trajano.ms.core,JsonOps,88,0,8,0,9,0,9,0,5,0
+Swagger Microservice/ms-common,net.trajano.ms.core,NonceOps,0,10,0,0,0,3,0,1,0,1
+Swagger Microservice/ms-common,net.trajano.ms.core,NonceObject,0,10,0,0,0,4,0,3,0,3
+Swagger Microservice/ms-common,net.trajano.ms.core,JwtClaimsSetPrincipal,47,38,12,0,16,9,8,4,2,4
+Swagger Microservice/ms-common,net.trajano.ms.core,ErrorResponse,5,292,0,16,2,78,1,25,1,17
+Swagger Microservice/ms-common,net.trajano.ms.core,ErrorCodes,0,3,0,0,0,2,0,1,0,1
+Swagger Microservice/ms-common,net.trajano.ms.core,ErrorResponses,0,74,0,0,0,23,0,7,0,7

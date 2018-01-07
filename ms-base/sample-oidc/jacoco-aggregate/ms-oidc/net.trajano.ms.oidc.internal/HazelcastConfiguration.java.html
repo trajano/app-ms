@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>HazelcastConfiguration.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample OIDC Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-oidc</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.oidc.internal</a> &gt; <span class="el_source">HazelcastConfiguration.java</span></div><h1>HazelcastConfiguration.java</h1><pre class="source lang-java linenums">package net.trajano.ms.oidc.internal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.hazelcast.config.Config;
+import com.hazelcast.config.EntryListenerConfig;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.MapConfig;
+import com.hazelcast.config.MulticastConfig;
+import com.hazelcast.config.NetworkConfig;
+
+import net.trajano.ms.spi.CacheNames;
+
+@Configuration
+<span class="nc" id="L19">public class HazelcastConfiguration {</span>
+
+<span class="nc" id="L21">    private static final Logger LOG = LoggerFactory.getLogger(HazelcastConfiguration.class);</span>
+
+    public static final String SERVER_STATE = &quot;server_state&quot;;
+
+    @Value(&quot;${cache.instance_name:authz}&quot;)
+    private String instanceName;
+
+    @Value(&quot;${token.jwk_expiration:1800}&quot;)
+    private int jwkExpirationInSeconds;
+
+    @Value(&quot;${token.nonce:3600}&quot;)
+    private int nonceExpirationInSeconds;
+
+    @Value(&quot;${oidc.server_state_expiration:3600}&quot;)
+    private int serverStateExpiration;
+
+    @Bean
+    public Config hazelcastConfig() {
+
+<span class="nc" id="L40">        final EntryListenerConfig listener = new EntryListenerConfig();</span>
+<span class="nc" id="L41">        final Config config = new Config()</span>
+<span class="nc" id="L42">            .setNetworkConfig(new NetworkConfig()</span>
+<span class="nc" id="L43">                .setJoin(new JoinConfig()</span>
+<span class="nc" id="L44">                    .setMulticastConfig(new MulticastConfig()</span>
+<span class="nc" id="L45">                        .setEnabled(true))))</span>
+<span class="nc" id="L46">            .setInstanceName(instanceName)</span>
+<span class="nc" id="L47">            .setProperty(&quot;hazelcast.logging.type&quot;, &quot;slf4j&quot;)</span>
+<span class="nc" id="L48">            .addMapConfig(new MapConfig()</span>
+<span class="nc" id="L49">                .setName(SERVER_STATE)</span>
+<span class="nc" id="L50">                .setTimeToLiveSeconds(serverStateExpiration)</span>
+<span class="nc" id="L51">                .setMaxIdleSeconds(serverStateExpiration))</span>
+<span class="nc" id="L52">            .addMapConfig(new MapConfig()</span>
+<span class="nc" id="L53">                .setName(CacheNames.NONCE)</span>
+<span class="nc" id="L54">                .setTimeToLiveSeconds(nonceExpirationInSeconds)</span>
+<span class="nc" id="L55">                .setMaxIdleSeconds(nonceExpirationInSeconds))</span>
+<span class="nc" id="L56">            .addMapConfig(new MapConfig()</span>
+<span class="nc" id="L57">                .setName(CacheNames.JWKS)</span>
+<span class="nc" id="L58">                .setTimeToLiveSeconds(jwkExpirationInSeconds)</span>
+<span class="nc" id="L59">                .setMaxIdleSeconds(jwkExpirationInSeconds)</span>
+<span class="nc" id="L60">                .addEntryListenerConfig(listener));</span>
+
+<span class="nc" id="L62">        LOG.debug(&quot;hazelcast config={}&quot;, config);</span>
+<span class="nc" id="L63">        return config;</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

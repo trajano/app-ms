@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GsonJacksonJsonOps.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.beans</a> &gt; <span class="el_source">GsonJacksonJsonOps.java</span></div><h1>GsonJacksonJsonOps.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.beans;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+
+import net.trajano.ms.core.JsonOps;
+
+@Component
+<span class="fc" id="L18">public class GsonJacksonJsonOps implements</span>
+    JsonOps {
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    public &lt;T&gt; T fromJson(final Reader src,
+        final Class&lt;T&gt; to) {
+
+        try {
+<span class="fc" id="L32">            return objectMapper.readerFor(to).readValue(src);</span>
+<span class="nc" id="L33">        } catch (final IOException e) {</span>
+<span class="nc" id="L34">            throw new UncheckedIOException(e);</span>
+        }
+    }
+
+    @Override
+    public JsonElement toJsonElement(final Reader s) {
+
+<span class="nc" id="L41">        return gson.fromJson(s, JsonElement.class);</span>
+    }
+
+    @Override
+    public void writeTo(final Object src,
+        final Writer writer) throws IOException {
+
+<span class="nc" id="L48">        objectMapper.writer().writeValue(writer, src);</span>
+<span class="nc" id="L49">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

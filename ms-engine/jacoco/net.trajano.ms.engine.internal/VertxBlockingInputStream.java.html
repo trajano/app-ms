@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxBlockingInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal</a> &gt; <span class="el_source">VertxBlockingInputStream.java</span></div><h1>VertxBlockingInputStream.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
+
+public class VertxBlockingInputStream extends InputStream {
+
+<span class="fc" id="L16">    private static final Buffer END_BUFFER = Symbol.newSymbol(Buffer.class);</span>
+
+<span class="fc" id="L18">    private static final Buffer END_BUFFER_WITH_ERROR = Symbol.newSymbol(Buffer.class);</span>
+
+<span class="fc" id="L20">    private static final Logger LOG = LoggerFactory.getLogger(VertxBlockingInputStream.class);</span>
+
+<span class="pc" id="L22">    private int availableBytes = 0;</span>
+
+<span class="pc" id="L24">    private long bytesRead = 0;</span>
+
+    /**
+     * Flag to indicate that the stream is closed.
+     */
+<span class="pc" id="L29">    private boolean closed = false;</span>
+
+    private Buffer currentBuffer;
+
+<span class="pc" id="L33">    private IOException exceptionToThrow = null;</span>
+
+    private int pos;
+
+<span class="pc" id="L37">    private final BlockingQueue&lt;Buffer&gt; queue = new LinkedBlockingQueue&lt;&gt;();</span>
+
+    /**
+     * Constructs VertxBlockingInputStream without any associated handlers
+     * configured on a ReadStream.
+     */
+<span class="fc" id="L43">    public VertxBlockingInputStream() {</span>
+
+<span class="fc" id="L45">    }</span>
+
+<span class="nc" id="L47">    public VertxBlockingInputStream(final ReadStream&lt;Buffer&gt; readStream) {</span>
+
+<span class="nc" id="L49">        readStream</span>
+<span class="nc" id="L50">            .handler(this::populate)</span>
+<span class="nc" id="L51">            .endHandler(aVoid -&gt; end());</span>
+
+<span class="nc" id="L53">    }</span>
+
+    @Override
+    public int available() throws IOException {
+
+<span class="nc" id="L58">        return availableBytes;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+
+<span class="nc" id="L64">        closed = true;</span>
+<span class="nc" id="L65">    }</span>
+
+    public void end() {
+
+<span class="fc" id="L69">        queue.add(END_BUFFER);</span>
+<span class="fc" id="L70">    }</span>
+
+    /**
+     * End the buffer because of an error.
+     *
+     * @param e
+     */
+    public void error(final Throwable e) {
+
+<span class="nc" id="L79">        exceptionToThrow = new IOException(e);</span>
+<span class="nc" id="L80">        queue.add(END_BUFFER_WITH_ERROR);</span>
+
+<span class="nc" id="L82">    }</span>
+
+    @Override
+    public boolean markSupported() {
+
+<span class="nc" id="L87">        return false;</span>
+    }
+
+    public void populate(final Buffer buffer) {
+
+<span class="fc" id="L92">        queue.add(buffer);</span>
+<span class="fc" id="L93">        availableBytes += buffer.length();</span>
+<span class="fc" id="L94">    }</span>
+
+    @Override
+    public int read() throws IOException {
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (closed) {</span>
+<span class="nc" id="L100">            throw new IOException(&quot;Stream is closed&quot;);</span>
+        }
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (currentBuffer == null) {</span>
+            try {
+<span class="fc" id="L104">                currentBuffer = queue.take();</span>
+<span class="fc" id="L105">                pos = 0;</span>
+<span class="nc" id="L106">            } catch (final InterruptedException e) {</span>
+<span class="nc" id="L107">                LOG.error(&quot;Interrupted while waiting for next buffer&quot;, e);</span>
+<span class="nc" id="L108">                Thread.currentThread().interrupt();</span>
+<span class="fc" id="L109">            }</span>
+        }
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (currentBuffer == null) {</span>
+<span class="nc" id="L112">            throw new IOException(&quot;Obtained a null buffer from the queue&quot;);</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        } else if (currentBuffer == END_BUFFER_WITH_ERROR) {</span>
+<span class="nc" id="L114">            throw exceptionToThrow;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        } else if (currentBuffer == END_BUFFER) {</span>
+<span class="fc" id="L116">            return -1;</span>
+        } else {
+<span class="fc" id="L118">            final byte b = currentBuffer.getByte(pos++);</span>
+<span class="fc" id="L119">            --availableBytes;</span>
+<span class="fc" id="L120">            ++bytesRead;</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (pos == currentBuffer.length()) {</span>
+<span class="fc" id="L122">                currentBuffer = null;</span>
+            }
+<span class="fc" id="L124">            return b;</span>
+        }
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+
+<span class="nc" id="L131">        throw new IOException(&quot;reset not supported&quot;);</span>
+    }
+
+    /**
+     * Gets a count of how much bytes have been read from this input stream.
+     *
+     * @return total bytes read
+     */
+    public long totalBytesRead() {
+
+<span class="nc" id="L141">        return bytesRead;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

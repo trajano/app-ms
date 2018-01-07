@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>TokenCache.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">OpenID Connect</a> &gt; <a href="../index.html" class="el_bundle">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.authz.internal</a> &gt; <span class="el_source">TokenCache.java</span></div><h1>TokenCache.java</h1><pre class="source lang-java linenums">package net.trajano.ms.authz.internal;
+
+import java.time.Instant;
+import java.util.Collection;
+
+import javax.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Component;
+
+import net.trajano.ms.auth.token.IdTokenResponse;
+import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
+
+@Component
+<span class="fc" id="L23">public class TokenCache {</span>
+
+    /**
+     * Logger for TokenCache
+     */
+<span class="fc" id="L28">    private static final Logger LOG = LoggerFactory.getLogger(TokenCache.class);</span>
+
+    @Value(&quot;${token.accessTokenExpiration:300}&quot;)
+    private int accessTokenExpirationInSeconds;
+
+    private Cache accessTokenToEntry;
+
+    @Autowired
+    private CacheManager cm;
+
+    @Autowired
+    private CryptoOps cryptoOps;
+
+    private Cache refreshTokenToEntry;
+
+    /**
+     * Evicts the entry from the caches.
+     *
+     * @param cacheEntry
+     *            cache entry.
+     */
+    private void evictEntry(final TokenCacheEntry cacheEntry) {
+
+<span class="nc" id="L51">        accessTokenToEntry.evict(cacheEntry.getAccessToken());</span>
+<span class="nc" id="L52">        refreshTokenToEntry.evict(cacheEntry.getRefreshToken());</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * This will return null if a valid entry was not found.
+     *
+     * @param accessToken
+     *            access token
+     * @return OAuth 2.0 ID Token Response
+     */
+    public IdTokenResponse get(final String accessToken) {
+
+<span class="fc" id="L64">        final TokenCacheEntry cacheEntry = getCacheEntry(accessToken);</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (cacheEntry == null) {</span>
+<span class="fc" id="L66">            return null;</span>
+        }
+<span class="nc" id="L68">        return new IdTokenResponse(accessToken, cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresInSeconds());</span>
+
+    }
+
+    /**
+     * This will return null if a valid entry was not found.
+     *
+     * @param accessToken
+     *            access token
+     * @return OAuth 2.0 ID Token Response
+     */
+    public TokenCacheEntry getCacheEntry(final String accessToken) {
+
+<span class="fc" id="L81">        final TokenCacheEntry cacheEntry = accessTokenToEntry.get(accessToken, TokenCacheEntry.class);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (cacheEntry == null) {</span>
+<span class="fc" id="L83">            LOG.debug(&quot;No entry for accessToken={}&quot;, accessToken);</span>
+<span class="fc" id="L84">            return null;</span>
+        }
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (cacheEntry.isExpired()) {</span>
+<span class="nc" id="L87">            evictEntry(cacheEntry);</span>
+<span class="nc" id="L88">            LOG.debug(&quot;Entry was expired for accessToken={}&quot;, accessToken);</span>
+<span class="nc" id="L89">            return null;</span>
+        }
+<span class="nc" id="L91">        return cacheEntry;</span>
+
+    }
+
+    @PostConstruct
+    public void init() {
+
+<span class="fc" id="L98">        accessTokenToEntry = cm.getCache(CacheNames.ACCESS_TOKEN_TO_ENTRY);</span>
+<span class="fc" id="L99">        refreshTokenToEntry = cm.getCache(CacheNames.REFRESH_TOKEN_TO_ENTRY);</span>
+<span class="fc" id="L100">        LOG.debug(&quot;cache manager={} accessTokenToEntry={} refreshTokenToEntry={}&quot;, cm, accessTokenToEntry, refreshTokenToEntry);</span>
+<span class="fc" id="L101">    }</span>
+
+    public OAuthTokenResponse refresh(final String refreshToken,
+        final String clientId) {
+
+<span class="nc" id="L106">        final TokenCacheEntry cacheEntry = refreshTokenToEntry.get(refreshToken, TokenCacheEntry.class);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (cacheEntry == null) {</span>
+<span class="nc" id="L108">            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, &quot;Token rejected&quot;, &quot;Bearer&quot;);</span>
+        }
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (cacheEntry.isExpired()) {</span>
+<span class="nc" id="L111">            evictEntry(cacheEntry);</span>
+<span class="nc" id="L112">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;JWT has exceeded life time&quot;);</span>
+        }
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (!cacheEntry.getAudiences().contains(clientId)) {</span>
+<span class="nc" id="L115">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Client mismatch&quot;);</span>
+        }
+<span class="nc" id="L117">        return updateEntry(cacheEntry);</span>
+
+    }
+
+    /**
+     * Revokes the refresh token and associated access token. This will only throw
+     * an error if the token was not associated with the given client ID.
+     *
+     * @param refreshToken
+     *            refreshToken
+     * @param clientId
+     *            client ID
+     */
+    public void revokeRefreshToken(final String refreshToken,
+        final String clientId) {
+
+<span class="nc" id="L133">        final TokenCacheEntry cacheEntry = refreshTokenToEntry.get(refreshToken, TokenCacheEntry.class);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (cacheEntry == null) {</span>
+<span class="nc" id="L135">            return;</span>
+        }
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (!cacheEntry.getAudiences().contains(clientId)) {</span>
+<span class="nc" id="L138">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Client mismatch&quot;);</span>
+        }
+<span class="nc" id="L140">        evictEntry(cacheEntry);</span>
+
+<span class="nc" id="L142">    }</span>
+
+    /**
+     * Stores the internal claims set into the cache and returns an OAuth token.
+     *
+     * @param jwt
+     *            JWT to store
+     * @param audiences
+     *            audience client IDs, this is usually the gateway.
+     * @param expiresOn
+     *            JWT expiration
+     * @return OAuth 2.0 token response with the new tokens.
+     */
+    public OAuthTokenResponse store(final String jwt,
+        final Collection&lt;String&gt; audiences,
+        final Instant expiresOn) {
+
+<span class="nc" id="L159">        final String accessToken = cryptoOps.newToken();</span>
+<span class="nc" id="L160">        final String refreshToken = cryptoOps.newToken();</span>
+<span class="nc" id="L161">        final TokenCacheEntry newCacheEntry = new TokenCacheEntry(accessToken, refreshToken, jwt, audiences, expiresOn);</span>
+<span class="nc" id="L162">        accessTokenToEntry.putIfAbsent(accessToken, newCacheEntry);</span>
+<span class="nc" id="L163">        refreshTokenToEntry.putIfAbsent(refreshToken, newCacheEntry);</span>
+
+<span class="nc" id="L165">        final OAuthTokenResponse oauthTokenResponse = new OAuthTokenResponse();</span>
+<span class="nc" id="L166">        oauthTokenResponse.setAccessToken(accessToken);</span>
+<span class="nc" id="L167">        oauthTokenResponse.setTokenType(&quot;Bearer&quot;);</span>
+<span class="nc" id="L168">        oauthTokenResponse.setExpiresIn(accessTokenExpirationInSeconds);</span>
+<span class="nc" id="L169">        oauthTokenResponse.setRefreshToken(refreshToken);</span>
+
+<span class="nc" id="L171">        return oauthTokenResponse;</span>
+    }
+
+    /**
+     * Stores the cache entry into the caches with updated tokens. It will evict the
+     * existing entries as well.
+     *
+     * @param cacheEntry
+     *            entry to store
+     * @return OAuth 2.0 token response with the new tokens.
+     */
+    private OAuthTokenResponse updateEntry(final TokenCacheEntry cacheEntry) {
+
+<span class="nc" id="L184">        evictEntry(cacheEntry);</span>
+<span class="nc" id="L185">        return store(cacheEntry.getJwt(), cacheEntry.getAudiences(), cacheEntry.getExpiresOn());</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

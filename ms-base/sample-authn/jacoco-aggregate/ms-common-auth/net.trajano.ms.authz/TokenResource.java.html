@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>TokenResource.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample Authentication Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.authz</a> &gt; <span class="el_source">TokenResource.java</span></div><h1>TokenResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.authz;
+
+import java.net.URI;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.annotation.security.PermitAll;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.jwt.NumericDate;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import net.trajano.ms.auth.token.GrantTypes;
+import net.trajano.ms.auth.token.IdTokenResponse;
+import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
+import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.authz.spi.InternalClaimsBuilder;
+import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
+
+@Api
+@Configuration
+@Component
+@Path(&quot;/token&quot;)
+@PermitAll
+<span class="nc" id="L52">public class TokenResource {</span>
+
+<span class="nc" id="L54">    private static final Logger LOG = LoggerFactory.getLogger(TokenResource.class);</span>
+
+    @Autowired
+    private ClientValidator clientValidator;
+
+    @Autowired
+    private CryptoOps cryptoOps;
+
+    @Autowired
+    private InternalClaimsBuilder internalClaimsBuilder;
+
+    @Value(&quot;${issuer}&quot;)
+    private URI issuer;
+
+<span class="nc" id="L68">    private final ConcurrentMap&lt;URI, HttpsJwks&gt; jwksMap = new ConcurrentHashMap&lt;&gt;();</span>
+
+    /**
+     * Maximum life of a JWT token. Past that period, it is expected to no longer be
+     * used.
+     */
+    @Value(&quot;${token.jwtMaximumLifetime:86400}&quot;)
+    private int jwtMaximumLifetimeInSeconds;
+
+    @Value(&quot;${realmName:client_credentials}&quot;)
+    private String realmName;
+
+    @Autowired
+    private TokenCache tokenCache;
+
+    /**
+     * Performs client credential validation then dispatches to the appropriate
+     * handler for a given grant type.
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public OAuthTokenResponse dispatch(
+        @ApiParam(allowableValues = &quot;refresh_token, authorization_code&quot;) @FormParam(&quot;grant_type&quot;) final String grantType,
+        @FormParam(&quot;code&quot;) final String code,
+        @FormParam(&quot;assertion&quot;) final String assertion,
+        @FormParam(&quot;aud&quot;) final String audience,
+        @FormParam(&quot;refresh_token&quot;) final String refreshToken,
+        @FormParam(&quot;jwks_uri&quot;) final URI jwksUri,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="nc" id="L99">        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);</span>
+
+<span class="nc" id="L101">        final String clientId = clientCredentials[0];</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (!clientValidator.isValid(grantType, clientId, clientCredentials[1])) {</span>
+<span class="nc" id="L103">            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, &quot;Unauthorized client&quot;, String.format(&quot;Basic realm=\&quot;%s\&quot;, encoding=\&quot;UTF-8\&quot;&quot;, realmName));</span>
+        }
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (GrantTypes.REFRESH_TOKEN.equals(grantType)) {</span>
+<span class="nc" id="L107">            return handleRefreshGrant(refreshToken, clientId);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        } else if (GrantTypes.AUTHORIZATION_CODE.equals(grantType)) {</span>
+<span class="nc" id="L109">            return handleAuthorizationCodeGrant(code);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        } else if (GrantTypes.JWT_ASSERTION.equals(grantType)) {</span>
+<span class="nc" id="L111">            return handleJwtAssertionGrant(assertion, clientId, audience);</span>
+
+        } else {
+<span class="nc" id="L114">            throw ErrorResponses.badRequest(ErrorCodes.UNSUPPORT_GRANT_TYPE, &quot;Invalid grant type&quot;);</span>
+        }
+
+    }
+
+    private IdTokenResponse handleAuthorizationCodeGrant(final String accessToken) {
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (accessToken == null) {</span>
+<span class="nc" id="L122">            throw ErrorResponses.invalidRequest(&quot;Missing access token&quot;);</span>
+        }
+<span class="nc" id="L124">        final IdTokenResponse idTokenResponse = tokenCache.get(accessToken);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (idTokenResponse == null) {</span>
+<span class="nc" id="L126">            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, &quot;Access token was not valid&quot;, &quot;Bearer&quot;);</span>
+        }
+<span class="nc" id="L128">        return idTokenResponse;</span>
+
+    }
+
+    /**
+     * Takes an assertion and converts it using an {@link InternalClaimsBuilder} to
+     * a JWT used internally
+     *
+     * @param assertion
+     *            an external JWT assertion
+     * @param clientId
+     *            client ID
+     * @return OAuth response
+     */
+    private OAuthTokenResponse handleJwtAssertionGrant(final String assertion,
+        final String clientId,
+        final String audience) {
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (assertion == null) {</span>
+<span class="nc" id="L147">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Missing assertion&quot;);</span>
+        }
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (clientId == null) {</span>
+<span class="nc" id="L150">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Missing client_id&quot;);</span>
+        }
+
+        try {
+<span class="nc" id="L154">            final URI jwksUri = clientValidator.getJwksUri(clientId);</span>
+<span class="nc" id="L155">            LOG.debug(&quot;jwksUri={}&quot;, jwksUri);</span>
+<span class="nc" id="L156">            HttpsJwks httpsJwks = null;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (jwksUri != null) {</span>
+<span class="nc" id="L158">                httpsJwks = jwksMap.computeIfAbsent(jwksUri, uri -&gt; new HttpsJwks(uri.toASCIIString()));</span>
+            }
+
+<span class="nc" id="L161">            final JwtConsumerBuilder builder = new JwtConsumerBuilder();</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (httpsJwks == null) {</span>
+<span class="nc" id="L164">                builder.setDisableRequireSignature()</span>
+<span class="nc" id="L165">                    .setSkipSignatureVerification();</span>
+            } else {
+<span class="nc" id="L167">                builder.setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks));</span>
+            }
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (audience == null) {</span>
+<span class="nc" id="L170">                builder.setExpectedAudience(clientId);</span>
+            } else {
+<span class="nc" id="L172">                builder.setExpectedAudience(clientId, audience);</span>
+            }
+<span class="nc" id="L174">            final JwtConsumer jwtConsumer = builder</span>
+<span class="nc" id="L175">                .build();</span>
+
+<span class="nc" id="L177">            final JwtClaims internalClaims = internalClaimsBuilder.buildInternalJWTClaimsSet(jwtConsumer.processToClaims(assertion));</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            if (internalClaims.getSubject() == null) {</span>
+<span class="nc" id="L180">                LOG.error(&quot;Subject is missing from {}&quot;, internalClaims);</span>
+<span class="nc" id="L181">                throw ErrorResponses.internalServerError(&quot;Subject is missing from the resulting claims set.&quot;);</span>
+            }
+
+<span class="nc" id="L184">            internalClaims.setGeneratedJwtId();</span>
+<span class="nc" id="L185">            internalClaims.setIssuer(issuer.toASCIIString());</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (audience == null) {</span>
+<span class="nc" id="L187">                internalClaims.setAudience(clientId);</span>
+            } else {
+<span class="nc" id="L189">                internalClaims.setAudience(clientId, audience);</span>
+            }
+<span class="nc" id="L191">            internalClaims.setIssuedAtToNow();</span>
+
+<span class="nc" id="L193">            final Instant expirationTime = Instant.now().plus(jwtMaximumLifetimeInSeconds, ChronoUnit.SECONDS);</span>
+<span class="nc" id="L194">            internalClaims.setExpirationTime(NumericDate.fromMilliseconds(expirationTime.toEpochMilli()));</span>
+
+<span class="nc" id="L196">            return tokenCache.store(cryptoOps.sign(internalClaims), internalClaims.getAudience(), expirationTime);</span>
+
+<span class="nc" id="L198">        } catch (final MalformedClaimException</span>
+            | InvalidJwtException e) {
+<span class="nc" id="L200">            LOG.error(&quot;Unable to parse assertion&quot;, e);</span>
+<span class="nc" id="L201">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Unable to parse assertion&quot;);</span>
+        }
+    }
+
+    private OAuthTokenResponse handleRefreshGrant(final String refreshToken,
+        final String clientId) {
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (refreshToken == null) {</span>
+<span class="nc" id="L209">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Missing refresh token&quot;);</span>
+        }
+<span class="nc" id="L211">        return tokenCache.refresh(refreshToken, clientId);</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

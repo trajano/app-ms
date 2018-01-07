@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>VertxOutputStream.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="../index.html" class="el_bundle">ms-engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal</a> &gt; <span class="el_source">VertxOutputStream.java</span></div><h1>VertxOutputStream.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal;
+
+import static io.vertx.core.buffer.Buffer.buffer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.streams.WriteStream;
+
+public class VertxOutputStream extends OutputStream {
+
+    private Thread closingThread;
+
+    private final WriteStream&lt;Buffer&gt; stream;
+
+<span class="fc" id="L20">    public VertxOutputStream(final WriteStream&lt;Buffer&gt; stream) {</span>
+
+<span class="fc" id="L22">        this.stream = stream;</span>
+<span class="fc" id="L23">    }</span>
+
+    private void addChunkedIfNeeded() {
+
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (stream instanceof HttpServerResponse) {</span>
+<span class="fc" id="L28">            final HttpServerResponse resp = (HttpServerResponse) stream;</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">            if (resp.headers().get(HttpHeaders.CONTENT_LENGTH) == null) {</span>
+<span class="fc" id="L30">                resp.setChunked(true);</span>
+            }
+<span class="pc bnc" id="L32" title="All 2 branches missed.">        } else if (stream instanceof HttpClientRequest) {</span>
+<span class="nc" id="L33">            final HttpClientRequest req = (HttpClientRequest) stream;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            if (req.headers().get(HttpHeaders.CONTENT_LENGTH) == null) {</span>
+<span class="nc" id="L35">                req.setChunked(true);</span>
+            }
+        }
+
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Checks if the stream has been closed by the current thread. If so it should
+     * not allow usage anymore.
+     *
+     * @throws IOException
+     *             when the stream is closed.
+     */
+    private void checkClosed() throws IOException {
+
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (closingThread == Thread.currentThread()) {</span>
+<span class="nc" id="L51">            throw new IOException(&quot;Cannot use on the same thread that had closed it&quot;);</span>
+        }
+<span class="fc" id="L53">    }</span>
+
+    @Override
+    public void close() throws IOException {
+
+<span class="pc bpc" id="L58" title="3 of 4 branches missed.">        if (closingThread != null &amp;&amp; closingThread != Thread.currentThread()) {</span>
+<span class="nc" id="L59">            throw new IOException(&quot;Attempt to close from another thread&quot;);</span>
+        }
+<span class="fc" id="L61">        closingThread = Thread.currentThread();</span>
+<span class="fc" id="L62">    }</span>
+
+    @Override
+    public void write(final byte[] b) throws IOException {
+
+<span class="fc" id="L67">        checkClosed();</span>
+<span class="fc" id="L68">        addChunkedIfNeeded();</span>
+<span class="fc" id="L69">        stream.write(buffer(b));</span>
+<span class="fc" id="L70">    }</span>
+
+    @Override
+    public void write(final byte[] b,
+        final int off,
+        final int len) throws IOException {
+
+<span class="fc" id="L77">        checkClosed();</span>
+<span class="fc" id="L78">        addChunkedIfNeeded();</span>
+<span class="fc" id="L79">        stream.write(buffer().appendBytes(b, off, len));</span>
+<span class="fc" id="L80">    }</span>
+
+    @Override
+    public void write(final int b) throws IOException {
+
+<span class="nc" id="L85">        checkClosed();</span>
+<span class="nc" id="L86">        addChunkedIfNeeded();</span>
+<span class="nc" id="L87">        final Buffer buffer = buffer(new byte[] {</span>
+            (byte) b
+        });
+<span class="nc" id="L90">        stream.write(buffer);</span>
+
+<span class="nc" id="L92">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IssuerConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">OpenID Connect</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.oidc.spi</a> &gt; <span class="el_source">IssuerConfig.java</span></div><h1>IssuerConfig.java</h1><pre class="source lang-java linenums">package net.trajano.ms.oidc.spi;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
+import net.trajano.ms.oidc.OpenIdConfiguration;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
+<span class="fc" id="L27">public class IssuerConfig {</span>
+
+    @XmlElement(name = &quot;client_id&quot;,
+        required = true)
+    private String clientId;
+
+    @XmlElement(name = &quot;client_secret&quot;,
+        required = true)
+    private String clientSecret;
+
+    @XmlElement(name = &quot;display&quot;)
+    private String display;
+
+    @XmlElement(required = true)
+    private String id;
+
+    @XmlTransient
+    private HttpsJwks jwkset;
+
+    @XmlTransient
+    private OpenIdConfiguration openIdConfiguration;
+
+    @XmlElement(name = &quot;prompt&quot;)
+    private String prompt;
+
+    @XmlElement(name = &quot;redirect_uri&quot;,
+        required = true)
+    private URI redirectUri;
+
+    @XmlElement(name = &quot;scope&quot;,
+        required = true)
+    private String scope;
+
+    @XmlElement(required = true)
+    private URI uri;
+
+    public URI buildAuthenticationRequestUri(final URI redirectUri,
+        final String state,
+        final String nonce) {
+
+<span class="fc" id="L67">        openIdConfiguration.getAuthorizationEndpoint();</span>
+<span class="fc" id="L68">        final UriBuilder b = UriBuilder.fromUri(openIdConfiguration.getAuthorizationEndpoint())</span>
+<span class="fc" id="L69">            .queryParam(&quot;response_type&quot;, &quot;code&quot;)</span>
+<span class="fc" id="L70">            .queryParam(&quot;scope&quot;, scope)</span>
+<span class="fc" id="L71">            .queryParam(&quot;client_id&quot;, clientId)</span>
+<span class="fc" id="L72">            .queryParam(&quot;redirect_uri&quot;, redirectUri)</span>
+<span class="fc" id="L73">            .queryParam(&quot;nonce&quot;, nonce);</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (state != null) {</span>
+<span class="fc" id="L75">            b.queryParam(&quot;state&quot;, state);</span>
+        }
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (display != null) {</span>
+<span class="nc" id="L78">            b.queryParam(&quot;display&quot;, display);</span>
+        }
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (prompt != null) {</span>
+<span class="nc" id="L81">            b.queryParam(&quot;prompt&quot;, prompt);</span>
+        }
+<span class="fc" id="L83">        return b</span>
+<span class="fc" id="L84">            .build();</span>
+    }
+
+    public String buildAuthorization() {
+
+<span class="nc" id="L89">        return HttpAuthorizationHeaders.buildBasicAuthorization(clientId, clientSecret);</span>
+    }
+
+    public String getClientId() {
+
+<span class="nc" id="L94">        return clientId;</span>
+    }
+
+    public String getClientSecret() {
+
+<span class="nc" id="L99">        return clientSecret;</span>
+    }
+
+    public String getDisplay() {
+
+<span class="nc" id="L104">        return display;</span>
+    }
+
+    public String getId() {
+
+<span class="nc" id="L109">        return id;</span>
+    }
+
+    public JsonWebKeySet getJwks() {
+
+        try {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (jwkset == null) {</span>
+<span class="nc" id="L116">                jwkset = new HttpsJwks(getOpenIdConfiguration().getJwksUri().toASCIIString());</span>
+            }
+<span class="nc" id="L118">            return new JsonWebKeySet(jwkset.getJsonWebKeys());</span>
+<span class="nc" id="L119">        } catch (final JoseException e) {</span>
+<span class="nc" id="L120">            throw new InternalServerErrorException(e);</span>
+<span class="nc" id="L121">        } catch (final IOException e) {</span>
+<span class="nc" id="L122">            throw new UncheckedIOException(e);</span>
+        }
+    }
+
+    public OpenIdConfiguration getOpenIdConfiguration() {
+
+<span class="nc" id="L128">        return openIdConfiguration;</span>
+    }
+
+    public String getPrompt() {
+
+<span class="nc" id="L133">        return prompt;</span>
+    }
+
+    public URI getRedirectUri() {
+
+<span class="nc" id="L138">        return redirectUri;</span>
+    }
+
+    public String getScope() {
+
+<span class="nc" id="L143">        return scope;</span>
+    }
+
+    public URI getUri() {
+
+<span class="nc" id="L148">        return uri;</span>
+    }
+
+    public void setClientId(final String clientId) {
+
+<span class="fc" id="L153">        this.clientId = clientId;</span>
+<span class="fc" id="L154">    }</span>
+
+    public void setClientSecret(final String clientSecret) {
+
+<span class="fc" id="L158">        this.clientSecret = clientSecret;</span>
+<span class="fc" id="L159">    }</span>
+
+    public void setDisplay(final String display) {
+
+<span class="nc" id="L163">        this.display = display;</span>
+<span class="nc" id="L164">    }</span>
+
+    public void setId(final String id) {
+
+<span class="nc" id="L168">        this.id = id;</span>
+<span class="nc" id="L169">    }</span>
+
+    public void setOpenIdConfiguration(final OpenIdConfiguration openIdConfiguration) {
+
+<span class="fc" id="L173">        this.openIdConfiguration = openIdConfiguration;</span>
+<span class="fc" id="L174">    }</span>
+
+    public void setPrompt(final String prompt) {
+
+<span class="nc" id="L178">        this.prompt = prompt;</span>
+<span class="nc" id="L179">    }</span>
+
+    public void setRedirectUri(final URI redirectUri) {
+
+<span class="nc" id="L183">        this.redirectUri = redirectUri;</span>
+<span class="nc" id="L184">    }</span>
+
+    public void setScope(final String scope) {
+
+<span class="fc" id="L188">        this.scope = scope;</span>
+<span class="fc" id="L189">    }</span>
+
+    public void setUri(final URI uri) {
+
+<span class="nc" id="L193">        this.uri = uri;</span>
+<span class="nc" id="L194">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

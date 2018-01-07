@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultAssertionRequiredPredicate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.beans</a> &gt; <span class="el_source">DefaultAssertionRequiredPredicate.java</span></div><h1>DefaultAssertionRequiredPredicate.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.beans;
+
+import java.lang.reflect.Method;
+
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.container.ResourceInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Checks if the URI has any JSR-250 annotations that would indicate a secured
+ * resource. On a method level if PermitAll is present then it will allow access
+ * without any assertion even if RolesAllowed is present on the class level.
+ * &lt;p&gt;
+ * However, the default is to require the assertion if nothing has been
+ * specified.
+ * &lt;p&gt;
+ * This will throw an IllegalArgumentException if both {@link RolesAllowed} and
+ * {@link PermitAll} are present in a class or method.
+ *
+ * @author Archimedes Trajano
+ */
+<span class="fc" id="L25">public class DefaultAssertionRequiredPredicate implements</span>
+    JwtAssertionRequiredPredicate {
+
+<span class="fc" id="L28">    private static final Logger LOG = LoggerFactory.getLogger(DefaultAssertionRequiredPredicate.class);</span>
+
+    /**
+     * &lt;p&gt;
+     * The key logic for the test is as follows:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     * Let:
+     * &lt;/p&gt;
+     * &lt;table&gt;
+     * &lt;tr&gt;
+     * &lt;td&gt;a =&lt;/td&gt;
+     * &lt;td&gt;resourceMethodHasRolesAllowed&lt;/td&gt;
+     * &lt;/tr&gt;
+     * &lt;tr&gt;
+     * &lt;td&gt;b =&lt;/td&gt;
+     * &lt;td&gt;resourceClassHasRolesAllowed&lt;/td&gt;
+     * &lt;/tr&gt;
+     * &lt;tr&gt;
+     * &lt;td&gt;c =&lt;/td&gt;
+     * &lt;td&gt;resourceMethodHasPermitAll&lt;/td&gt;
+     * &lt;/tr&gt;
+     * &lt;tr&gt;
+     * &lt;td&gt;d =&lt;/td&gt;
+     * &lt;td&gt;resourceClassHasPermitAll&lt;/td&gt;
+     * &lt;/tr&gt;
+     * &lt;/table&gt;
+     * &lt;p&gt;
+     * The rules that need to be applied translate to:
+     * &lt;/p&gt;
+     *
+     * &lt;pre&gt;
+     * = a || ( b &amp;&amp; !c ) || ( !a &amp;&amp; !b &amp;&amp; !c &amp;&amp; !d )
+     * = (a || b || !d) &amp;&amp; ( a || !c )
+     * &lt;/pre&gt;
+     *
+     * @param resourceInfo
+     *            resource info
+     * @return &lt;code&gt;true&lt;/code&gt; if the resource is protected
+     */
+    @Override
+    public boolean test(final ResourceInfo resourceInfo) {
+
+<span class="fc" id="L71">        final Method resourceMethod = resourceInfo.getResourceMethod();</span>
+<span class="fc" id="L72">        final Class&lt;?&gt; resourceClass = resourceInfo.getResourceClass();</span>
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        final boolean resourceMethodHasRolesAllowed = resourceMethod.getAnnotation(RolesAllowed.class) != null;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        final boolean resourceClassHasRolesAllowed = resourceClass.getAnnotation(RolesAllowed.class) != null;</span>
+
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        final boolean resourceMethodHasPermitAll = resourceMethod.getAnnotation(PermitAll.class) != null;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        final boolean resourceClassHasPermitAll = resourceClass.getAnnotation(PermitAll.class) != null;</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (LOG.isDebugEnabled()) {</span>
+<span class="fc" id="L81">            LOG.debug(&quot;resourceMethod={} PermitAll={} RolesAllowed={}&quot;, resourceMethod, resourceMethodHasPermitAll, resourceMethodHasRolesAllowed);</span>
+<span class="fc" id="L82">            LOG.debug(&quot;resourceClass={} PermitAll={} RolesAllowed={}&quot;, resourceClass, resourceClassHasPermitAll, resourceClassHasRolesAllowed);</span>
+        }
+
+<span class="pc bpc" id="L85" title="3 of 4 branches missed.">        if (resourceMethodHasRolesAllowed &amp;&amp; resourceMethodHasPermitAll) {</span>
+<span class="nc" id="L86">            throw new IllegalArgumentException(&quot;The resource method &quot; + resourceMethod + &quot; may not have both @RolesAllowed and @PermitAll annotations.&quot;);</span>
+<span class="pc bpc" id="L87" title="3 of 4 branches missed.">        } else if (resourceClassHasRolesAllowed &amp;&amp; resourceClassHasPermitAll) {</span>
+<span class="nc" id="L88">            throw new IllegalArgumentException(&quot;The resource class &quot; + resourceClass + &quot; may not have both @RolesAllowed and @PermitAll annotations.&quot;);</span>
+        } else {
+<span class="pc bpc" id="L90" title="4 of 10 branches missed.">            return (resourceMethodHasRolesAllowed || resourceClassHasRolesAllowed || !resourceClassHasPermitAll) &amp;&amp; (resourceMethodHasRolesAllowed || !resourceMethodHasPermitAll);</span>
+        }
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

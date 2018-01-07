@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>JwtClaimsSetPrincipal.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample OIDC Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.core</a> &gt; <span class="el_source">JwtClaimsSetPrincipal.java</span></div><h1>JwtClaimsSetPrincipal.java</h1><pre class="source lang-java linenums">package net.trajano.ms.core;
+
+import java.net.URI;
+import java.security.Principal;
+
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+
+/**
+ * This wraps a JWT claims set as a Principal for use with the Security Context.
+ *
+ * @author Archimedes Trajano
+ */
+public class JwtClaimsSetPrincipal implements
+    Principal {
+
+    private final String authority;
+
+    /**
+     * Wrapped claims set.
+     */
+    private final JwtClaims claimsSet;
+
+    private final String subject;
+
+    /**
+     * Build the principal using a map.
+     *
+     * @param claimsSet
+     */
+<span class="fc" id="L31">    public JwtClaimsSetPrincipal(final JwtClaims claimsSet) {</span>
+
+        try {
+<span class="fc" id="L34">            this.claimsSet = claimsSet;</span>
+<span class="fc" id="L35">            subject = claimsSet.getSubject();</span>
+<span class="fc" id="L36">            authority = String.format(&quot;%s@%s&quot;, subject, URI.create(claimsSet.getIssuer()).getHost());</span>
+
+<span class="nc" id="L38">        } catch (final MalformedClaimException e) {</span>
+<span class="nc" id="L39">            throw new ExceptionInInitializerError(e);</span>
+<span class="fc" id="L40">        }</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Only compare the claims, since that is the main content. {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (this == obj) {</span>
+<span class="nc" id="L50">            return true;</span>
+        }
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L53">            return false;</span>
+        }
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L56">            return false;</span>
+        }
+<span class="nc" id="L58">        final JwtClaimsSetPrincipal other = (JwtClaimsSetPrincipal) obj;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (claimsSet == null) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (other.claimsSet != null) {</span>
+<span class="nc" id="L61">                return false;</span>
+            }
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        } else if (!claimsSet.equals(other.claimsSet)) {</span>
+<span class="nc" id="L64">            return false;</span>
+        }
+<span class="nc" id="L66">        return true;</span>
+    }
+
+    /**
+     * The authority string consists of the subject '@' issuer.
+     *
+     * @return an authority string
+     */
+    public String getAuthority() {
+
+<span class="fc" id="L76">        return authority;</span>
+    }
+
+    /**
+     * @return the underlying claims set
+     */
+    public JwtClaims getClaimsSet() {
+
+<span class="fc" id="L84">        return claimsSet;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+
+<span class="fc" id="L93">        return subject;</span>
+    }
+
+    /**
+     * Gets the hash code of the claims set. {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+
+<span class="nc" id="L102">        return claimsSet.hashCode();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

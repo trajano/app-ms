@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>ManifestHandler.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="../index.html" class="el_bundle">ms-engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine</a> &gt; <span class="el_source">ManifestHandler.java</span></div><h1>ManifestHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine;
+
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.jar.Manifest;
+
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.BufferUtil;
+import net.trajano.ms.engine.internal.VertxBufferInputStream;
+
+/**
+ * This creates a route that will provide data from the MANIFIEST.MF of the
+ * application which can contain information such as version and build number.
+ *
+ * @author Archimedes Trajano
+ */
+public class ManifestHandler implements
+    Handler&lt;RoutingContext&gt;,
+    AutoCloseable {
+
+    /**
+     * Constructs a new route for the given router to a JAX-RS application to
+     * &quot;.well-known/manifest&quot;
+     *
+     * @param router
+     */
+    public static ManifestHandler registerToRouter(
+        final Router router) {
+
+<span class="fc" id="L38">        return registerToRouter(router, &quot;/.well-known/manifest&quot;);</span>
+    }
+
+    /**
+     * Constructs a new route for the given router to a JAX-RS application.
+     *
+     * @param router
+     *            Vert.x router
+     * @param uri
+     *            uri that the route would be mapped to
+     */
+    public static ManifestHandler registerToRouter(
+        final Router router,
+        final String uri) {
+
+<span class="fc" id="L53">        final ManifestHandler requestHandler = new ManifestHandler();</span>
+<span class="fc" id="L54">        router.get(uri).handler(requestHandler);</span>
+<span class="fc" id="L55">        return requestHandler;</span>
+    }
+
+    private final Buffer json;
+
+    private final Buffer text;
+
+<span class="fc" id="L62">    public ManifestHandler() {</span>
+
+        try {
+<span class="fc" id="L65">            text = BufferUtil.bufferFromClasspathResource(&quot;META-INF/MANIFEST.MF&quot;);</span>
+            Manifest mf;
+<span class="fc" id="L67">            mf = new Manifest(new VertxBufferInputStream(text));</span>
+<span class="fc" id="L68">            final JsonObject mapFrom = JsonObject.mapFrom(mf.getMainAttributes());</span>
+<span class="fc" id="L69">            json = mapFrom.toBuffer();</span>
+<span class="nc" id="L70">        } catch (final IOException e) {</span>
+<span class="nc" id="L71">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L72">        }</span>
+
+<span class="fc" id="L74">    }</span>
+
+    @Override
+    public void close() throws Exception {
+
+        // does nothing
+
+<span class="fc" id="L81">    }</span>
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (TEXT_PLAIN.equals(context.getAcceptableContentType())) {</span>
+<span class="fc" id="L87">            context.response().putHeader(CONTENT_TYPE, TEXT_PLAIN).end(text);</span>
+        } else {
+<span class="fc" id="L89">            context.response().putHeader(CONTENT_TYPE, APPLICATION_JSON).end(json);</span>
+        }
+
+<span class="fc" id="L92">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GatewayMS.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway</a> &gt; <span class="el_source">GatewayMS.java</span></div><h1>GatewayMS.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway;
+
+import java.io.File;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner.Mode;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import io.vertx.core.Vertx;
+
+@SpringBootApplication
+@EnableAutoConfiguration
+<span class="fc" id="L17">public class GatewayMS {</span>
+
+    public static void main(final String[] args) {
+
+<span class="nc" id="L21">        System.setProperty(&quot;vertx.disableDnsResolver&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L22">        System.setProperty(&quot;vertx.logger-delegate-factory-class-name&quot;, &quot;io.vertx.core.logging.SLF4JLogDelegateFactory&quot;);</span>
+
+<span class="nc" id="L24">        final File logbackFile = new File(&quot;logback.xml&quot;);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        if (logbackFile.exists()) {</span>
+<span class="nc" id="L26">            System.setProperty(&quot;logging.config&quot;, logbackFile.getAbsolutePath());</span>
+        }
+
+<span class="nc" id="L29">        final SpringApplication application = new SpringApplication(GatewayMS.class);</span>
+<span class="nc" id="L30">        application.setBannerMode(Mode.OFF);</span>
+<span class="nc" id="L31">        application.setWebEnvironment(false);</span>
+<span class="nc" id="L32">        application.run(args);</span>
+
+<span class="nc" id="L34">    }</span>
+
+    @Autowired
+    private GatewayVerticle gatewayVerticle;
+
+    @Autowired
+    private Vertx vertx;
+
+    @PostConstruct
+    public void start() {
+
+<span class="fc" id="L45">        vertx.deployVerticle(gatewayVerticle);</span>
+<span class="fc" id="L46">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,4 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Microservice Engine/ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsPath,100,275,18,36,22,52,12,27,1,11
+Microservice Engine/ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsRouter,5,167,1,15,1,31,1,16,0,9
+Microservice Engine/ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsFailureHandler,72,49,7,3,15,12,6,3,1,3

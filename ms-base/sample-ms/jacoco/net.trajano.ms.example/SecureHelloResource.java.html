@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecureHelloResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Sample Microservice</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.example</a> &gt; <span class="el_source">SecureHelloResource.java</span></div><h1>SecureHelloResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.example;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
+import net.trajano.ms.core.JsonOps;
+import net.trajano.ms.core.JwtClaimsSetPrincipal;
+import net.trajano.ms.example.beans.Counter;
+import net.trajano.ms.example.beans.UselessCounter;
+
+/**
+ * This resource uses CDI rather than Spring annotations.
+ *
+ * @author Archimedes Trajano
+ */
+@Api(tags = {
+    &quot;infernal&quot;,
+    &quot;doom&quot;
+},
+    authorizations = @Authorization(&quot;Bearer&quot;))
+@ApplicationScoped
+@Path(&quot;/s&quot;)
+<span class="nc" id="L40">public class SecureHelloResource {</span>
+
+    @Inject
+    private Counter counter;
+
+    @Inject
+    private JsonOps jsonOps;
+
+    @Inject
+    private UselessCounter uselessCounter;
+
+    @ApiOperation(value = &quot;Counts&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path(&quot;/count&quot;)
+    public JsonObject count() {
+
+<span class="nc" id="L57">        final JsonObject json = new JsonObject();</span>
+<span class="nc" id="L58">        json.add(&quot;counter&quot;, new JsonPrimitive(counter.count()));</span>
+<span class="nc" id="L59">        json.add(&quot;useless_counter&quot;, new JsonPrimitive(uselessCounter.count()));</span>
+<span class="nc" id="L60">        return json;</span>
+    }
+
+    @ApiOperation(value = &quot;Secure Hello&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject hello(@QueryParam(&quot;name&quot;) final String name,
+        @Context final SecurityContext securityContext) {
+
+<span class="nc" id="L69">        final JsonObject json = new JsonObject();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (name != null) {</span>
+<span class="nc" id="L71">            json.add(&quot;name&quot;, new JsonPrimitive(name));</span>
+        }
+<span class="nc" id="L73">        final JwtClaimsSetPrincipal userPrincipal = (JwtClaimsSetPrincipal) securityContext.getUserPrincipal();</span>
+<span class="nc" id="L74">        json.add(&quot;principal&quot;, new JsonPrimitive(userPrincipal.getName()));</span>
+<span class="nc" id="L75">        json.add(&quot;claims&quot;, jsonOps.toJsonElement(userPrincipal.getClaimsSet().toJson()));</span>
+<span class="nc" id="L76">        return json;</span>
+    }
+
+    @ApiOperation(value = &quot;displays hello world after a given amount of seconds seconds&quot;)
+    @GET
+    @Path(&quot;/suspend/{seconds}&quot;)
+    @Produces(MediaType.TEXT_PLAIN)
+    public void suspend(@Suspended final AsyncResponse asyncResponse,
+        @PathParam(&quot;seconds&quot;) final int seconds) throws InterruptedException {
+
+<span class="nc" id="L86">        Thread.sleep(seconds * 1000L);</span>
+<span class="nc" id="L87">        asyncResponse.resume(Response.ok(&quot;hello&quot;).build());</span>
+<span class="nc" id="L88">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

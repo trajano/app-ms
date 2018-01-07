@@ -1,0 +1,4 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsPath,144,231,22,32,23,51,16,23,2,10
+ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsRouter,9,163,1,15,3,29,2,15,1,8
+ms-engine-spring-jaxrs,net.trajano.ms.engine.jaxrs,JaxRsFailureHandler,121,0,10,0,27,0,9,0,4,0

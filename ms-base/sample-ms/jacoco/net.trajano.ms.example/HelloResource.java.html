@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HelloResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Sample Microservice</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.example</a> &gt; <span class="el_source">HelloResource.java</span></div><h1>HelloResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.example;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.security.PermitAll;
+import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.SwaggerDefinition;
+import net.trajano.ms.core.JsonOps;
+import net.trajano.ms.example.domain.MyType;
+
+@SwaggerDefinition(
+    info = @Info(
+        title = &quot;Sample microservice from hello&quot;,
+        version = &quot;1.0&quot;))
+@Api(tags = {
+    &quot;infernal&quot;,
+    &quot;doom&quot;
+})
+@Component
+@Path(&quot;/hello&quot;)
+@PermitAll
+<span class="fc" id="L56">public class HelloResource {</span>
+
+    @Context
+    private Client jaxrsClient;
+
+    @Inject
+    private JsonOps jsonOps;
+
+    @ApiOperation(value = &quot;displays openid config of google async&quot;,
+        hidden = true)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path(&quot;/async&quot;)
+    public void async(@Suspended final AsyncResponse asyncResponse) throws InterruptedException,
+        ExecutionException {
+
+<span class="nc" id="L72">        final Future&lt;Response&gt; futureResponseFromClient = jaxrsClient.target(&quot;https://accounts.google.com/.well-known/openid-configuration&quot;).request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, &quot;curl/7.55.1&quot;).async().get();</span>
+
+<span class="nc" id="L74">        final Response responseFromClient = futureResponseFromClient.get();</span>
+        try {
+<span class="nc" id="L76">            final String object = responseFromClient.readEntity(String.class);</span>
+<span class="nc" id="L77">            asyncResponse.resume(object);</span>
+        } finally {
+<span class="nc" id="L79">            responseFromClient.close();</span>
+<span class="nc" id="L80">        }</span>
+<span class="nc" id="L81">    }</span>
+
+    @ApiOperation(value = &quot;throws an client exception&quot;)
+    @GET
+    @Path(&quot;/bad&quot;)
+    public Response badClient() {
+
+<span class="nc" id="L88">        final JsonElement entity = jsonOps.toJsonElement(&quot;{\&quot;error\&quot;:\&quot;client bad\&quot;}&quot;);</span>
+<span class="nc" id="L89">        throw new BadRequestException(&quot;who's bad&quot;, Response.status(Status.BAD_REQUEST).entity(entity).build());</span>
+    }
+
+    @ApiOperation(value = &quot;throws a Runtime Exception&quot;)
+    @GET
+    @Path(&quot;/cough&quot;)
+    public Response cough() {
+
+<span class="nc" id="L97">        throw new IllegalStateException(&quot;ahem&quot;, new IOException(&quot;burp&quot;));</span>
+    }
+
+    private String getFileName(final MultivaluedMap&lt;String, String&gt; header) {
+
+<span class="nc" id="L102">        final String[] contentDisposition = header.getFirst(&quot;Content-Disposition&quot;).split(&quot;;&quot;);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (final String filename : contentDisposition) {</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (filename.trim().startsWith(&quot;filename&quot;)) {</span>
+
+<span class="nc" id="L107">                final String[] name = filename.split(&quot;=&quot;);</span>
+
+<span class="nc" id="L109">                return name[1].trim().replaceAll(&quot;\&quot;&quot;, &quot;&quot;);</span>
+            }
+        }
+<span class="nc" id="L112">        return &quot;unknown&quot;;</span>
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String helloHelloPost(@FormParam(&quot;me&quot;) final String me) {
+
+<span class="nc" id="L120">        return &quot;HelloHello &quot; + me;</span>
+    }
+
+    @ApiOperation(value = &quot;displays hello world&quot;)
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String helloWorld() {
+
+<span class="nc" id="L128">        return &quot;Hello world at &quot; + new Date();</span>
+    }
+
+    @ApiOperation(value = &quot;displays hello world&quot;)
+    @GET
+    @Path(&quot;/o&quot;)
+    @Produces({
+        MediaType.APPLICATION_JSON,
+        MediaType.APPLICATION_XML
+    })
+    public MyType helloWorld2() {
+
+<span class="nc" id="L140">        final MyType myType = new MyType();</span>
+<span class="nc" id="L141">        myType.setFoo(&quot;Hello world at &quot; + new Date());</span>
+<span class="nc" id="L142">        return myType;</span>
+    }
+
+    @ApiOperation(value = &quot;data from GSON&quot;)
+    @GET
+    @Path(&quot;/j&quot;)
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject jsonObject() {
+
+<span class="nc" id="L151">        final JsonObject ret = new JsonObject();</span>
+<span class="nc" id="L152">        ret.add(&quot;Hello&quot;, new JsonPrimitive(&quot;world&quot;));</span>
+<span class="nc" id="L153">        return ret;</span>
+    }
+
+    @ApiOperation(value = &quot;displays openid config of google&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path(&quot;/openid&quot;)
+    public Response maven() {
+
+<span class="nc" id="L162">        final Response clientResponse = jaxrsClient.target(&quot;https://accounts.google.com/.well-known/openid-configuration&quot;).request().header(javax.ws.rs.core.HttpHeaders.USER_AGENT, &quot;curl/7.55.1&quot;).get();</span>
+        try {
+<span class="nc" id="L164">            final String value = clientResponse.readEntity(String.class);</span>
+<span class="nc" id="L165">            return Response.ok(value).build();</span>
+        } finally {
+<span class="nc" id="L167">            clientResponse.close();</span>
+        }
+    }
+
+    @ApiOperation(value = &quot;Cancelling after 1 seconds&quot;,
+        tags = &quot;internal&quot;)
+    @GET
+    @Path(&quot;/s1&quot;)
+    @Produces(MediaType.TEXT_PLAIN)
+    public void s1(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+<span class="nc" id="L178">        asyncResponse.setTimeout(5, TimeUnit.SECONDS);</span>
+<span class="nc" id="L179">        Thread.sleep(1000);</span>
+<span class="nc" id="L180">        asyncResponse.cancel(5);</span>
+<span class="nc" id="L181">    }</span>
+
+    @ApiOperation(value = &quot;Timeout after 2 seconds&quot;)
+    @GET
+    @Path(&quot;/st&quot;)
+    @Produces(MediaType.TEXT_PLAIN)
+    public void st(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+<span class="nc" id="L189">        asyncResponse.setTimeout(1, TimeUnit.SECONDS);</span>
+<span class="nc" id="L190">        Thread.sleep(2000);</span>
+<span class="nc" id="L191">        asyncResponse.resume(Response.ok(&quot;hello&quot;).build());</span>
+<span class="nc" id="L192">    }</span>
+
+    @ApiOperation(value = &quot;displays hello world after 2 seconds&quot;)
+    @GET
+    @Path(&quot;/suspend&quot;)
+    @Produces(MediaType.TEXT_PLAIN)
+    public void suspend(@Suspended final AsyncResponse asyncResponse) throws InterruptedException {
+
+<span class="nc" id="L200">        Thread.sleep(2000);</span>
+<span class="nc" id="L201">        asyncResponse.resume(Response.ok(&quot;hello&quot;).build());</span>
+<span class="nc" id="L202">    }</span>
+
+    @ApiOperation(value = &quot;upload a file&quot;)
+    @POST
+    @Path(&quot;/upload&quot;)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void upload(
+        final MultipartFormDataInput input,
+        @Suspended final AsyncResponse asyncResponse) throws IOException {
+
+<span class="nc" id="L213">        final JsonObject json = new JsonObject();</span>
+<span class="nc" id="L214">        final Map&lt;String, List&lt;InputPart&gt;&gt; uploadForm = input.getFormDataMap();</span>
+<span class="nc" id="L215">        final List&lt;InputPart&gt; inputParts = uploadForm.get(&quot;uploadedFile&quot;);</span>
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        for (final InputPart inputPart : inputParts) {</span>
+
+<span class="nc" id="L219">            final MultivaluedMap&lt;String, String&gt; header = inputPart.getHeaders();</span>
+<span class="nc" id="L220">            final String fileName = getFileName(header);</span>
+
+            //fromJson the uploaded file to inputstream
+<span class="nc" id="L223">            final InputStream inputStream = inputPart.getBody(InputStream.class, null);</span>
+<span class="nc" id="L224">            int c = 0;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            while (inputStream.read() != -1) {</span>
+<span class="nc" id="L226">                ++c;</span>
+            }
+
+<span class="nc" id="L229">            json.add(fileName, new JsonPrimitive(c));</span>
+<span class="nc" id="L230">        }</span>
+<span class="nc" id="L231">        asyncResponse.resume(json);</span>
+<span class="nc" id="L232">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

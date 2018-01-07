@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>Conversions.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="../index.html" class="el_bundle">ms-engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal</a> &gt; <span class="el_source">Conversions.java</span></div><h1>Conversions.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
+
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.RequestOptions;
+import io.vertx.ext.web.impl.CookieImpl;
+import net.trajano.ms.engine.internal.resteasy.CaseInsenstiveMultivalueStringMap;
+
+public final class Conversions {
+
+    /**
+     * Pumps the contents of an {@link InputStream} to a {@link Buffer}.
+     *
+     * @param is
+     *            input stream
+     * @return buffer
+     */
+    public static Buffer toBuffer(final InputStream is) throws IOException {
+
+<span class="nc" id="L32">        final Buffer b = Buffer.buffer(1024);</span>
+<span class="nc" id="L33">        final byte[] buf = new byte[1024];</span>
+        int len;
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        while ((len = is.read(buf)) &gt;= 0) {</span>
+<span class="nc" id="L36">            b.appendBytes(buf, 0, len);</span>
+        }
+<span class="nc" id="L38">        return b;</span>
+
+    }
+
+    /**
+     * Converts a Vert.X cookie to a JAX-RS Cookie.
+     *
+     * @param vertxCookie
+     *            Vert.X cookie
+     * @return JAX-RS Cookie
+     */
+    public static Cookie toCookie(final io.vertx.ext.web.Cookie vertxCookie) {
+
+<span class="nc" id="L51">        return new Cookie(vertxCookie.getName(), vertxCookie.getValue(), vertxCookie.getPath(), vertxCookie.getDomain());</span>
+    }
+
+    public static Map&lt;String, Cookie&gt; toCookies(final Set&lt;io.vertx.ext.web.Cookie&gt; vertxCookies) {
+
+<span class="nc" id="L56">        final Map&lt;String, Cookie&gt; cookies = new HashMap&lt;&gt;(vertxCookies.size());</span>
+<span class="nc" id="L57">        vertxCookies.forEach(vertxCookie -&gt; cookies.put(vertxCookie.getName(), toCookie(vertxCookie)));</span>
+<span class="nc" id="L58">        return cookies;</span>
+    }
+
+    public static MultivaluedMap&lt;String, Object&gt; toMultivaluedMap(final MultiMap multimap) {
+
+<span class="nc" id="L63">        final MultivaluedMap&lt;String, Object&gt; mvm = new MultivaluedHashMap&lt;&gt;(multimap.size());</span>
+<span class="nc" id="L64">        multimap.forEach(entry -&gt; mvm.add(entry.getKey(), entry.getValue()));</span>
+<span class="nc" id="L65">        return mvm;</span>
+    }
+
+    /**
+     * This returns a case-insensitive multivalued map suitable for headers.
+     *
+     * @param multimap
+     * @return
+     */
+    public static MultivaluedMap&lt;String, String&gt; toMultivaluedStringMap(final MultiMap multimap) {
+
+<span class="fc" id="L76">        final MultivaluedMap&lt;String, String&gt; mvm = new CaseInsenstiveMultivalueStringMap();</span>
+<span class="fc" id="L77">        multimap.forEach(entry -&gt; mvm.add(entry.getKey(), entry.getValue()));</span>
+<span class="fc" id="L78">        return mvm;</span>
+    }
+
+    public static RequestOptions toRequestOptions(final URI uri) {
+
+<span class="fc" id="L83">        final RequestOptions options = new RequestOptions()</span>
+<span class="fc" id="L84">            .setSsl(&quot;https&quot;.equals(uri.getScheme()))</span>
+<span class="fc" id="L85">            .setHost(uri.getHost());</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (uri.getPort() &gt; 0) {</span>
+<span class="fc" id="L87">            options.setPort(uri.getPort());</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        } else if (options.isSsl()) {</span>
+<span class="fc" id="L89">            options.setPort(443);</span>
+        } else {
+<span class="nc" id="L91">            options.setPort(80);</span>
+        }
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (uri.getRawQuery() == null) {</span>
+<span class="fc" id="L94">            options.setURI(uri.getRawPath());</span>
+        } else {
+<span class="fc" id="L96">            options.setURI(uri.getRawPath() + &quot;?&quot; + uri.getRawQuery());</span>
+        }
+<span class="fc" id="L98">        return options;</span>
+    }
+
+    public static io.vertx.ext.web.Cookie toVertxCookie(final NewCookie cookie) {
+
+<span class="nc" id="L103">        final io.vertx.ext.web.Cookie vertxCookie = new CookieImpl(cookie.getName(), cookie.getValue());</span>
+<span class="nc" id="L104">        vertxCookie.setPath(cookie.getPath());</span>
+<span class="nc" id="L105">        vertxCookie.setDomain(cookie.getDomain());</span>
+<span class="nc" id="L106">        vertxCookie.setHttpOnly(cookie.isHttpOnly());</span>
+<span class="nc" id="L107">        vertxCookie.setChanged(true);</span>
+<span class="nc" id="L108">        vertxCookie.setMaxAge(cookie.getMaxAge());</span>
+<span class="nc" id="L109">        vertxCookie.setSecure(cookie.isSecure());</span>
+<span class="nc" id="L110">        return vertxCookie;</span>
+    }
+
+<span class="fc" id="L113">    private Conversions() {</span>
+
+<span class="fc" id="L115">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

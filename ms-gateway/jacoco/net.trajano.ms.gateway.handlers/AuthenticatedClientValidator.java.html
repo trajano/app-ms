@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticatedClientValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.handlers</a> &gt; <span class="el_source">AuthenticatedClientValidator.java</span></div><h1>AuthenticatedClientValidator.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.handlers;
+
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.Map;
+
+import net.trajano.ms.gateway.internal.Errors;
+import net.trajano.ms.gateway.internal.MediaTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.CorsHandler;
+import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.PathContext;
+import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
+
+/**
+ * &lt;p&gt;
+ * Handles determining what Origin URIs are allowed based on the Origin and
+ * Authorization header. If the authorization is Basic, then the client ID and
+ * secret are verified against the system. If it is a Bearer authorization, it
+ * will use the &lt;code&gt;aud&lt;/code&gt; value of the data referenced by the access
+ * token.
+ * &lt;/p&gt;
+ *
+ * @author Archimedes Trajano
+ */
+@Component
+@Order(SelfRegisteringRoutingContextHandler.CORE_GLOBAL + 1)
+<span class="fc" id="L45">public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextHandler {</span>
+
+<span class="fc" id="L47">    private static final Logger LOG = LoggerFactory.getLogger(AuthenticatedClientValidator.class);</span>
+
+    /**
+     * Strips off the path components from a URL.
+     *
+     * @param url
+     *            URL to process
+     * @return a URI suitable for Access-Control-Allow-Origin
+     * @throws MalformedURLException
+     *             invalid URL
+     */
+    public static URI getPartsForOriginHeader(final URL url) throws MalformedURLException {
+
+<span class="fc" id="L60">        final String tempOriginString = new URL(url, &quot;/&quot;).toString();</span>
+<span class="fc" id="L61">        return URI.create(tempOriginString.substring(0, tempOriginString.length() - 1));</span>
+    }
+
+    @Value(&quot;${authorization.endpoint}&quot;)
+    private URI authorizationEndpoint;
+
+    @Autowired
+    private GatewayClientAuthorization gatewayClientAuthorization;
+
+    @Autowired
+    private HttpClient httpClient;
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+<span class="nc" id="L76">        final PathContext pathContext = getPathContext(context);</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">        if (pathContext == null || !pathContext.isProtected()) {</span>
+<span class="nc" id="L78">            context.next();</span>
+<span class="nc" id="L79">            return;</span>
+        }
+
+<span class="nc" id="L82">        LOG.debug(&quot;Handling {} ended={} path is protected&quot;, context, context.request().isEnded());</span>
+
+<span class="nc" id="L84">        final String origin = context.request().getHeader(HttpHeaders.ORIGIN);</span>
+<span class="nc" id="L85">        final String referrer = context.request().getHeader(HttpHeaders.REFERER);</span>
+
+        final URI originUri;
+        try {
+            final URL tempOrigin;
+<span class="nc bnc" id="L90" title="All 4 branches missed.">            if (origin == null &amp;&amp; referrer != null) {</span>
+<span class="nc" id="L91">                tempOrigin = new URL(referrer);</span>
+            } else {
+<span class="nc" id="L93">                tempOrigin = new URL(origin);</span>
+            }
+<span class="nc" id="L95">            originUri = getPartsForOriginHeader(tempOrigin);</span>
+<span class="nc" id="L96">        } catch (final MalformedURLException e) {</span>
+<span class="nc" id="L97">            context.response().setStatusCode(400)</span>
+<span class="nc" id="L98">                .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)</span>
+<span class="nc" id="L99">                .end(Errors.missingOrigin().toBuffer());</span>
+
+<span class="nc" id="L101">            return;</span>
+<span class="nc" id="L102">        }</span>
+<span class="nc" id="L103">        LOG.debug(&quot;originUri={}&quot;, originUri);</span>
+<span class="nc" id="L104">        context.put(&quot;origin&quot;, originUri);</span>
+
+<span class="nc" id="L106">        final String authorization = context.request().getHeader(HttpHeaders.AUTHORIZATION);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (authorization == null) {</span>
+<span class="nc" id="L108">            context.next();</span>
+<span class="nc" id="L109">            return;</span>
+        }
+
+<span class="nc" id="L112">        LOG.debug(&quot;context={} authorization={}&quot;, context, authorization);</span>
+
+<span class="nc" id="L114">        final HttpClientRequest authorizationRequest = httpClient.post(Conversions.toRequestOptions(authorizationEndpoint.resolve(&quot;/check&quot;)), authorizationResponse -&gt; {</span>
+<span class="nc" id="L115">            LOG.debug(&quot;statusCode={}&quot;, authorizationResponse.statusCode());</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (authorizationResponse.statusCode() == 204) {</span>
+<span class="nc" id="L117">                context.put(&quot;client_authorized&quot;, true);</span>
+<span class="nc" id="L118">                context.next();</span>
+            } else {
+<span class="nc" id="L120">                authorizationResponse.headers().forEach(h -&gt; stripTransferEncodingAndLength(context.response(), h));</span>
+<span class="nc" id="L121">                authorizationResponse.bodyHandler(body -&gt; {</span>
+<span class="nc" id="L122">                    context.response().setStatusCode(authorizationResponse.statusCode())</span>
+<span class="nc" id="L123">                        .setStatusMessage(authorizationResponse.statusMessage())</span>
+<span class="nc" id="L124">                        .setChunked(false)</span>
+<span class="nc" id="L125">                        .end(body);</span>
+<span class="nc" id="L126">                    LOG.debug(&quot;response={}&quot;, body);</span>
+<span class="nc" id="L127">                });</span>
+            }
+<span class="nc" id="L129">        });</span>
+<span class="nc" id="L130">        final JsonObject checkRequest = new JsonObject();</span>
+<span class="nc" id="L131">        checkRequest.put(&quot;authorization&quot;, authorization);</span>
+<span class="nc" id="L132">        checkRequest.put(&quot;origin&quot;, originUri.toASCIIString());</span>
+<span class="nc" id="L133">        LOG.debug(&quot;checkRequest={}&quot;, checkRequest);</span>
+<span class="nc" id="L134">        gatewayClientAuthorization.gatewayRequest(authorizationRequest)</span>
+<span class="nc" id="L135">            .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)</span>
+<span class="nc" id="L136">            .putHeader(HttpHeaders.ACCEPT, APPLICATION_JSON)</span>
+<span class="nc" id="L137">            .end(checkRequest.toBuffer());</span>
+<span class="nc" id="L138">        context.request().pause();</span>
+
+<span class="nc" id="L140">    }</span>
+
+    /**
+     * Register this but also register the {@link CorsHandler}. The
+     * {@link CorsHandler} will deal with the normal CORS headers after it has been
+     * processed initially by this handler. {@inheritDoc}
+     */
+    @Override
+    public void register(final Router router) {
+
+<span class="fc" id="L150">        router.route().handler(this);</span>
+
+<span class="fc" id="L152">        router.route().handler(CorsHandler.create(&quot;.+&quot;)</span>
+<span class="fc" id="L153">            .maxAgeSeconds(600)</span>
+<span class="fc" id="L154">            .allowedMethod(HttpMethod.GET)</span>
+<span class="fc" id="L155">            .allowedMethod(HttpMethod.POST)</span>
+<span class="fc" id="L156">            .allowedMethod(HttpMethod.PUT)</span>
+<span class="fc" id="L157">            .allowedMethod(HttpMethod.DELETE)</span>
+<span class="fc" id="L158">            .allowedMethod(HttpMethod.OPTIONS)</span>
+<span class="fc" id="L159">            .allowedHeader(&quot;Content-Type&quot;)</span>
+<span class="fc" id="L160">            .allowedHeader(&quot;Accept&quot;)</span>
+<span class="fc" id="L161">            .allowedHeader(&quot;Accept-Language&quot;)</span>
+<span class="fc" id="L162">            .allowedHeader(&quot;Authorization&quot;));</span>
+
+<span class="fc" id="L164">    }</span>
+
+    private void stripTransferEncodingAndLength(final HttpServerResponse contextResponse,
+        final Map.Entry&lt;String, String&gt; h) {
+
+<span class="nc bnc" id="L169" title="All 4 branches missed.">        if (&quot;Content-Length&quot;.equalsIgnoreCase(h.getKey()) || &quot;Transfer-Encoding&quot;.equalsIgnoreCase(h.getKey())) {</span>
+<span class="nc" id="L170">            return;</span>
+        }
+<span class="nc" id="L172">        contextResponse.putHeader(h.getKey(), h.getValue());</span>
+<span class="nc" id="L173">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

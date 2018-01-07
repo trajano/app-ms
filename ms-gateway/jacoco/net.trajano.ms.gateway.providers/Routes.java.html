@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Routes.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.providers</a> &gt; <span class="el_source">Routes.java</span></div><h1>Routes.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.providers;
+
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
+
+import java.net.URI;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.stereotype.Component;
+
+import io.vertx.ext.web.Router;
+import net.trajano.ms.gateway.handlers.SelfRegisteringRoutingContextHandler;
+import net.trajano.ms.gateway.internal.ContextSettingHandler;
+
+/**
+ * Configures the routes on the gateway.
+ *
+ * @author Archimedes Trajano
+ */
+@Component
+<span class="fc" id="L28">public class Routes {</span>
+
+    public static final String CONTEXT_PROTECTED = &quot;protected&quot;;
+
+    /**
+     * Logger.
+     */
+<span class="fc" id="L35">    private static final Logger LOG = LoggerFactory.getLogger(Routes.class);</span>
+
+    @Value(&quot;${http.defaultBodyLimit:-1}&quot;)
+    private long defaultBodyLimit;
+
+    @Autowired
+    private ConfigurableEnvironment env;
+
+    @Autowired
+    private List&lt;SelfRegisteringRoutingContextHandler&gt; handlers;
+
+    /**
+     * Path that renders the JWKS used by the gateway.
+     */
+    @Value(&quot;${jwks.path}&quot;)
+    private String jwksPath;
+
+    /**
+     * Source JWKS URI used by the gateway.
+     */
+    @Value(&quot;${jwks.source}&quot;)
+    private URI jwksSourceURI;
+
+    @Autowired
+    private Router router;
+
+    @PostConstruct
+    public void registerHandlers() {
+        // Register the context setting handlers
+
+<span class="fc" id="L65">        int i = 0;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        while (env.containsProperty(String.format(&quot;routes[%d].from&quot;, i))) {</span>
+
+<span class="fc" id="L68">            final String from = env.getProperty(String.format(&quot;routes[%d].from&quot;, i));</span>
+<span class="fc" id="L69">            final URI to = env.getProperty(String.format(&quot;routes[%d].to&quot;, i), URI.class);</span>
+<span class="fc" id="L70">            final boolean protectedRoute = env.getProperty(String.format(&quot;routes[%d].protected&quot;, i), Boolean.class, true);</span>
+<span class="fc" id="L71">            final long limit = env.getProperty(String.format(&quot;routes[%d].limit&quot;, i), Long.class, defaultBodyLimit);</span>
+<span class="fc" id="L72">            final boolean exact = env.getProperty(String.format(&quot;routes[%d].exact&quot;, i), Boolean.class, false);</span>
+<span class="fc" id="L73">            final boolean onlyGetJson = env.getProperty(String.format(&quot;routes[%d].onlyGetGson&quot;, i), Boolean.class, false);</span>
+
+<span class="fc" id="L75">            String wildcard = &quot;/*&quot;;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if (exact) {</span>
+<span class="fc" id="L77">                wildcard = &quot;&quot;;</span>
+            }
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">            if (onlyGetJson) {</span>
+                // Special case when only JSON is wanted.  Primarily for reference requests.
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                if (protectedRoute) {</span>
+<span class="nc" id="L83">                    LOG.info(&quot;get JSON from={} to={}, protected, exact={}&quot;, from, to, exact);</span>
+<span class="nc" id="L84">                    router.get(from + wildcard)</span>
+<span class="nc" id="L85">                        .produces(APPLICATION_JSON)</span>
+<span class="nc" id="L86">                        .handler(new ContextSettingHandler(true, from, to, limit));</span>
+                } else {
+<span class="nc" id="L88">                    LOG.info(&quot;get JSON from={} to={}, unprotected, exact={}&quot;, from, to, exact);</span>
+<span class="nc" id="L89">                    router.get(from + wildcard)</span>
+<span class="nc" id="L90">                        .produces(APPLICATION_JSON)</span>
+<span class="nc" id="L91">                        .handler(new ContextSettingHandler(false, from, to, limit));</span>
+                }
+            } else {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                if (protectedRoute) {</span>
+<span class="fc" id="L95">                    LOG.info(&quot;route from={} to={}, protected, exact={}&quot;, from, to, exact);</span>
+<span class="fc" id="L96">                    router.route(from + wildcard)</span>
+<span class="fc" id="L97">                        .handler(new ContextSettingHandler(true, from, to, limit));</span>
+                } else {
+<span class="fc" id="L99">                    LOG.info(&quot;route from={} to={}, unprotected, exact={}&quot;, from, to, exact);</span>
+<span class="fc" id="L100">                    router.route(from + wildcard)</span>
+<span class="fc" id="L101">                        .handler(new ContextSettingHandler(false, from, to, limit));</span>
+                }
+            }
+<span class="fc" id="L104">            ++i;</span>
+<span class="fc" id="L105">        }</span>
+
+<span class="fc" id="L107">        router.get(jwksPath)</span>
+<span class="fc" id="L108">            .produces(APPLICATION_JSON)</span>
+<span class="fc" id="L109">            .handler(new ContextSettingHandler(false, jwksPath, jwksSourceURI, defaultBodyLimit));</span>
+
+        // Register the actual handlers
+<span class="fc" id="L112">        handlers.forEach(h -&gt; {</span>
+<span class="fc" id="L113">            LOG.debug(&quot;Registering {} #{} to {}&quot;, h, h.getClass().getAnnotation(Order.class).value(), router);</span>
+<span class="fc" id="L114">            h.register(router);</span>
+<span class="fc" id="L115">        });</span>
+<span class="fc" id="L116">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

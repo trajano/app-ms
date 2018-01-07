@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.spring</a> &gt; <span class="el_source">SpringConfiguration.java</span></div><h1>SpringConfiguration.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.spring;
+
+import java.util.Collections;
+
+import org.springframework.beans.factory.config.CustomScopeConfigurer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
+import io.swagger.jackson.SwaggerModule;
+import io.vertx.core.json.Json;
+
+@Configuration
+<span class="fc" id="L17">public class SpringConfiguration {</span>
+
+    @Bean
+    public static CustomScopeConfigurer customScopeConfigurer(final ContainerRequestScope scope) {
+
+<span class="fc" id="L22">        final CustomScopeConfigurer configurer = new CustomScopeConfigurer();</span>
+
+<span class="fc" id="L24">        configurer.setScopes(Collections.singletonMap(&quot;request&quot;, scope));</span>
+<span class="fc" id="L25">        return configurer;</span>
+    }
+
+    @Bean
+    public static ContainerRequestScope requestScope() {
+
+<span class="fc" id="L31">        return new ContainerRequestScope();</span>
+    }
+
+    /**
+     * This {@link ObjectMapper} sets up Jackson for some common defaults. This
+     * utilizes Vert.x mapper to support their json objects in addition it will
+     * prevent &lt;code&gt;null&lt;/code&gt; from being put into a resulting JSON.
+     *
+     * @return configured object mapper
+     */
+    @Bean
+    public ObjectMapper objectMapper() {
+
+<span class="fc" id="L44">        return Json.mapper.copy()</span>
+<span class="fc" id="L45">            .registerModule(new SwaggerModule())</span>
+<span class="fc" id="L46">            .registerModule(new JaxbAnnotationModule())</span>
+<span class="fc" id="L47">            .setSerializationInclusion(JsonInclude.Include.NON_NULL);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CachedDataProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.beans</a> &gt; <span class="el_source">CachedDataProvider.java</span></div><h1>CachedDataProvider.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.beans;
+
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.InternalServerErrorException;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKey;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jwk.RsaJwkGenerator;
+import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.jose4j.lang.JoseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import net.trajano.ms.core.NonceOps;
+import net.trajano.ms.spi.CacheNames;
+
+@Component
+<span class="fc" id="L31">public class CachedDataProvider implements</span>
+    NonceOps {
+
+<span class="fc" id="L34">    private static final Logger LOG = LoggerFactory.getLogger(CachedDataProvider.class);</span>
+
+    /**
+     * Maximum number of keys to keep in the cache.
+     */
+    public static final int MAX_NUMBER_OF_KEYS = 5;
+
+    public static final int MIN_NUMBER_OF_KEYS = 2;
+
+    @Autowired(required = false)
+    private CacheManager cm;
+
+    /**
+     * This is a cache of JWKs. If this is not provided a default one is used.
+     */
+    private Cache jwksCache;
+
+    /**
+     * This is a cache of nonce. If this is not provided a default one is used.
+     */
+    private Cache nonceCache;
+
+    @Autowired
+    private TokenGenerator tokenGenerator;
+
+    public JwtConsumer buildConsumer() {
+
+<span class="nc" id="L61">        return buildConsumer(null, null);</span>
+    }
+
+    public JwtConsumer buildConsumer(final HttpsJwks jwks,
+        final List&lt;String&gt; audience) {
+
+<span class="fc" id="L67">        final JwtConsumerBuilder builder = new JwtConsumerBuilder()</span>
+<span class="fc" id="L68">            .setRequireJwtId();</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (jwks != null) {</span>
+<span class="nc" id="L70">            builder</span>
+<span class="nc" id="L71">                .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(jwks));</span>
+        } else {
+<span class="fc" id="L73">            builder.setSkipSignatureVerification();</span>
+        }
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (audience != null) {</span>
+<span class="fc" id="L76">            builder</span>
+<span class="fc" id="L77">                .setExpectedAudience(audience.toArray(new String[audience.size()]));</span>
+        } else {
+<span class="nc" id="L79">            builder.setSkipDefaultAudienceValidation();</span>
+        }
+<span class="fc" id="L81">        return builder.build();</span>
+    }
+
+    /**
+     * Builds JWKS if necessary after 60 seconds, but only builds
+     * {@value #MIN_NUMBER_OF_KEYS} at a time.
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void buildJwks() {
+
+<span class="fc" id="L91">        int nCreated = 0;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (int i = 0; i &lt; MAX_NUMBER_OF_KEYS; ++i) {</span>
+<span class="fc" id="L93">            final String cacheKey = String.valueOf(i);</span>
+<span class="fc" id="L94">            final JsonWebKey jwk = jwksCache.get(cacheKey, JsonWebKey.class);</span>
+<span class="pc bpc" id="L95" title="1 of 4 branches missed.">            if (jwk == null &amp;&amp; nCreated &lt; MIN_NUMBER_OF_KEYS) {</span>
+<span class="fc" id="L96">                final RsaJsonWebKey newJwk = buildNewRsaKey();</span>
+<span class="fc" id="L97">                jwksCache.putIfAbsent(cacheKey, newJwk);</span>
+<span class="fc" id="L98">                ++nCreated;</span>
+<span class="fc" id="L99">                LOG.debug(&quot;Created new JWK kid={}&quot;, newJwk.getKeyId());</span>
+            }
+        }
+
+<span class="fc" id="L103">    }</span>
+
+    private RsaJsonWebKey buildNewRsaKey() {
+
+        try {
+<span class="fc" id="L108">            final RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);</span>
+<span class="fc" id="L109">            rsaJsonWebKey.setKeyId(tokenGenerator.newToken());</span>
+<span class="fc" id="L110">            rsaJsonWebKey.setAlgorithm(AlgorithmIdentifiers.RSA_USING_SHA512);</span>
+<span class="fc" id="L111">            rsaJsonWebKey.setUse(&quot;sig&quot;);</span>
+<span class="fc" id="L112">            return rsaJsonWebKey;</span>
+<span class="nc" id="L113">        } catch (final JoseException e) {</span>
+<span class="nc" id="L114">            throw new InternalServerErrorException(e);</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean claimNonce(final String nonce) {
+
+<span class="fc" id="L124">        final Boolean value = nonceCache.get(nonce, Boolean.class);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (value == null) {</span>
+<span class="fc" id="L126">            return false;</span>
+        } else {
+<span class="fc" id="L128">            nonceCache.evict(nonce);</span>
+<span class="fc" id="L129">            return value;</span>
+        }
+    }
+
+    /**
+     * Gets a single signing key.
+     *
+     * @return an RSA web key that supports signing.
+     */
+    public RsaJsonWebKey getASigningKey() {
+
+<span class="fc" id="L140">        final JsonWebKeySet keySet = getKeySet();</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (LOG.isDebugEnabled()) {</span>
+<span class="fc" id="L142">            LOG.debug(keySet.toJson());</span>
+        }
+<span class="fc" id="L144">        return (RsaJsonWebKey) keySet.findJsonWebKey(null, &quot;RSA&quot;, &quot;sig&quot;, null);</span>
+    }
+
+    private Cache getCache(final String cacheName) {
+
+<span class="fc" id="L149">        Cache cache = cm.getCache(CacheNames.JWKS);</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (cache == null) {</span>
+<span class="nc" id="L151">            LOG.warn(&quot;A no cache named {} was not provided by the cache manager an in-memory cache will be used&quot;, cacheName);</span>
+<span class="nc" id="L152">            cache = new ConcurrentMapCacheManager(cacheName).getCache(cacheName);</span>
+        }
+<span class="fc" id="L154">        return cache;</span>
+
+    }
+
+    /**
+     * Builds the keys from the cache.
+     *
+     * @return
+     */
+    public JsonWebKeySet getKeySet() {
+
+<span class="fc" id="L165">        final JsonWebKeySet set = new JsonWebKeySet();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (int i = 0; i &lt; MAX_NUMBER_OF_KEYS; ++i) {</span>
+<span class="fc" id="L167">            final String cacheKey = String.valueOf(i);</span>
+<span class="fc" id="L168">            final JsonWebKey jwk = jwksCache.get(cacheKey, JsonWebKey.class);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">            if (jwk != null) {</span>
+<span class="fc" id="L170">                set.addJsonWebKey(jwk);</span>
+            }
+        }
+<span class="fc" id="L173">        return set;</span>
+    }
+
+    @PostConstruct
+    public void init() {
+
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if (cm == null) {</span>
+<span class="fc" id="L180">            LOG.warn(&quot;A org.springframework.cache.CacheManager was not provided an in-memory cache will be used&quot;);</span>
+<span class="fc" id="L181">            cm = new ConcurrentMapCacheManager(CacheNames.JWKS, CacheNames.NONCE);</span>
+        }
+
+<span class="fc" id="L184">        jwksCache = getCache(CacheNames.JWKS);</span>
+<span class="fc" id="L185">        nonceCache = getCache(CacheNames.NONCE);</span>
+
+<span class="fc" id="L187">        LOG.debug(&quot;jwksCache={} nonceCache={}&quot;, jwksCache, nonceCache);</span>
+<span class="fc" id="L188">        buildJwks();</span>
+<span class="fc" id="L189">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String newNonce() {
+
+<span class="fc" id="L197">        final String nonce = tokenGenerator.newToken();</span>
+<span class="fc" id="L198">        nonceCache.putIfAbsent(nonce, true);</span>
+<span class="fc" id="L199">        return nonce;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

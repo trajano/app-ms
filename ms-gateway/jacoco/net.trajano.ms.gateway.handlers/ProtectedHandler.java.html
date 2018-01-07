@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProtectedHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.handlers</a> &gt; <span class="el_source">ProtectedHandler.java</span></div><h1>ProtectedHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.handlers;
+
+import static io.vertx.core.http.HttpHeaders.AUTHORIZATION;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.vertx.core.http.HttpHeaders.DATE;
+import static java.time.ZoneOffset.UTC;
+import static java.time.ZonedDateTime.now;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_FORM_URLENCODED;
+import static net.trajano.ms.gateway.internal.MediaTypes.APPLICATION_JSON;
+import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import net.trajano.ms.gateway.internal.Predicates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.Errors;
+import net.trajano.ms.gateway.internal.PathContext;
+import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
+import net.trajano.ms.gateway.providers.RequestIDProvider;
+
+@Component
+@Order(SelfRegisteringRoutingContextHandler.CORE_PATHS + 5)
+<span class="fc" id="L46">public class ProtectedHandler extends SelfRegisteringRoutingContextHandler {</span>
+
+    private static final String BEARER_TOKEN_PATTERN = &quot;^Bearer ([A-Za-z0-9]{64})$&quot;;
+
+    private static final String INTERNAL_SERVER_ERROR = &quot;Internal Server Error&quot;;
+
+<span class="fc" id="L52">    private static final Logger LOG = LoggerFactory.getLogger(ProtectedHandler.class);</span>
+
+    private static final String X_JWKS_URI = &quot;X-JWKS-URI&quot;;
+
+    private static final String X_JWT_ASSERTION = &quot;X-JWT-Assertion&quot;;
+
+    private static final String X_JWT_AUDIENCE = &quot;X-JWT-Audience&quot;;
+
+    @Value(&quot;${authorization.endpoint}&quot;)
+    private URI authorizationEndpoint;
+
+    @Autowired
+    private GatewayClientAuthorization gatewayClientAuthorization;
+
+    @Autowired
+    private HttpClient httpClient;
+
+    @Value(&quot;${jwks.path}&quot;)
+    private String jwksPath;
+
+    @Value(&quot;${jwks.uri}&quot;)
+    private URI jwksUri;
+
+    /**
+     * Obtains the access token from the request. It is expected to be the
+     * Authorization with a bearer tag. The authentication code is expected to be a
+     * given pattern.
+     *
+     * @param contextRequest
+     *            request
+     * @return access token
+     */
+    private String getAccessToken(final HttpServerRequest contextRequest) {
+
+<span class="nc" id="L86">        final String authorizationHeader = contextRequest.getHeader(AUTHORIZATION);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (authorizationHeader == null) {</span>
+<span class="nc" id="L88">            return null;</span>
+        }
+<span class="nc" id="L90">        final Matcher m = Pattern.compile(BEARER_TOKEN_PATTERN).matcher(authorizationHeader);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (!m.matches()) {</span>
+<span class="nc" id="L92">            return null;</span>
+        } else {
+<span class="nc" id="L94">            return m.group(1);</span>
+        }
+    }
+
+    /**
+     * This handler goes through the authorization to prepopulate the
+     * X-JWT-Assertion header. There is no need to check if client is authorized
+     * because it was already done by ClientOriginHandler.
+     *
+     * @return handler
+     */
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public void handle(final RoutingContext context) {
+
+<span class="nc" id="L109">        LOG.debug(&quot;Handling {} ended={}&quot;, context, context.request().isEnded());</span>
+        // if null or it is marked as protected then go on.
+<span class="nc" id="L111">        final PathContext pathContext = PathContext.get(context);</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">        if (pathContext == null || !pathContext.isProtected()) {</span>
+<span class="nc" id="L113">            context.next();</span>
+<span class="nc" id="L114">            return;</span>
+        }
+<span class="nc" id="L116">        LOG.debug(&quot;Handling {} with from={} to={} protected={}&quot;, context, pathContext.getFrom(), pathContext.getTo(), pathContext.isProtected());</span>
+
+<span class="nc" id="L118">        final String baseUri = pathContext.getFrom();</span>
+
+<span class="nc" id="L120">        final HttpServerRequest contextRequest = context.request();</span>
+<span class="nc" id="L121">        final HttpServerResponse contextResponse = context.response();</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (!contextRequest.uri().startsWith(baseUri)) {</span>
+<span class="nc" id="L124">            throw new IllegalStateException(contextRequest.uri() + &quot; did not start with&quot; + baseUri);</span>
+        }
+
+<span class="nc" id="L127">        final String accessToken = getAccessToken(contextRequest);</span>
+
+<span class="nc" id="L129">        final String requestID = context.get(RequestIDProvider.REQUEST_ID);</span>
+<span class="nc" id="L130">        final String now = RFC_1123_DATE_TIME.format(now(UTC));</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (accessToken == null) {</span>
+<span class="nc" id="L133">            LOG.debug(&quot;missing or invalid access token&quot;);</span>
+<span class="nc" id="L134">            contextResponse</span>
+<span class="nc" id="L135">                .setStatusCode(401)</span>
+<span class="nc" id="L136">                .setStatusMessage(&quot;Unauthorized&quot;)</span>
+<span class="nc" id="L137">                .putHeader(&quot;WWW-Authenticate&quot;, &quot;Bearer&quot;)</span>
+<span class="nc" id="L138">                .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)</span>
+<span class="nc" id="L139">                .end(Errors.unauthorizedClient(&quot;missing or invalid access token&quot;).toBuffer());</span>
+<span class="nc" id="L140">            return;</span>
+        }
+
+<span class="nc" id="L143">        final HttpClientRequest authorizationRequest = httpClient</span>
+<span class="nc" id="L144">            .post(Conversions.toRequestOptions(authorizationEndpoint.resolve(&quot;/token&quot;)))</span>
+<span class="nc" id="L145">            .handler(authorizationResponse -&gt; {</span>
+<span class="nc" id="L146">                LOG.debug(&quot;ended={}&quot;, contextRequest.isEnded());</span>
+<span class="nc" id="L147">                authorizationResponse.bodyHandler(buffer -&gt; {</span>
+<span class="nc" id="L148">                    LOG.debug(&quot;isended={}&quot;, contextRequest.isEnded());</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                    if (authorizationResponse.statusCode() != 200) {</span>
+<span class="nc" id="L150">                        StreamSupport.stream(authorizationResponse.headers().spliterator(), false)</span>
+<span class="nc" id="L151">                            .filter(Predicates.STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING)</span>
+<span class="nc" id="L152">                            .forEach(h -&gt; contextResponse.putHeader(h.getKey(), h.getValue()));</span>
+<span class="nc" id="L153">                        contextResponse.setStatusCode(authorizationResponse.statusCode())</span>
+<span class="nc" id="L154">                            .setStatusMessage(authorizationResponse.statusMessage())</span>
+<span class="nc" id="L155">                            .setChunked(false)</span>
+<span class="nc" id="L156">                            .end(buffer);</span>
+                    } else {
+<span class="nc" id="L158">                        final JsonObject response = new JsonObject(buffer);</span>
+<span class="nc" id="L159">                        final String idToken = response.getString(&quot;id_token&quot;);</span>
+
+<span class="nc" id="L161">                        final List&lt;String&gt; audience = response.getJsonArray(&quot;aud&quot;).getList();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                        if (idToken == null) {</span>
+<span class="nc" id="L163">                            LOG.error(&quot;Unable to get the ID Token from {} given access_token={}&quot;, authorizationEndpoint, accessToken);</span>
+<span class="nc" id="L164">                            context.response().setStatusCode(500)</span>
+<span class="nc" id="L165">                                .setStatusMessage(INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L166">                                .putHeader(CONTENT_TYPE, APPLICATION_JSON)</span>
+<span class="nc" id="L167">                                .end(Errors.serverError(&quot;Unable to get assertion from authorization endpoint&quot;).toBuffer());</span>
+<span class="nc" id="L168">                            return;</span>
+                        }
+
+<span class="nc" id="L171">                        final Map&lt;String, String&gt; securityMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L172">                        securityMap.put(X_JWT_ASSERTION, idToken);</span>
+<span class="nc" id="L173">                        securityMap.put(X_JWKS_URI, jwksUri.toASCIIString());</span>
+<span class="nc" id="L174">                        securityMap.put(X_JWT_AUDIENCE, audience.stream().collect(Collectors.joining(&quot;, &quot;)));</span>
+<span class="nc" id="L175">                        context.put(&quot;additional_headers&quot;, securityMap);</span>
+<span class="nc" id="L176">                        contextRequest.resume();</span>
+<span class="nc" id="L177">                        context.next();</span>
+                    }
+<span class="nc" id="L179">                });</span>
+
+<span class="nc" id="L181">            })</span>
+<span class="nc" id="L182">            .exceptionHandler(context::fail);</span>
+
+<span class="nc" id="L184">        gatewayClientAuthorization.gatewayRequest(authorizationRequest)</span>
+<span class="nc" id="L185">            .putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_FORM_URLENCODED)</span>
+<span class="nc" id="L186">            .putHeader(HttpHeaders.ACCEPT, APPLICATION_JSON)</span>
+<span class="nc" id="L187">            .putHeader(REQUEST_ID, requestID)</span>
+<span class="nc" id="L188">            .putHeader(DATE, now)</span>
+<span class="nc" id="L189">            .end(&quot;grant_type=authorization_code&amp;code=&quot; + accessToken);</span>
+<span class="nc" id="L190">        contextRequest.pause();</span>
+<span class="nc" id="L191">        LOG.debug(&quot;access_token={} ended={}&quot;, accessToken, contextRequest.isEnded());</span>
+<span class="nc" id="L192">    }</span>
+
+    @Override
+    public void register(final Router router) {
+
+<span class="fc" id="L197">        router.get().handler(this);</span>
+<span class="fc" id="L198">        router.post().handler(this);</span>
+<span class="fc" id="L199">        router.put().handler(this);</span>
+<span class="fc" id="L200">        router.delete().handler(this);</span>
+<span class="fc" id="L201">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>MDCKeys.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Swagger Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.spi</a> &gt; <span class="el_source">MDCKeys.java</span></div><h1>MDCKeys.java</h1><pre class="source lang-java linenums">package net.trajano.ms.spi;
+
+/**
+ * MDC Keys. These are used by the core API. The service implementation should
+ * populate the {@link org.slf4j.MDC} using the following keys
+ */
+public final class MDCKeys {
+
+    /**
+     * Host name and port.
+     */
+    public static final String HOST = &quot;Host&quot;;
+
+    /**
+     * JWT ID. Represents a client session;
+     */
+    public static final String JWT_ID = &quot;X-JWT-ID&quot;;
+
+    /**
+     * Request ID. Represents a single request coming from the client.
+     */
+    public static final String REQUEST_ID = &quot;X-Request-ID&quot;;
+
+    /**
+     * Request method. Represents the method URI being requested upon.
+     */
+    public static final String REQUEST_METHOD = &quot;X-Request-Method&quot;;
+
+    /**
+     * Request URI. Represents the URI being requested.
+     */
+    public static final String REQUEST_URI = &quot;X-Request-URI&quot;;
+
+    /**
+     * Prevent instantiation of constants class.
+     */
+<span class="fc" id="L37">    private MDCKeys() {</span>
+
+<span class="fc" id="L39">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

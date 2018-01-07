@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxAsynchronousResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.resteasy</a> &gt; <span class="el_source">VertxAsynchronousResponse.java</span></div><h1>VertxAsynchronousResponse.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.resteasy;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.container.CompletionCallback;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.WriterInterceptor;
+
+import org.jboss.resteasy.core.ResourceMethodInvoker;
+import org.jboss.resteasy.core.ServerResponseWriter;
+import org.jboss.resteasy.specimpl.BuiltResponse;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.ext.web.RoutingContext;
+
+public class VertxAsynchronousResponse implements
+    ResteasyAsynchronousResponse {
+
+    /**
+     * Logger.
+     */
+<span class="fc" id="L41">    private static final Logger LOG = LoggerFactory.getLogger(VertxAsynchronousResponse.class);</span>
+
+    private Annotation[] annotations;
+
+<span class="fc" id="L45">    private final AtomicBoolean cancelled = new AtomicBoolean(false);</span>
+
+    /**
+     * Completion callbacks.
+     */
+<span class="fc" id="L50">    private final List&lt;CompletionCallback&gt; completionCallbacks = new LinkedList&lt;&gt;();</span>
+
+<span class="fc" id="L52">    private final AtomicBoolean done = new AtomicBoolean(false);</span>
+
+    private ResourceMethodInvoker invoker;
+
+    /**
+     * RestEasy provider factory.
+     */
+    private final ResteasyProviderFactory providerFactory;
+
+    private final HttpRequest request;
+
+    private ContainerResponseFilter[] responseFilters;
+
+    /**
+     * Vert.X routing context.
+     */
+    private final RoutingContext routingContext;
+
+<span class="fc" id="L70">    private final AtomicBoolean suspended = new AtomicBoolean(true);</span>
+
+    /**
+     * JAX RS Timeout Handler.
+     */
+    private TimeoutHandler timeoutHandler;
+
+<span class="fc" id="L77">    private long timeoutTimerID = -1;</span>
+
+<span class="fc" id="L79">    private final Semaphore writeLock = new Semaphore(1);</span>
+
+    private WriterInterceptor[] writerInterceptors;
+
+    public VertxAsynchronousResponse(final ResteasyProviderFactory providerFactory,
+        final HttpRequest request,
+<span class="fc" id="L85">        final RoutingContext routingContext) {</span>
+
+<span class="fc" id="L87">        this.providerFactory = providerFactory;</span>
+<span class="fc" id="L88">        this.request = request;</span>
+<span class="fc" id="L89">        this.routingContext = routingContext;</span>
+
+<span class="fc" id="L91">    }</span>
+
+    @Override
+    public boolean cancel() {
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (cancelled.getAndSet(true)) {</span>
+<span class="nc" id="L97">            return false;</span>
+        }
+<span class="nc" id="L99">        return sendData(Response.ok(Status.SERVICE_UNAVAILABLE.getReasonPhrase())</span>
+<span class="nc" id="L100">            .status(Status.SERVICE_UNAVAILABLE).build());</span>
+    }
+
+    @Override
+    public boolean cancel(final Date retryAfter) {
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (cancelled.getAndSet(true)) {</span>
+<span class="nc" id="L107">            return false;</span>
+        }
+<span class="nc" id="L109">        return sendData(Response.ok(Status.SERVICE_UNAVAILABLE.getReasonPhrase())</span>
+<span class="nc" id="L110">            .header(HttpHeaders.RETRY_AFTER, retryAfter)</span>
+<span class="nc" id="L111">            .status(Status.SERVICE_UNAVAILABLE).build());</span>
+    }
+
+    @Override
+    public boolean cancel(final int retryAfter) {
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (cancelled.getAndSet(true)) {</span>
+<span class="nc" id="L118">            return false;</span>
+        }
+<span class="nc" id="L120">        return sendData(Response.ok(Status.SERVICE_UNAVAILABLE.getReasonPhrase())</span>
+<span class="nc" id="L121">            .header(HttpHeaders.RETRY_AFTER, retryAfter)</span>
+<span class="nc" id="L122">            .status(Status.SERVICE_UNAVAILABLE).build());</span>
+    }
+
+    /**
+     * Cancels the current timeout timer if defined.
+     */
+    private void cancelTimer() {
+
+<span class="pc bpc" id="L130" title="3 of 4 branches missed.">        if (timeoutTimerID != -1 &amp;&amp; !routingContext.vertx().cancelTimer(timeoutTimerID)) {</span>
+<span class="nc" id="L131">            LOG.error(&quot;Attempted to cancel a timer that does not exist {}&quot;, timeoutTimerID);</span>
+        }
+<span class="fc" id="L133">    }</span>
+
+    @Override
+    public Annotation[] getAnnotations() {
+
+<span class="nc" id="L138">        return annotations;</span>
+    }
+
+    @Override
+    public ResourceMethodInvoker getMethod() {
+
+<span class="nc" id="L144">        return invoker;</span>
+    }
+
+    @Override
+    public ContainerResponseFilter[] getResponseFilters() {
+
+<span class="nc" id="L150">        return responseFilters;</span>
+    }
+
+    @Override
+    public WriterInterceptor[] getWriterInterceptors() {
+
+<span class="nc" id="L156">        return writerInterceptors;</span>
+    }
+
+    private void handleTimeout() {
+
+<span class="nc" id="L161">        LOG.warn(&quot;Timeout has occurred for timerId={}&quot;, timeoutTimerID);</span>
+<span class="nc" id="L162">        timeoutTimerID = -1;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (timeoutHandler != null) {</span>
+<span class="nc" id="L164">            timeoutHandler.handleTimeout(this);</span>
+        }
+
+<span class="nc" id="L167">    }</span>
+
+    /**
+     * {@inheritDoc}. This system supports async HTTP and this is a noop.
+     */
+    @Override
+    public void initialRequestThreadFinished() {
+
+        // does nothing
+<span class="nc" id="L176">    }</span>
+
+    @Override
+    public boolean isCancelled() {
+
+<span class="nc" id="L181">        return cancelled.get();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDone() {
+
+<span class="nc" id="L190">        return done.get();</span>
+    }
+
+    @Override
+    public boolean isSuspended() {
+
+<span class="fc" id="L196">        return suspended.get();</span>
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection&lt;Class&lt;?&gt;&gt; register(final Class&lt;?&gt; callback) {
+
+<span class="nc" id="L207">        return Collections.emptySet();</span>
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map&lt;Class&lt;?&gt;, Collection&lt;Class&lt;?&gt;&gt;&gt; register(final Class&lt;?&gt; callback,
+        final Class&lt;?&gt;... callbacks) {
+
+<span class="nc" id="L219">        return Collections.emptyMap();</span>
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty set.
+     */
+    @Override
+    public Collection&lt;Class&lt;?&gt;&gt; register(final Object callback) {
+
+<span class="nc" id="L230">        return Collections.emptySet();</span>
+    }
+
+    /**
+     * Not used. {@inheritDoc}
+     *
+     * @return empty map.
+     */
+    @Override
+    public Map&lt;Class&lt;?&gt;, Collection&lt;Class&lt;?&gt;&gt;&gt; register(final Object callback,
+        final Object... callbacks) {
+
+<span class="nc" id="L242">        return Collections.emptyMap();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean resume(final Object response) {
+
+<span class="fc" id="L251">        LOG.debug(&quot;Object response received={}&quot;, response);</span>
+<span class="fc" id="L252">        return sendData(response);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean resume(final Throwable response) {
+
+<span class="nc" id="L261">        LOG.debug(&quot;Throwable response received={}&quot;, response);</span>
+<span class="nc" id="L262">        return sendData(response);</span>
+    }
+
+    private boolean sendData(final Object entity) {
+
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">        if (!suspended.getAndSet(false)) {</span>
+<span class="nc" id="L268">            return false;</span>
+        }
+
+        try {
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">            if (!writeLock.tryAcquire()) {</span>
+<span class="nc" id="L273">                LOG.error(&quot;Semaphore locked&quot;, timeoutTimerID);</span>
+<span class="nc" id="L274">                writeLock.acquire();</span>
+            }
+
+            final Response response;
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            if (entity == null) {</span>
+<span class="nc" id="L279">                response = Response.noContent().build();</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">            } else if (entity instanceof Response) {</span>
+<span class="fc" id="L281">                response = (Response) entity;</span>
+            } else {
+<span class="nc" id="L283">                response = Response.ok(entity, invoker.resolveContentType(request, entity)).build();</span>
+            }
+
+<span class="fc" id="L286">            writeResponse(response);</span>
+
+<span class="fc" id="L288">            done.set(true);</span>
+<span class="fc" id="L289">            cancelTimer();</span>
+<span class="pc" id="L290">            completionCallbacks.forEach(callback -&gt; callback.onComplete(null));</span>
+<span class="fc" id="L291">            return true;</span>
+<span class="nc" id="L292">        } catch (final IOException e) {</span>
+<span class="nc" id="L293">            throw new InternalServerErrorException(e);</span>
+<span class="nc" id="L294">        } catch (final InterruptedException e) {</span>
+<span class="nc" id="L295">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L296">            return false;</span>
+        } finally {
+<span class="pc" id="L298">            writeLock.release();</span>
+        }
+    }
+
+    @Override
+    public void setAnnotations(final Annotation[] annotations) {
+
+<span class="nc" id="L305">        this.annotations = annotations;</span>
+<span class="nc" id="L306">    }</span>
+
+    /**
+     * Set the resource method invoker.
+     */
+    @Override
+    public void setMethod(final ResourceMethodInvoker invoker) {
+
+<span class="nc" id="L314">        this.invoker = invoker;</span>
+
+<span class="nc" id="L316">    }</span>
+
+    @Override
+    public void setResponseFilters(final ContainerResponseFilter[] responseFilters) {
+
+<span class="nc" id="L321">        this.responseFilters = responseFilters;</span>
+<span class="nc" id="L322">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean setTimeout(final long time,
+        final TimeUnit unit) {
+
+        try {
+<span class="nc" id="L332">            writeLock.acquire();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            if (!isSuspended()) {</span>
+<span class="nc" id="L334">                return false;</span>
+            }
+<span class="nc" id="L336">            cancelTimer();</span>
+<span class="nc" id="L337">            final long millis = unit.toMillis(time);</span>
+<span class="nc" id="L338">            timeoutTimerID = routingContext.vertx().setTimer(millis, timerId -&gt; handleTimeout());</span>
+<span class="nc" id="L339">            LOG.debug(&quot;New timeout handler created timeoutTimerId={} for {} ms&quot;, timeoutTimerID, millis);</span>
+<span class="nc" id="L340">            return true;</span>
+<span class="nc" id="L341">        } catch (final InterruptedException e) {</span>
+<span class="nc" id="L342">            routingContext.fail(e);</span>
+<span class="nc" id="L343">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L344">            return false;</span>
+        } finally {
+<span class="nc" id="L346">            writeLock.release();</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}.
+     */
+    @Override
+    public void setTimeoutHandler(final TimeoutHandler handler) {
+
+<span class="nc" id="L356">        timeoutHandler = handler;</span>
+
+<span class="nc" id="L358">    }</span>
+
+    @Override
+    public void setWriterInterceptors(final WriterInterceptor[] writerInterceptors) {
+
+<span class="nc" id="L363">        this.writerInterceptors = writerInterceptors;</span>
+
+<span class="nc" id="L365">    }</span>
+
+    /**
+     * Write the response.
+     *
+     * @param response
+     *            response
+     * @throws IOException
+     */
+    private void writeResponse(final Response response) throws IOException {
+
+<span class="fc" id="L376">        ServerResponseWriter.writeNomapResponse((BuiltResponse) response, request, new VertxHttpResponse(routingContext), providerFactory);</span>
+
+<span class="fc" id="L378">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

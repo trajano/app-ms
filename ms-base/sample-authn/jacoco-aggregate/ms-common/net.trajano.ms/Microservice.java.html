@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>Microservice.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample Authentication Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms</a> &gt; <span class="el_source">Microservice.java</span></div><h1>Microservice.java</h1><pre class="source lang-java linenums">package net.trajano.ms;
+
+import static java.lang.String.format;
+
+import java.util.Iterator;
+import java.util.ServiceLoader;
+
+import javax.ws.rs.core.Application;
+
+import org.springframework.boot.Banner.Mode;
+import org.springframework.boot.SpringApplication;
+
+import net.trajano.ms.spi.MicroserviceEngine;
+
+/**
+ * Class used to bootstrap the Microservice engine. This takes a JAX-RS
+ * {@link javax.ws.rs.core.Application} class as the application entry point.
+ * Here is an example of how it is used.
+ *
+ * &lt;pre&gt;
+ * import javax.ws.rs.core.Application;
+ * import org.springframework.boot.autoconfigure.SpringBootApplication;
+ * import net.trajano.ms.Microservice;
+ *
+ * &amp;#64;SpringBootApplication
+ * public class SampleMS extends Application {
+ *
+ *     public static void main(final String[] args) {
+ *
+ *         Microservice.run(SampleMS.class, args);
+ *
+ *     }
+ * }
+ * &lt;/pre&gt;
+ */
+public class Microservice {
+
+    protected static Class&lt;? extends Application&gt; applicationClass;
+
+    /**
+     * Microservice engines to use. Made protected so that it can be altered for
+     * testing.
+     */
+<span class="fc" id="L44">    protected static Iterator&lt;MicroserviceEngine&gt; microserviceEngineIterator = ServiceLoader.load(MicroserviceEngine.class).iterator();</span>
+
+    /**
+     * This returns the application class that was set, may be &lt;code&gt;null&lt;/code&gt;.
+     *
+     * @return the application class.
+     */
+    public static Class&lt;? extends Application&gt; getApplicationClass() {
+
+<span class="fc" id="L53">        return applicationClass;</span>
+    }
+
+    /**
+     * Bootstrap the microservice application.
+     *
+     * @param applicationClass
+     *            JAX-RS Application class
+     * @param extraSources
+     *            extra source classes.
+     * @param args
+     *            command line arguments
+     */
+    public static void run(final Class&lt;? extends Application&gt; applicationClass,
+        final Class&lt;?&gt;[] extraSources,
+        final String... args) {
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!microserviceEngineIterator.hasNext()) {</span>
+<span class="fc" id="L71">            throw new LinkageError(&quot;No MicroserviceEngine was defined&quot;);</span>
+        }
+<span class="fc" id="L73">        final MicroserviceEngine microserviceEngine = microserviceEngineIterator.next();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (microserviceEngineIterator.hasNext()) {</span>
+<span class="fc" id="L75">            throw new LinkageError(format(&quot;Multiple MicroserviceEngine was defined, %s, %s and possibly more&quot;, microserviceEngine, microserviceEngineIterator.next()));</span>
+        }
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (Microservice.applicationClass != null) {</span>
+<span class="fc" id="L78">            throw new LinkageError(&quot;Another Application class has already been registered in this JVM.&quot;);</span>
+        }
+<span class="fc" id="L80">        Microservice.applicationClass = applicationClass;</span>
+
+<span class="fc" id="L82">        final Object[] bootstrapObjects = microserviceEngine.bootstrap();</span>
+<span class="fc" id="L83">        final Object[] sources = new Object[extraSources.length + bootstrapObjects.length];</span>
+
+<span class="fc" id="L85">        System.arraycopy(extraSources, 0, sources, 0, extraSources.length);</span>
+<span class="fc" id="L86">        System.arraycopy(bootstrapObjects, 0, sources, extraSources.length, bootstrapObjects.length);</span>
+
+<span class="fc" id="L88">        final SpringApplication springApplication = new SpringApplication(sources);</span>
+<span class="fc" id="L89">        springApplication.setWebEnvironment(false);</span>
+<span class="fc" id="L90">        springApplication</span>
+<span class="fc" id="L91">            .setBannerMode(Mode.OFF);</span>
+<span class="fc" id="L92">        springApplication.run(args);</span>
+<span class="fc" id="L93">    }</span>
+
+    /**
+     * Bootstrap the microservice application.
+     *
+     * @param applicationClass
+     *            JAX-RS Application class
+     * @param args
+     *            command line arguments
+     */
+    public static void run(final Class&lt;? extends Application&gt; applicationClass,
+        final String... args) {
+
+<span class="fc" id="L106">        run(applicationClass, new Class&lt;?&gt;[0], args);</span>
+<span class="fc" id="L107">    }</span>
+
+    /**
+     * Prevent instantiation. Only use {@link #run(Class, String...)}
+     */
+<span class="fc" id="L112">    protected Microservice() {</span>
+
+<span class="fc" id="L114">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

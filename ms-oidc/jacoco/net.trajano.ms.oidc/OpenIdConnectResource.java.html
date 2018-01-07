@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenIdConnectResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">OpenID Connect</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.oidc</a> &gt; <span class="el_source">OpenIdConnectResource.java</span></div><h1>OpenIdConnectResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.oidc;
+
+import java.net.URI;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.security.PermitAll;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonObject;
+
+import io.swagger.annotations.Api;
+import net.trajano.ms.auth.token.GrantTypes;
+import net.trajano.ms.auth.token.OAuthTokenResponse;
+import net.trajano.ms.core.CryptoOps;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
+import net.trajano.ms.oidc.internal.AuthenticationUriBuilder;
+import net.trajano.ms.oidc.internal.HazelcastConfiguration;
+import net.trajano.ms.oidc.internal.ServerState;
+import net.trajano.ms.oidc.spi.IssuerConfig;
+import net.trajano.ms.oidc.spi.ServiceConfiguration;
+
+@Api
+@Component
+@Path(&quot;/oidc&quot;)
+@PermitAll
+<span class="fc" id="L56">public class OpenIdConnectResource {</span>
+
+    /**
+     * &quot;id_token&quot; key in the ID Token response.
+     */
+    private static final String ID_TOKEN = &quot;id_token&quot;;
+
+<span class="fc" id="L63">    private static final Logger LOG = LoggerFactory.getLogger(OpenIdConnectResource.class);</span>
+
+    @Autowired
+    private AuthenticationUriBuilder authenticationUriBuilder;
+
+    @Value(&quot;${authorization.endpoint}&quot;)
+    private URI authorizationEndpoint;
+
+    @Context
+    private Client client;
+
+    @Autowired
+    private CacheManager cm;
+
+    @Autowired
+    private CryptoOps cryptoOps;
+
+    private Cache serverStateCache;
+
+    @Autowired
+    private ServiceConfiguration serviceConfiguration;
+
+    /**
+     * The state that is passed here is transformed to a JWT before passing to the
+     * OIDC IP.
+     *
+     * @param state
+     *            this is a client level state
+     * @param issuerId
+     *            issuer
+     * @return a redirect
+     */
+    @Path(&quot;/auth/{issuer_id}&quot;)
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response auth(@FormParam(&quot;state&quot;) final String state,
+        @PathParam(&quot;issuer_id&quot;) final String issuerId,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="fc" id="L102">        return Response.seeOther(authUri(state, issuerId, authorization)).build();</span>
+    }
+
+    @Path(&quot;/auth-uri/{issuer_id}&quot;)
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public URI authUri(@QueryParam(&quot;state&quot;) final String state,
+        @PathParam(&quot;issuer_id&quot;) final String issuerId,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="fc" id="L112">        getRedirectUri(authorization);</span>
+<span class="fc" id="L113">        return authenticationUriBuilder.build(state, issuerId, authorization, new JwtClaims());</span>
+    }
+
+    @Path(&quot;/auth-info/{issuer_id}&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject authUriJson(@QueryParam(&quot;state&quot;) final String state,
+        @PathParam(&quot;issuer_id&quot;) final String issuerId,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="fc" id="L123">        final JsonObject uriObject = new JsonObject();</span>
+<span class="fc" id="L124">        uriObject.addProperty(&quot;uri&quot;, authUri(state, issuerId, authorization).toASCIIString());</span>
+<span class="fc" id="L125">        return uriObject;</span>
+    }
+
+    @Path(&quot;/cb/{issuer_id}&quot;)
+    @GET
+    public Response callback(@QueryParam(&quot;code&quot;) final String code,
+        @QueryParam(&quot;state&quot;) final String jwtState,
+        @PathParam(&quot;issuer_id&quot;) final String issuerId) throws MalformedClaimException {
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (issuerId == null) {</span>
+<span class="nc" id="L135">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Missing issuer_id&quot;);</span>
+        }
+<span class="nc" id="L137">        final IssuerConfig issuerConfig = serviceConfiguration.getIssuerConfig(issuerId);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (issuerConfig == null) {</span>
+<span class="nc" id="L139">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Invalid issuer_id&quot;);</span>
+        }
+
+<span class="nc" id="L142">        final ServerState serverState = serverStateCache.get(jwtState, ServerState.class);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (serverState == null) {</span>
+<span class="nc" id="L144">            throw ErrorResponses.badRequest(ErrorCodes.INVALID_REQUEST, &quot;Invalid state&quot;);</span>
+        }
+
+<span class="nc" id="L147">        final URI redirectUri = UriBuilder.fromUri(serviceConfiguration.getRedirectUri()).path(issuerId).build();</span>
+<span class="nc" id="L148">        final Form form = new Form();</span>
+<span class="nc" id="L149">        form.param(&quot;redirect_uri&quot;, redirectUri.toASCIIString());</span>
+<span class="nc" id="L150">        form.param(&quot;grant_type&quot;, GrantTypes.AUTHORIZATION_CODE);</span>
+<span class="nc" id="L151">        form.param(&quot;code&quot;, code);</span>
+<span class="nc" id="L152">        final OpenIdConfiguration openIdConfiguration = issuerConfig.getOpenIdConfiguration();</span>
+<span class="nc" id="L153">        final URI tokenEndpoint = openIdConfiguration.getTokenEndpoint();</span>
+<span class="nc" id="L154">        final Response clientResponse = client.target(tokenEndpoint)</span>
+<span class="nc" id="L155">            .request(MediaType.APPLICATION_JSON)</span>
+<span class="nc" id="L156">            .header(HttpHeaders.AUTHORIZATION, issuerConfig.buildAuthorization())</span>
+<span class="nc" id="L157">            .post(Entity.form(form));</span>
+<span class="nc" id="L158">        final JsonObject openIdToken = clientResponse.readEntity(JsonObject.class);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (clientResponse.getStatus() != Status.OK.getStatusCode()) {</span>
+<span class="nc" id="L160">            LOG.error(&quot;Received = {} from {}&quot;, openIdToken, tokenEndpoint);</span>
+<span class="nc" id="L161">            throw ErrorResponses.internalServerError(&quot;server unable to get id_token&quot;);</span>
+        }
+
+<span class="nc" id="L164">        final JwtClaims idTokenClaims = cryptoOps.toClaimsSet(openIdToken.get(ID_TOKEN).getAsString(), openIdConfiguration.getHttpsJwks());</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (!serverState.getNonce().equals(idTokenClaims.getStringClaimValue(&quot;nonce&quot;))) {</span>
+<span class="nc" id="L166">            throw ErrorResponses.internalServerError(&quot;nonce did not match&quot;);</span>
+        }
+
+        // Add additional claims but throw an error if it already exists.
+<span class="nc" id="L170">        serverState.getAdditionalClaims().getClaimsMap()</span>
+<span class="nc" id="L171">            .forEach((k,</span>
+                v) -&gt; {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                if (idTokenClaims.hasClaim(k)) {</span>
+<span class="nc" id="L174">                    throw new InternalServerErrorException(&quot;The claim &quot; + k + &quot; already exists from the IP&quot;);</span>
+                } else {
+<span class="nc" id="L176">                    idTokenClaims.setClaim(k, v);</span>
+                }
+<span class="nc" id="L178">            });</span>
+
+<span class="nc" id="L180">        final Form storeInternalForm = new Form();</span>
+<span class="nc" id="L181">        storeInternalForm.param(&quot;grant_type&quot;, GrantTypes.JWT_ASSERTION);</span>
+<span class="nc" id="L182">        storeInternalForm.param(&quot;assertion&quot;, cryptoOps.sign(idTokenClaims));</span>
+<span class="nc" id="L183">        storeInternalForm.param(&quot;aud&quot;, issuerConfig.getClientId());</span>
+
+<span class="nc" id="L185">        final OAuthTokenResponse tokenResponse = client.target(authorizationEndpoint).path(&quot;/token&quot;).request(MediaType.APPLICATION_JSON)</span>
+<span class="nc" id="L186">            .header(HttpHeaders.AUTHORIZATION, serverState.getClientCredentials())</span>
+<span class="nc" id="L187">            .post(Entity.form(storeInternalForm), OAuthTokenResponse.class);</span>
+
+        final URI newUri;
+<span class="nc" id="L190">        final URI redirectUri1 = getRedirectUri(serverState.getClientCredentials());</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (tokenResponse.isExpiring()) {</span>
+<span class="nc" id="L192">            newUri = UriBuilder</span>
+<span class="nc" id="L193">                .fromUri(redirectUri1)</span>
+<span class="nc" id="L194">                .fragment(&quot;state={state}&amp;access_token={access_token}&amp;refresh_token={refresh_token}&amp;token_type={token_type}&amp;expires_in={expires_in}&quot;)</span>
+<span class="nc" id="L195">                .build(serverState.getClientState(),</span>
+<span class="nc" id="L196">                    tokenResponse.getAccessToken(),</span>
+<span class="nc" id="L197">                    tokenResponse.getRefreshToken(),</span>
+<span class="nc" id="L198">                    tokenResponse.getTokenType(),</span>
+<span class="nc" id="L199">                    tokenResponse.getExpiresIn());</span>
+        } else {
+<span class="nc" id="L201">            newUri = UriBuilder</span>
+<span class="nc" id="L202">                .fromUri(redirectUri1)</span>
+<span class="nc" id="L203">                .fragment(&quot;state={state}&amp;access_token={access_token}&amp;refresh_token={refresh_token}&amp;token_type={token_type}&quot;)</span>
+<span class="nc" id="L204">                .build(serverState.getClientState(),</span>
+<span class="nc" id="L205">                    tokenResponse.getAccessToken(),</span>
+<span class="nc" id="L206">                    tokenResponse.getRefreshToken(),</span>
+<span class="nc" id="L207">                    tokenResponse.getTokenType());</span>
+        }
+<span class="nc" id="L209">        return Response.temporaryRedirect(newUri).build();</span>
+
+    }
+
+    /**
+     * Gets the redirect URI from authorization endpoint.
+     *
+     * @param authorization
+     *            authorization header
+     * @return
+     */
+    private URI getRedirectUri(final String authorization) {
+
+        try {
+<span class="fc" id="L223">            LOG.debug(&quot;Obtaining redirect URI using authorization={}&quot;, authorization);</span>
+<span class="fc" id="L224">            return URI.create(client.target(authorizationEndpoint).path(&quot;/check/openid-redirect-uri&quot;).request(MediaType.TEXT_PLAIN)</span>
+<span class="fc" id="L225">                .header(HttpHeaders.AUTHORIZATION, authorization)</span>
+<span class="fc" id="L226">                .get(String.class));</span>
+<span class="nc" id="L227">        } catch (final BadRequestException e) {</span>
+<span class="nc" id="L228">            throw ErrorResponses.invalidAuthorization();</span>
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+
+<span class="fc" id="L235">        serverStateCache = cm.getCache(HazelcastConfiguration.SERVER_STATE);</span>
+<span class="fc" id="L236">    }</span>
+
+    public void setClient(final Client client) {
+
+<span class="fc" id="L240">        this.client = client;</span>
+<span class="fc" id="L241">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

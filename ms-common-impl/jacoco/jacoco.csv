@@ -1,0 +1,17 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Common Microservice Implementation,net.trajano.ms.vertx,VertxConfig,23,39,1,1,7,13,1,5,0,5
+Common Microservice Implementation,net.trajano.ms.vertx,VertxMicroserviceEngine,67,172,3,5,9,35,5,9,3,7
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,GsonMessageBodyHandler,87,34,14,2,6,7,11,3,3,3
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,RequestIdContextInterceptor,3,10,1,1,1,4,1,2,0,2
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,JsonExceptionMapper,0,193,0,20,0,41,0,17,0,7
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,JwksFromHeaderUriProvider,20,7,4,0,7,2,3,2,1,2
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,JwtSecurityContext,19,27,0,0,6,6,4,1,4,1
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,MDCInterceptor,0,42,1,1,0,8,1,3,0,3
+Common Microservice Implementation,net.trajano.ms.vertx.jaxrs,JwtAssertionInterceptor,80,122,11,9,24,35,10,8,1,7
+Common Microservice Implementation,net.trajano.ms.vertx.beans,JcaCryptoOps,6,73,0,2,2,20,0,5,0,4
+Common Microservice Implementation,net.trajano.ms.vertx.beans,TokenGenerator,0,36,0,2,0,8,0,5,0,4
+Common Microservice Implementation,net.trajano.ms.vertx.beans,DefaultAssertionRequiredPredicate,38,98,14,14,2,14,12,5,0,3
+Common Microservice Implementation,net.trajano.ms.vertx.beans,GsonJacksonJsonOps,20,10,0,0,5,2,2,2,2,2
+Common Microservice Implementation,net.trajano.ms.vertx.beans,JwksRouteHandler,16,3,0,0,4,1,2,1,2,1
+Common Microservice Implementation,net.trajano.ms.vertx.beans,GsonProvider,0,8,0,0,0,2,0,2,0,2
+Common Microservice Implementation,net.trajano.ms.vertx.beans,CachedDataProvider,38,217,6,16,8,55,7,16,1,11

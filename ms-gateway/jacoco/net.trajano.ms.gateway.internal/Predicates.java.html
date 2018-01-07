@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Predicates.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.internal</a> &gt; <span class="el_source">Predicates.java</span></div><h1>Predicates.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.internal;
+
+import static io.vertx.core.http.HttpHeaders.AUTHORIZATION;
+import static io.vertx.core.http.HttpHeaders.CONTENT_LENGTH;
+import static io.vertx.core.http.HttpHeaders.COOKIE;
+import static io.vertx.core.http.HttpHeaders.DATE;
+import static io.vertx.core.http.HttpHeaders.SET_COOKIE;
+import static io.vertx.core.http.HttpHeaders.TRANSFER_ENCODING;
+import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public final class Predicates {
+
+    /**
+     * A header is can be forwarded as long as it is not restricted.
+     * {@link io.vertx.core.http.HttpHeaders#AUTHORIZATION} is restricted unless it
+     * is &quot;Basic&quot; which implies that it is a client authorization that can be passed
+     * down.
+     */
+    public static final Predicate&lt;Map.Entry&lt;String, String&gt;&gt; HEADER_FORWARDABLE;
+
+    /**
+     * The {@link io.vertx.core.http.HttpHeaders#CONTENT_LENGTH} and
+     * {@link io.vertx.core.http.HttpHeaders#TRANSFER_ENCODING} causes problems when
+     * both are sent.
+     */
+    public static final Predicate&lt;Map.Entry&lt;String, String&gt;&gt; STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING;
+
+    /**
+     * Set of restricted headers.
+     */
+    private static final Set&lt;String&gt; RESTRICTED_HEADERS;
+
+    /**
+     * URI that points to the JWKS.
+     */
+    private static final String X_JWKS_URI = &quot;X-JWKS-URI&quot;;
+
+    private static final String X_JWT_ASSERTION = &quot;X-JWT-Assertion&quot;;
+
+    private static final String X_JWT_AUDIENCE = &quot;X-JWT-Audience&quot;;
+
+    static {
+
+<span class="fc" id="L50">        RESTRICTED_HEADERS = Stream.of(X_JWKS_URI, X_JWT_ASSERTION, X_JWT_AUDIENCE, REQUEST_ID, DATE, AUTHORIZATION, COOKIE, SET_COOKIE).map(CharSequence::toString).collect(Collectors.toSet());</span>
+<span class="fc bfc" id="L51" title="All 6 branches covered.">        HEADER_FORWARDABLE = e -&gt; e.getKey().contentEquals(AUTHORIZATION) &amp;&amp; e.getValue().startsWith(&quot;Basic &quot;) || !RESTRICTED_HEADERS.contains(e.getKey());</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        STRIP_CONTENT_LENGTH_AND_TRANSFER_ENCODING = e -&gt; !(e.getKey().contentEquals(CONTENT_LENGTH) || e.getKey().contentEquals(TRANSFER_ENCODING));</span>
+
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Prevent instantiation of utility class.
+     */
+<span class="fc" id="L59">    private Predicates() {</span>
+
+<span class="fc" id="L61">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

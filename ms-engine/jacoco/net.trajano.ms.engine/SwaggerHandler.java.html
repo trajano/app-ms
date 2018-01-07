@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SwaggerHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine</a> &gt; <span class="el_source">SwaggerHandler.java</span></div><h1>SwaggerHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine;
+
+import java.net.URI;
+import java.util.Set;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+
+import org.reflections.Reflections;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.jaxrs.Reader;
+import io.swagger.models.Swagger;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.swagger.ClonableSwagger;
+
+public class SwaggerHandler implements
+    Handler&lt;RoutingContext&gt;,
+    AutoCloseable {
+
+    /**
+     * Convenience method to construct and register the routes to a Vert.x router
+     * with a base Spring application context.
+     *
+     * @param router
+     *            vert.x router
+     * @param applicationClasses
+     *            application classes
+     * @return the handlers
+     */
+    @SafeVarargs
+    public static SwaggerHandler[] multipleRegisterToRouter(final Router router,
+        final Class&lt;? extends Application&gt;... applicationClasses) {
+
+<span class="fc" id="L43">        final SwaggerHandler[] ret = new SwaggerHandler[applicationClasses.length];</span>
+<span class="fc" id="L44">        int i = 0;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (final Class&lt;? extends Application&gt; applicationClass : applicationClasses) {</span>
+<span class="fc" id="L46">            final SwaggerHandler requestHandler = new SwaggerHandler(applicationClass);</span>
+<span class="fc" id="L47">            router.route(requestHandler.baseUriRoute())</span>
+<span class="fc" id="L48">                .useNormalisedPath(true)</span>
+<span class="fc" id="L49">                .handler(requestHandler);</span>
+<span class="fc" id="L50">            ret[i++] = requestHandler;</span>
+        }
+<span class="fc" id="L52">        return ret;</span>
+
+    }
+
+    /**
+     * Convenience method to construct and register a single application route to a
+     * Vert.x router.
+     *
+     * @param router
+     *            vert.x router
+     * @param applicationClass
+     *            application class
+     * @return the handler
+     */
+    public static SwaggerHandler registerToRouter(final Router router,
+        final Class&lt;? extends Application&gt; applicationClass) {
+
+<span class="fc" id="L69">        return multipleRegisterToRouter(router, applicationClass)[0];</span>
+    }
+
+    private final URI baseUri;
+
+    private final ClonableSwagger swagger;
+
+    public SwaggerHandler(
+<span class="fc" id="L77">        final Class&lt;? extends Application&gt; applicationClass) {</span>
+
+<span class="fc" id="L79">        final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (annotation != null) {</span>
+<span class="fc" id="L81">            baseUri = URI.create(annotation.value()).normalize();</span>
+        } else {
+<span class="nc" id="L83">            baseUri = URI.create(&quot;/&quot;);</span>
+        }
+
+        Application application;
+        try {
+<span class="fc" id="L88">            application = applicationClass.newInstance();</span>
+<span class="nc" id="L89">        } catch (InstantiationException</span>
+            | IllegalAccessException e) {
+<span class="nc" id="L91">            throw new ExceptionInInitializerError(e);</span>
+<span class="fc" id="L92">        }</span>
+
+<span class="fc" id="L94">        swagger = new ClonableSwagger();</span>
+<span class="fc" id="L95">        final Reader swaggerReader = new Reader(swagger);</span>
+<span class="fc" id="L96">        final Set&lt;Class&lt;?&gt;&gt; resourceClasses = application.getClasses();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (resourceClasses.isEmpty()) {</span>
+<span class="fc" id="L98">            final String packageName = applicationClass.getPackage().getName();</span>
+<span class="fc" id="L99">            final Reflections reflections = new Reflections(packageName);</span>
+<span class="fc" id="L100">            reflections.getTypesAnnotatedWith(Api.class).forEach(swaggerReader::read);</span>
+<span class="fc" id="L101">            reflections.getTypesAnnotatedWith(SwaggerDefinition.class).forEach(swaggerReader::read);</span>
+<span class="fc" id="L102">        } else {</span>
+<span class="nc" id="L103">            swaggerReader.read(applicationClass);</span>
+<span class="nc" id="L104">            resourceClasses.forEach(swaggerReader::read);</span>
+        }
+
+<span class="fc" id="L107">    }</span>
+
+    /**
+     * The base URI set in {@link ApplicationPath} annotation.
+     *
+     * @return the base URI
+     */
+    public URI baseUri() {
+
+<span class="fc" id="L116">        return baseUri;</span>
+    }
+
+    /**
+     * The route path to the base URI. Basically base URI + &quot;/*&quot;.
+     *
+     * @return The route path to the base URI.
+     */
+    public String baseUriRoute() {
+
+<span class="fc" id="L126">        return baseUri().getPath();</span>
+    }
+
+    @Override
+    public void close() {
+
+        // does nothing.
+<span class="nc" id="L133">    }</span>
+
+    public Swagger getSwagger() {
+
+<span class="fc" id="L137">        return swagger;</span>
+    }
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+        try {
+<span class="fc" id="L144">            context.response().putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L145">                .end(Buffer.buffer(io.swagger.util.Json.mapper()</span>
+<span class="fc" id="L146">                    .writeValueAsBytes(swagger.withRoutingContext(context))));</span>
+<span class="nc" id="L147">        } catch (final JsonProcessingException e) {</span>
+<span class="nc" id="L148">            context.fail(e);</span>
+<span class="fc" id="L149">        }</span>
+<span class="fc" id="L150">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

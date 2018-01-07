@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxClientResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.resteasy</a> &gt; <span class="el_source">VertxClientResponse.java</span></div><h1>VertxClientResponse.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.resteasy;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
+import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpClientRequest;
+import net.trajano.ms.engine.internal.Conversions;
+import net.trajano.ms.engine.internal.VertxBlockingInputStream;
+
+public class VertxClientResponse extends ClientResponse {
+
+<span class="fc" id="L19">    private static final Logger LOG = LoggerFactory.getLogger(VertxClientResponse.class);</span>
+
+    private Throwable exception;
+
+    private final VertxBlockingInputStream is;
+
+    final SemaphoredHeaders&lt;Object&gt; semaphoredHeaders;
+
+    @SuppressWarnings({
+        &quot;unchecked&quot;,
+        &quot;rawtypes&quot;
+    })
+    public VertxClientResponse(final ClientConfiguration configuration,
+        final HttpClientRequest httpClientRequest) {
+
+<span class="fc" id="L34">        super(configuration);</span>
+<span class="fc" id="L35">        semaphoredHeaders = new SemaphoredHeaders&lt;&gt;();</span>
+
+        // Used in the base classes
+<span class="fc" id="L38">        metadata = semaphoredHeaders;</span>
+<span class="fc" id="L39">        is = new VertxBlockingInputStream();</span>
+
+<span class="fc" id="L41">        httpClientRequest.handler(httpClientResponse -&gt; {</span>
+<span class="fc" id="L42">            LOG.debug(&quot;Status = {}&quot;, httpClientResponse.statusCode());</span>
+<span class="fc" id="L43">            setStatus(httpClientResponse.statusCode());</span>
+<span class="fc" id="L44">            final MultiMap headers = httpClientResponse.headers();</span>
+<span class="fc" id="L45">            metadata.putAll((Map) Conversions.toMultivaluedStringMap(headers));</span>
+<span class="fc" id="L46">            httpClientResponse.handler(is::populate)</span>
+<span class="fc" id="L47">                .endHandler(aVoid -&gt; is.end());</span>
+<span class="fc" id="L48">            LOG.trace(&quot;prepared HTTP client response handler&quot;);</span>
+
+<span class="fc" id="L50">            semaphoredHeaders.releaseLock();</span>
+<span class="fc" id="L51">        }).exceptionHandler(e -&gt; {</span>
+<span class="nc" id="L52">            LOG.error(&quot;exception handling response&quot;, e);</span>
+<span class="nc" id="L53">            is.error(e);</span>
+<span class="nc" id="L54">            exception = e;</span>
+<span class="nc" id="L55">            semaphoredHeaders.releaseLock();</span>
+<span class="nc" id="L56">        });</span>
+<span class="fc" id="L57">        LOG.trace(&quot;prepared HTTP client request handler&quot;);</span>
+
+<span class="fc" id="L59">    }</span>
+
+    @Override
+    protected InputStream getInputStream() {
+
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (exception != null) {</span>
+<span class="nc" id="L65">            throw new IllegalStateException(exception);</span>
+        }
+<span class="fc" id="L67">        LOG.trace(&quot;inputStream={}&quot;, is);</span>
+<span class="fc" id="L68">        return is;</span>
+    }
+
+    @Override
+    public int getStatus() {
+
+<span class="nc" id="L74">        semaphoredHeaders.acquireUninterruptibly();</span>
+        try {
+<span class="nc" id="L76">            return super.getStatus();</span>
+        } finally {
+<span class="nc" id="L78">            semaphoredHeaders.releaseLock();</span>
+        }
+    }
+
+    @Override
+    public void releaseConnection() throws IOException {
+
+<span class="fc" id="L85">        LOG.debug(&quot;connection released&quot;);</span>
+
+<span class="fc" id="L87">    }</span>
+
+    @Override
+    protected void setInputStream(final InputStream is) {
+
+<span class="nc" id="L92">        throw new UnsupportedOperationException();</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

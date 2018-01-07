@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigurationProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.providers</a> &gt; <span class="el_source">ConfigurationProvider.java</span></div><h1>ConfigurationProvider.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.providers;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.vertx.core.VertxOptions;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpServerOptions;
+
+@Configuration
+<span class="fc" id="L12">public class ConfigurationProvider {</span>
+
+    @Value(&quot;${http.client.max_pool_size:50}&quot;)
+    private int httpClientMaxPoolSize;
+
+    @Value(&quot;${http.client.proxy.host:#{null}}&quot;)
+    private String httpClientProxyHost;
+
+    @Value(&quot;${http.client.proxy.password:#{null}}&quot;)
+    private String httpClientProxyPassword;
+
+    @Value(&quot;${http.port:8910}&quot;)
+    private int httpPort;
+
+    @Value(&quot;${vertx.warningExceptionTime:1}&quot;)
+    private long vertxWarningExceptionTime;
+
+    @Value(&quot;${vertx.workerPoolSize:50}&quot;)
+    private int vertxWorkerPoolSize;
+
+    @Bean
+    public HttpClientOptions httpClientOptions() {
+
+<span class="fc" id="L35">        return new HttpClientOptions()</span>
+<span class="fc" id="L36">            .setMaxPoolSize(httpClientMaxPoolSize);</span>
+    }
+
+    @Bean
+    public HttpServerOptions httpServerOptions() {
+
+<span class="nc" id="L42">        return new HttpServerOptions()</span>
+<span class="nc" id="L43">            .setCompressionSupported(true)</span>
+<span class="nc" id="L44">            .setPort(httpPort);</span>
+    }
+
+    @Bean
+    public VertxOptions vertxOptions() {
+
+<span class="fc" id="L50">        return new VertxOptions()</span>
+<span class="fc" id="L51">            .setWarningExceptionTime(vertxWarningExceptionTime)</span>
+<span class="fc" id="L52">            .setWorkerPoolSize(vertxWorkerPoolSize);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

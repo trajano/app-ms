@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>Symbol.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="../index.html" class="el_bundle">ms-engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal</a> &gt; <span class="el_source">Symbol.java</span></div><h1>Symbol.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+/**
+ * This provides a &quot;Symbol&quot; instance of an object which can be used as markers.
+ * It provides only two handlers that is equals and hashCode
+ *
+ * @author Archimedes Trajano
+ */
+public final class Symbol
+    implements
+    InvocationHandler {
+
+    /**
+     * A marker interface to indicate that an object is a symbol.
+     */
+    private static interface ISymbol {
+    }
+
+    /**
+     * Checks whether a given object is a symbol.
+     * 
+     * @param o
+     *            object to test
+     * @return true if it is a symbol.
+     */
+    public static boolean isSymbol(final Object o) {
+
+<span class="fc" id="L32">        return o instanceof ISymbol;</span>
+    }
+
+    public static &lt;T&gt; T newSymbol(final Class&lt;T&gt; clazz) {
+
+<span class="fc" id="L37">        return newSymbol(clazz, clazz.getName());</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;T&gt; T newSymbol(final Class&lt;T&gt; clazz,
+        final String name) {
+
+        try {
+<span class="fc" id="L45">            return (T) Proxy.newProxyInstance(Symbol.class.getClassLoader(), new Class[] {</span>
+                clazz,
+                ISymbol.class
+            }, new Symbol(name));
+<span class="fc" id="L49">        } catch (final IllegalArgumentException e) {</span>
+<span class="fc" id="L50">            throw new ExceptionInInitializerError(e);</span>
+        }
+    }
+
+    private final String symbolName;
+
+    /**
+     * Constructs Symbol.
+     *
+     * @param symbolName
+     *            symbol name
+     */
+<span class="fc" id="L62">    private Symbol(final String symbolName) {</span>
+
+<span class="fc" id="L64">        this.symbolName = symbolName;</span>
+<span class="fc" id="L65">    }</span>
+
+    @Override
+    public Object invoke(final Object proxy,
+        final Method method,
+        final Object[] args) throws Throwable {
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (&quot;equals&quot;.equals(method.getName())) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            return proxy == args[0];</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        } else if (&quot;hashCode&quot;.equals(method.getName())) {</span>
+<span class="fc" id="L75">            return symbolName.hashCode();</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        } else if (&quot;toString&quot;.equals(method.getName())) {</span>
+<span class="fc" id="L77">            return symbolName;</span>
+        }
+<span class="fc" id="L79">        throw new UnsupportedOperationException();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

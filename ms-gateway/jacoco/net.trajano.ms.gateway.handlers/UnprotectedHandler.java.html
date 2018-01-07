@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnprotectedHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.handlers</a> &gt; <span class="el_source">UnprotectedHandler.java</span></div><h1>UnprotectedHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.handlers;
+
+import static io.vertx.core.http.HttpHeaders.DATE;
+import static java.time.ZoneOffset.UTC;
+import static java.time.ZonedDateTime.now;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+import static net.trajano.ms.gateway.providers.RequestIDProvider.REQUEST_ID;
+
+import java.util.Map;
+import java.util.stream.StreamSupport;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.RequestOptions;
+import io.vertx.core.streams.Pump;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.PathContext;
+import net.trajano.ms.gateway.internal.Predicates;
+
+@Component
+@Order(SelfRegisteringRoutingContextHandler.CORE_PATHS + 6)
+<span class="fc" id="L32">public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {</span>
+
+    /**
+     * Logger.
+     */
+<span class="fc" id="L37">    private static final Logger LOG = LoggerFactory.getLogger(UnprotectedHandler.class);</span>
+
+    /**
+     * HTTP Client to connect to remote resource.
+     */
+    @Autowired
+    private HttpClient httpClient;
+
+    @Override
+    public void handle(final RoutingContext context) {
+
+        // if null or it is marked as protected then go on.
+<span class="nc" id="L49">        final PathContext pathContext = PathContext.get(context);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (pathContext == null) {</span>
+<span class="nc" id="L51">            context.next();</span>
+<span class="nc" id="L52">            return;</span>
+        }
+
+<span class="nc" id="L55">        LOG.debug(&quot;Handling {} with from={} to={} protected={} ended={}&quot;, context, pathContext.getFrom(), pathContext.getTo(), pathContext.isProtected(), context.request().isEnded());</span>
+
+<span class="nc" id="L57">        final HttpServerRequest contextRequest = context.request();</span>
+
+<span class="nc bnc" id="L59" title="All 4 branches missed.">        contextRequest.setExpectMultipart(context.parsedHeaders().contentType().isPermitted() &amp;&amp; &quot;multipart&quot;.equals(context.parsedHeaders().contentType().component()));</span>
+<span class="nc" id="L60">        final RequestOptions clientRequestOptions = Conversions.toRequestOptions(pathContext.getTo(), contextRequest.uri().substring(pathContext.getFrom().length()));</span>
+
+<span class="nc" id="L62">        final HttpClientRequest clientRequest = httpClient</span>
+<span class="nc" id="L63">            .request(contextRequest.method(), clientRequestOptions, clientResponse -&gt; {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                contextRequest.response().setChunked(clientResponse.getHeader(HttpHeaders.CONTENT_LENGTH) == null)</span>
+<span class="nc" id="L65">                    .setStatusCode(clientResponse.statusCode());</span>
+<span class="nc" id="L66">                clientResponse.headers().forEach(e -&gt; contextRequest.response().putHeader(e.getKey(), e.getValue()));</span>
+<span class="nc" id="L67">                clientResponse.endHandler(v -&gt; contextRequest.response().end());</span>
+<span class="nc" id="L68">                Pump.pump(clientResponse, contextRequest.response()).start();</span>
+<span class="nc" id="L69">            }).exceptionHandler(context::fail)</span>
+<span class="nc" id="L70">            .setChunked(true);</span>
+
+<span class="nc" id="L72">        StreamSupport.stream(contextRequest.headers().spliterator(), false)</span>
+<span class="nc" id="L73">            .filter(Predicates.HEADER_FORWARDABLE)</span>
+<span class="nc" id="L74">            .forEach(e -&gt; clientRequest.putHeader(e.getKey(), e.getValue()));</span>
+
+<span class="nc" id="L76">        clientRequest.putHeader(REQUEST_ID, (String) context.get(REQUEST_ID));</span>
+<span class="nc" id="L77">        clientRequest.putHeader(DATE, RFC_1123_DATE_TIME.format(now(UTC)));</span>
+<span class="nc" id="L78">        final Map&lt;String, String&gt; additionalHeaders = context.get(&quot;additional_headers&quot;);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (additionalHeaders != null) {</span>
+<span class="nc" id="L80">            additionalHeaders.forEach(clientRequest::putHeader);</span>
+        }
+<span class="nc" id="L82">        contextRequest.endHandler(v -&gt; clientRequest.end());</span>
+<span class="nc" id="L83">        Pump.pump(contextRequest, clientRequest).start();</span>
+<span class="nc" id="L84">        contextRequest.resume();</span>
+
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public void register(final Router router) {
+
+<span class="fc" id="L91">        router.get().handler(this);</span>
+<span class="fc" id="L92">        router.post().handler(this);</span>
+<span class="fc" id="L93">        router.put().handler(this);</span>
+<span class="fc" id="L94">        router.delete().handler(this);</span>
+<span class="fc" id="L95">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

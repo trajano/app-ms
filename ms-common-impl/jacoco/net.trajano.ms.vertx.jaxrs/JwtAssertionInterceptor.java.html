@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAssertionInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.jaxrs</a> &gt; <span class="el_source">JwtAssertionInterceptor.java</span></div><h1>JwtAssertionInterceptor.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.jaxrs;
+
+import static net.trajano.ms.core.ErrorCodes.FORBIDDEN;
+import static net.trajano.ms.core.ErrorCodes.UNAUTHORIZED_CLIENT;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.Provider;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+import net.trajano.ms.core.ErrorResponse;
+import net.trajano.ms.spi.MDCKeys;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
+import net.trajano.ms.vertx.beans.DefaultAssertionRequiredPredicate;
+import net.trajano.ms.vertx.beans.JwtAssertionRequiredPredicate;
+import net.trajano.ms.vertx.beans.JwtClaimsProcessor;
+
+/**
+ * This performs assertion check on the header data. It ignores the /jwks and
+ * /swagger URLs which should be publicly accessible.
+ *
+ * @author Archimedes Trajano
+ */
+@Component
+@Provider
+@Priority(Priorities.AUTHORIZATION + 1)
+<span class="fc" id="L51">public class JwtAssertionInterceptor implements</span>
+    ContainerRequestFilter {
+
+<span class="fc" id="L54">    private static final Logger LOG = LoggerFactory.getLogger(JwtAssertionInterceptor.class);</span>
+
+    public static final String X_JWKS_URI = &quot;X-JWKS-URI&quot;;
+
+    public static final String X_JWT_ASSERTION = &quot;X-JWT-Assertion&quot;;
+
+    public static final String X_JWT_AUDIENCE = &quot;X-JWT-Audience&quot;;
+
+    private JwtAssertionRequiredPredicate assertionRequiredPredicate;
+
+    private CachedDataProvider cachedDataProvider;
+
+    private JwtClaimsProcessor claimsProcessor;
+
+    @Autowired(required = false)
+    @Qualifier(&quot;authz.issuer&quot;)
+    private URI issuer;
+
+    /**
+     * JWKS Map
+     */
+<span class="fc" id="L75">    private final ConcurrentMap&lt;String, HttpsJwks&gt; jwks = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Context
+    private ResourceInfo resourceInfo;
+
+    @Override
+    public void filter(final ContainerRequestContext requestContext) {
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (!assertionRequiredPredicate.test(resourceInfo)) {</span>
+<span class="fc" id="L84">            return;</span>
+        }
+<span class="fc" id="L86">        final String assertion = requestContext.getHeaderString(X_JWT_ASSERTION);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (assertion == null) {</span>
+<span class="nc" id="L88">            LOG.warn(&quot;Missing assertion on request for {}&quot;, requestContext.getUriInfo());</span>
+<span class="nc" id="L89">            requestContext.abortWith(Response.status(Status.UNAUTHORIZED)</span>
+<span class="nc" id="L90">                .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)</span>
+<span class="nc" id="L91">                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, &quot;Missing assertion&quot;))</span>
+<span class="nc" id="L92">                .build());</span>
+<span class="nc" id="L93">            return;</span>
+        }
+<span class="fc" id="L95">        LOG.debug(&quot;assertion={}&quot;, assertion);</span>
+
+        final JwtClaims claims;
+        try {
+            HttpsJwks httpsJwks;
+<span class="fc" id="L100">            final String jwksUri = requestContext.getHeaderString(X_JWKS_URI);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (jwksUri == null) {</span>
+<span class="fc" id="L102">                httpsJwks = null;</span>
+            } else {
+<span class="nc" id="L104">                httpsJwks = jwks.get(jwksUri);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                if (httpsJwks == null) {</span>
+<span class="nc" id="L106">                    httpsJwks = new HttpsJwks(jwksUri);</span>
+                }
+            }
+<span class="fc" id="L109">            final List&lt;String&gt; audience = Arrays.asList(requestContext.getHeaderString(X_JWT_AUDIENCE).split(&quot;, &quot;));</span>
+<span class="fc" id="L110">            claims = cachedDataProvider.buildConsumer(httpsJwks, audience).processToClaims(assertion);</span>
+<span class="fc" id="L111">            MDC.put(MDCKeys.JWT_ID, claims.getJwtId());</span>
+<span class="nc" id="L112">        } catch (final InvalidJwtException</span>
+            | MalformedClaimException e) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (LOG.isDebugEnabled()) {</span>
+<span class="nc" id="L115">                LOG.debug(&quot;JWT invalid&quot;, e);</span>
+            } else {
+<span class="nc" id="L117">                LOG.error(&quot;JWT Invalid&quot;);</span>
+            }
+<span class="nc" id="L119">            requestContext.abortWith(Response.status(Status.UNAUTHORIZED)</span>
+<span class="nc" id="L120">                .header(HttpHeaders.WWW_AUTHENTICATE, X_JWT_ASSERTION)</span>
+<span class="nc" id="L121">                .entity(new ErrorResponse(UNAUTHORIZED_CLIENT, &quot;JWT was not valid&quot;))</span>
+<span class="nc" id="L122">                .build());</span>
+<span class="nc" id="L123">            return;</span>
+<span class="fc" id="L124">        }</span>
+
+<span class="fc" id="L126">        requestContext.setSecurityContext(new JwtSecurityContext(claims, requestContext.getUriInfo()));</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (claimsProcessor != null) {</span>
+<span class="fc" id="L128">            final boolean validateClaims = claimsProcessor.apply(claims);</span>
+<span class="fc" id="L129">            LOG.debug(&quot;{}.validateClaims result={}&quot;, claimsProcessor, validateClaims);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if (!validateClaims) {</span>
+<span class="nc" id="L131">                LOG.warn(&quot;Validation of claims failed on request for {}&quot;, requestContext.getUriInfo());</span>
+<span class="nc" id="L132">                requestContext.abortWith(Response.status(Status.FORBIDDEN)</span>
+<span class="nc" id="L133">                    .entity(new ErrorResponse(FORBIDDEN, &quot;Claims validation failed&quot;))</span>
+<span class="nc" id="L134">                    .build());</span>
+            }
+        }
+<span class="fc" id="L137">    }</span>
+
+    @PostConstruct
+    public void init() {
+
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (issuer == null) {</span>
+<span class="fc" id="L143">            LOG.warn(&quot;`authz.issuer` was not specified, will accept any issuer&quot;);</span>
+        }
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (claimsProcessor == null) {</span>
+<span class="fc" id="L146">            LOG.warn(&quot;JwtClaimsProcessor was not defined, will not peform any claims validation&quot;);</span>
+        }
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if (assertionRequiredPredicate == null) {</span>
+<span class="fc" id="L149">            LOG.debug(&quot;assertionRequiredPredicate was not defined, default annotation based predicate will be used&quot;);</span>
+<span class="fc" id="L150">            assertionRequiredPredicate = new DefaultAssertionRequiredPredicate();</span>
+        }
+
+<span class="fc" id="L153">    }</span>
+
+    @Autowired(required = false)
+    public void setAssertionRequiredFunction(final JwtAssertionRequiredPredicate predicate) {
+
+<span class="nc" id="L158">        assertionRequiredPredicate = predicate;</span>
+<span class="nc" id="L159">    }</span>
+
+    @Autowired
+    public void setCachedDataProvider(final CachedDataProvider cachedDataProvider) {
+
+<span class="fc" id="L164">        this.cachedDataProvider = cachedDataProvider;</span>
+<span class="fc" id="L165">    }</span>
+
+    @Autowired(required = false)
+    public void setClaimsProcessor(final JwtClaimsProcessor claimsProcessor) {
+
+<span class="fc" id="L170">        this.claimsProcessor = claimsProcessor;</span>
+<span class="fc" id="L171">    }</span>
+
+    public void setResourceInfo(final ResourceInfo resourceInfo) {
+
+<span class="fc" id="L175">        this.resourceInfo = resourceInfo;</span>
+<span class="fc" id="L176">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

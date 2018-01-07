@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxBeanProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.providers</a> &gt; <span class="el_source">VertxBeanProvider.java</span></div><h1>VertxBeanProvider.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.providers;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Router;
+
+/**
+ * Provides Vertx objects.
+ *
+ * @author Archimedes Trajano
+ */
+@Configuration
+<span class="fc" id="L20">public class VertxBeanProvider {</span>
+
+    @Bean
+    public HttpClient httpClient(final Vertx vertx,
+        final HttpClientOptions httpClientOptions) {
+
+<span class="fc" id="L26">        return vertx.createHttpClient(httpClientOptions);</span>
+    }
+
+    @Bean
+    public HttpServer httpServer(final Vertx vertx,
+        final HttpServerOptions httpServerOptions) {
+
+<span class="fc" id="L33">        return vertx.createHttpServer(httpServerOptions);</span>
+    }
+
+    @Bean
+    public Router router(final Vertx vertx) {
+
+<span class="fc" id="L39">        return Router.router(vertx);</span>
+
+    }
+
+    @Bean
+    public Vertx vertx(final VertxOptions vertxOptions) {
+
+<span class="fc" id="L46">        return Vertx.vertx(vertxOptions);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

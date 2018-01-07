@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringJaxRsHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine</a> &gt; <span class="el_source">SpringJaxRsHandler.java</span></div><h1>SpringJaxRsHandler.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.core.Dispatcher;
+import org.jboss.resteasy.core.ResourceInvoker;
+import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
+import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.util.ClassUtils;
+
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
+import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
+import net.trajano.ms.engine.internal.spring.CdiScopeMetadataResolver;
+import net.trajano.ms.engine.internal.spring.SpringConfiguration;
+import net.trajano.ms.engine.internal.spring.VertxRequestContextFilter;
+import net.trajano.ms.engine.jaxrs.CommonObjectMapperProvider;
+import net.trajano.ms.engine.jaxrs.PathsProvider;
+import net.trajano.ms.engine.jaxrs.WebApplicationExceptionMapper;
+
+public class SpringJaxRsHandler implements
+    Handler&lt;RoutingContext&gt;,
+    AutoCloseable,
+    PathsProvider {
+
+    /**
+     * Logger.
+     */
+<span class="fc" id="L61">    private static final Logger LOG = LoggerFactory.getLogger(SpringJaxRsHandler.class);</span>
+
+    /**
+     * Spring application context.
+     */
+    private final AnnotationConfigApplicationContext applicationContext;
+
+    private final URI baseUri;
+
+    private final ResteasyDeployment deployment;
+
+    private final Dispatcher dispatcher;
+
+    private HttpClientOptions httpClientOptions;
+
+    /**
+     * Path annotated classes.
+     */
+    private final Set&lt;Class&lt;?&gt;&gt; pathAnnotatedClasses;
+
+    private final ResteasyProviderFactory providerFactory;
+
+    public SpringJaxRsHandler(
+        final Class&lt;? extends Application&gt; applicationClass) {
+
+<span class="fc" id="L86">        this(null, applicationClass);</span>
+<span class="fc" id="L87">    }</span>
+
+    public SpringJaxRsHandler(final ConfigurableApplicationContext baseApplicationContext,
+<span class="fc" id="L90">        final Class&lt;? extends Application&gt; applicationClass) {</span>
+
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (baseApplicationContext == null) {</span>
+<span class="fc" id="L93">            LOG.debug(&quot;baseApplicationContext is null, a new application context will be created.&quot;);</span>
+<span class="fc" id="L94">            applicationContext = new AnnotationConfigApplicationContext();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        } else if (baseApplicationContext.isActive()) {</span>
+<span class="nc" id="L96">            LOG.debug(&quot;baseApplicationContext={} is active, will use as parent.&quot;, baseApplicationContext);</span>
+<span class="nc" id="L97">            applicationContext = new AnnotationConfigApplicationContext();</span>
+<span class="nc" id="L98">            applicationContext.setParent(baseApplicationContext);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        } else if (!(baseApplicationContext instanceof AnnotationConfigApplicationContext)) {</span>
+<span class="nc" id="L100">            LOG.debug(&quot;baseApplicationContext={} is not active, but is not an instance of AnnotationConfigApplicationContext, will activate and use as parent.&quot;, baseApplicationContext);</span>
+<span class="nc" id="L101">            baseApplicationContext.refresh();</span>
+<span class="nc" id="L102">            applicationContext = new AnnotationConfigApplicationContext();</span>
+<span class="nc" id="L103">            applicationContext.setParent(baseApplicationContext);</span>
+        } else {
+<span class="nc" id="L105">            LOG.debug(&quot;baseApplicationContext={} is not active, will reuse.&quot;, baseApplicationContext);</span>
+<span class="nc" id="L106">            applicationContext = (AnnotationConfigApplicationContext) baseApplicationContext;</span>
+        }
+<span class="fc" id="L108">        applicationContext.setScopeMetadataResolver(new CdiScopeMetadataResolver());</span>
+<span class="fc" id="L109">        applicationContext.register(SpringConfiguration.class, applicationClass, VertxRequestContextFilter.class, CommonObjectMapperProvider.class, WebApplicationExceptionMapper.class);</span>
+
+<span class="fc" id="L111">        final ApplicationPath annotation = applicationClass.getAnnotation(ApplicationPath.class);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (annotation != null) {</span>
+<span class="fc" id="L113">            baseUri = URI.create(annotation.value() + &quot;&quot;).normalize();</span>
+        } else {
+<span class="nc" id="L115">            baseUri = URI.create(&quot;&quot;);</span>
+        }
+
+        Application application;
+        try {
+<span class="fc" id="L120">            application = applicationClass.newInstance();</span>
+<span class="nc" id="L121">        } catch (InstantiationException</span>
+            | IllegalAccessException e) {
+<span class="nc" id="L123">            throw new ExceptionInInitializerError(e);</span>
+<span class="fc" id="L124">        }</span>
+
+<span class="fc" id="L126">        pathAnnotatedClasses = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L127">        final Set&lt;Class&lt;?&gt;&gt; resourceClasses = application.getClasses();</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (resourceClasses.isEmpty()) {</span>
+<span class="fc" id="L129">            final String packageName = applicationClass.getPackage().getName();</span>
+<span class="fc" id="L130">            LOG.debug(&quot;getClasses() is empty, performing scanning of annotated JAX-RS classes from {}&quot;, packageName);</span>
+<span class="fc" id="L131">            final Reflections reflections = new Reflections(packageName);</span>
+<span class="fc" id="L132">            reflections.getTypesAnnotatedWith(Path.class).forEach(clazz -&gt; {</span>
+<span class="fc" id="L133">                LOG.debug(&quot;{} =&gt; @Path {}&quot;, baseUri + clazz.getAnnotation(Path.class).value(), clazz);</span>
+<span class="fc" id="L134">                applicationContext.register(clazz);</span>
+<span class="fc" id="L135">            });</span>
+<span class="fc" id="L136">            reflections.getTypesAnnotatedWith(Provider.class).forEach(applicationContext::register);</span>
+<span class="fc" id="L137">            reflections.getTypesAnnotatedWith(RequestScoped.class).forEach(applicationContext::register);</span>
+<span class="fc" id="L138">            reflections.getTypesAnnotatedWith(ApplicationScoped.class).forEach(applicationContext::register);</span>
+<span class="fc" id="L139">        } else {</span>
+<span class="nc" id="L140">            LOG.debug(&quot;getClasses() = {}, not performing any scan&quot;, resourceClasses);</span>
+<span class="nc" id="L141">            resourceClasses.forEach(applicationContext::register);</span>
+        }
+
+<span class="fc" id="L144">        deployment = new ResteasyDeployment();</span>
+<span class="fc" id="L145">        deployment.setApplication(application);</span>
+<span class="fc" id="L146">        deployment.start();</span>
+
+<span class="fc" id="L148">        final SpringBeanProcessor springBeanProcessor = new SpringBeanProcessor(deployment);</span>
+
+<span class="fc" id="L150">        applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);</span>
+<span class="fc" id="L151">        applicationContext.addApplicationListener(springBeanProcessor);</span>
+<span class="fc" id="L152">        applicationContext.refresh();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (baseApplicationContext != null) {</span>
+<span class="nc" id="L154">            baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(</span>
+                (name,
+                    obj) -&gt; {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                    if (!deployment.getProviderFactory().isRegistered(obj)) {</span>
+<span class="nc" id="L158">                        LOG.debug(&quot;registering {} into provider factory&quot;, name);</span>
+<span class="nc" id="L159">                        deployment.getProviderFactory().register(obj);</span>
+                    }
+<span class="nc" id="L161">                });</span>
+        }
+<span class="fc" id="L163">        applicationContext.getBeansWithAnnotation(Path.class).forEach((name,</span>
+<span class="fc" id="L164">            obj) -&gt; pathAnnotatedClasses.add(ClassUtils.getUserClass(obj)));</span>
+
+<span class="fc" id="L166">        httpClientOptions = applicationContext.getBean(HttpClientOptions.class);</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (httpClientOptions == null) {</span>
+<span class="nc" id="L168">            httpClientOptions = new HttpClientOptions();</span>
+        }
+<span class="fc" id="L170">        deployment.start();</span>
+<span class="fc" id="L171">        dispatcher = deployment.getDispatcher();</span>
+<span class="fc" id="L172">        providerFactory = deployment.getProviderFactory();</span>
+<span class="fc" id="L173">    }</span>
+
+    @Override
+    public void close() {
+
+<span class="fc" id="L178">        deployment.stop();</span>
+<span class="fc" id="L179">        applicationContext.close();</span>
+
+<span class="fc" id="L181">    }</span>
+
+    @Override
+    public Iterable&lt;Class&lt;?&gt;&gt; getPathAnnotatedClasses() {
+
+<span class="fc" id="L186">        return pathAnnotatedClasses;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void handle(final RoutingContext context) {
+
+<span class="fc" id="L195">        final Client client = jaxRsClient(context.vertx());</span>
+<span class="fc" id="L196">        final HttpServerRequest serverRequest = context.request();</span>
+<span class="fc" id="L197">        final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());</span>
+
+<span class="fc" id="L199">        final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, providerFactory);</span>
+
+<span class="fc" id="L201">        context.request().setExpectMultipart(isMultipartExpected(request));</span>
+<span class="pc" id="L202">        try (final VertxHttpResponse response = new VertxHttpResponse(context)) {</span>
+<span class="fc" id="L203">            context.vertx().executeBlocking(</span>
+                future -&gt; {
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">                    if (LOG.isDebugEnabled()) {</span>
+<span class="fc" id="L206">                        LOG.debug(&quot;{} {}&quot;, context.request().method(), serverRequest.absoluteURI());</span>
+                    }
+<span class="fc" id="L208">                    ThreadLocalResteasyProviderFactory.push(providerFactory);</span>
+<span class="fc" id="L209">                    ResteasyProviderFactory.pushContext(RoutingContext.class, context);</span>
+<span class="fc" id="L210">                    ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());</span>
+<span class="fc" id="L211">                    ResteasyProviderFactory.pushContext(Client.class, client);</span>
+<span class="fc" id="L212">                    ResteasyProviderFactory.pushContext(HttpHeaders.class, request.getHttpHeaders());</span>
+
+                    try {
+<span class="fc" id="L215">                        dispatcher.invoke(request, response);</span>
+<span class="fc" id="L216">                        context.response().end();</span>
+<span class="fc" id="L217">                        future.complete();</span>
+                    } finally {
+<span class="pc" id="L219">                        ResteasyProviderFactory.clearContextData();</span>
+<span class="pc" id="L220">                        ThreadLocalResteasyProviderFactory.pop();</span>
+<span class="fc" id="L221">                    }</span>
+<span class="fc" id="L222">                }, false,</span>
+                res -&gt; {
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">                    if (res.failed()) {</span>
+<span class="nc" id="L225">                        context.fail(res.cause());</span>
+                    }
+<span class="fc" id="L227">                });</span>
+<span class="pc bpc" id="L228" title="6 of 8 branches missed.">        } catch (final IOException e) {</span>
+<span class="nc" id="L229">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L230">        }</span>
+<span class="fc" id="L231">    }</span>
+
+    /**
+     * Checks if multipart is expected for the resource. This is determined by the
+     * presence of {@value MediaType#MULTIPART_FORM_DATA} in the {@link Consumes}
+     * annotation.
+     *
+     * @param request
+     * @return
+     */
+    private boolean isMultipartExpected(final HttpRequest request) {
+
+<span class="fc" id="L243">        final ResourceInvoker invoker = dispatcher.getRegistry().getResourceInvoker(request);</span>
+<span class="fc" id="L244">        final Consumes consumes = invoker.getMethod().getAnnotation(Consumes.class);</span>
+<span class="pc bpc" id="L245" title="3 of 4 branches missed.">        return consumes != null &amp;&amp; Arrays.asList(consumes.value()).contains(MediaType.MULTIPART_FORM_DATA);</span>
+
+    }
+
+    /**
+     * Get the JAX-RS Client that is present in the vertx context or create a new
+     * one.
+     *
+     * @param vertx
+     *            vertx
+     * @return JAX-RS client.
+     */
+    private Client jaxRsClient(final Vertx vertx) {
+
+<span class="fc" id="L259">        Client jaxRsClient = vertx.getOrCreateContext().get(Client.class.getName());</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (jaxRsClient == null) {</span>
+<span class="fc" id="L261">            final HttpClient httpClient = vertx.createHttpClient(httpClientOptions);</span>
+<span class="fc" id="L262">            jaxRsClient = new ResteasyClientBuilder().providerFactory(providerFactory).httpEngine(new VertxClientEngine(httpClient)).build();</span>
+<span class="fc" id="L263">            vertx.getOrCreateContext().put(Client.class.getName(), jaxRsClient);</span>
+        }
+<span class="fc" id="L265">        return jaxRsClient;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

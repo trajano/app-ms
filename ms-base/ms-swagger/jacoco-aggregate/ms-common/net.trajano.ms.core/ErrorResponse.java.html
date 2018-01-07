@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>ErrorResponse.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Swagger Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.core</a> &gt; <span class="el_source">ErrorResponse.java</span></div><h1>ErrorResponse.java</h1><pre class="source lang-java linenums">package net.trajano.ms.core;
+
+import static net.trajano.ms.spi.MDCKeys.REQUEST_ID;
+
+import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
+import org.slf4j.MDC;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import io.swagger.annotations.ApiModelProperty;
+import net.trajano.ms.spi.MDCKeys;
+
+/**
+ * Error response. This is the error response that gets built by the system for
+ * any errors that occur.
+ *
+ * @author Archimedes Trajano
+ */
+@XmlRootElement
+@XmlType(propOrder = {
+    &quot;error&quot;,
+    &quot;errorDescription&quot;,
+    &quot;errorClass&quot;,
+    &quot;requestId&quot;,
+    &quot;requestUri&quot;,
+    &quot;threadId&quot;,
+    &quot;host&quot;,
+    &quot;jwtId&quot;,
+    &quot;stackTrace&quot;,
+    &quot;cause&quot;
+})
+@JsonInclude(Include.NON_NULL)
+public class ErrorResponse {
+
+    /**
+     * Local stack trace element.
+     */
+    @XmlRootElement
+    @SuppressWarnings(&quot;unused&quot;)
+    private static class LocalStackTraceElement {
+
+        /**
+         * Class name.
+         */
+        @XmlElement(name = &quot;class&quot;)
+        private final String className;
+
+        /**
+         * File name.
+         */
+        @XmlElement(name = &quot;file&quot;)
+        private final String fileName;
+
+        /**
+         * Line number.
+         */
+        @XmlElement(name = &quot;line&quot;)
+        private final int lineNumber;
+
+        /**
+         * Method name.
+         */
+        @XmlElement(name = &quot;method&quot;)
+        private final String methodName;
+
+<span class="fc" id="L76">        protected LocalStackTraceElement() {</span>
+
+<span class="fc" id="L78">            className = null;</span>
+<span class="fc" id="L79">            fileName = null;</span>
+<span class="fc" id="L80">            lineNumber = -1;</span>
+<span class="fc" id="L81">            methodName = null;</span>
+<span class="fc" id="L82">        }</span>
+
+<span class="fc" id="L84">        LocalStackTraceElement(final StackTraceElement ste) {</span>
+
+<span class="fc" id="L86">            className = ste.getClassName();</span>
+<span class="fc" id="L87">            methodName = ste.getMethodName();</span>
+<span class="fc" id="L88">            fileName = ste.getFileName();</span>
+<span class="fc" id="L89">            lineNumber = ste.getLineNumber();</span>
+
+<span class="fc" id="L91">        }</span>
+
+    }
+
+    /**
+     * The cause of this {@link ErrorResponse} or &lt;code&gt;null&lt;/code&gt; if the cause is
+     * nonexistent or unknown.
+     */
+    @XmlElement(name = &quot;cause&quot;,
+        required = false)
+    private final ErrorResponse cause;
+
+    /**
+     * The error code. This follows OAuth 2.0 error responses.
+     */
+    @XmlElement(required = true)
+    private final String error;
+
+    /**
+     * Class name of the error.
+     */
+    @XmlElement(name = &quot;error_class&quot;)
+    private final String errorClass;
+
+    /**
+     * The error description. This follows OAuth 2.0 error responses.
+     */
+    @XmlElement(name = &quot;error_description&quot;)
+    private final String errorDescription;
+
+    /**
+     * Host of the server that threw the error. This shows the hostname and port.
+     */
+    @XmlElement(name = &quot;host&quot;)
+    private final String host;
+
+    /**
+     * JWT ID. This represents the session.
+     */
+    @XmlElement(name = &quot;jwt_id&quot;)
+    private final String jwtId;
+
+    /**
+     * The request ID. This is obtained from the header.
+     */
+    @ApiModelProperty(name = &quot;request_id&quot;,
+        value = &quot;Request ID used to track the events for the request.&quot;)
+    @XmlElement(name = &quot;request_id&quot;)
+    private final String requestId;
+
+    /**
+     * Request URI.
+     */
+    @XmlElement(name = &quot;request_uri&quot;)
+    private final URI requestUri;
+
+    /**
+     * The stack trace.
+     */
+    @ApiModelProperty(name = &quot;stack_trace&quot;,
+        value = &quot;A list of stack trace elements.&quot;)
+    @XmlElement(name = &quot;stack_trace&quot;,
+        type = LocalStackTraceElement.class)
+    private final List&lt;LocalStackTraceElement&gt; stackTrace;
+
+    /**
+     * The thread ID.
+     */
+    @XmlElement(name = &quot;thread_id&quot;)
+    private final String threadId;
+
+    /**
+     * Constructs an empty ErrorResponse. This is used for {@link #cause} to prevent
+     * repeating the same information.
+     */
+<span class="fc" id="L166">    protected ErrorResponse() {</span>
+
+<span class="fc" id="L168">        cause = null;</span>
+<span class="fc" id="L169">        error = null;</span>
+<span class="fc" id="L170">        errorClass = null;</span>
+<span class="fc" id="L171">        errorDescription = null;</span>
+<span class="fc" id="L172">        stackTrace = null;</span>
+<span class="fc" id="L173">        host = null;</span>
+<span class="fc" id="L174">        jwtId = null;</span>
+<span class="fc" id="L175">        threadId = null;</span>
+<span class="fc" id="L176">        requestId = null;</span>
+<span class="fc" id="L177">        requestUri = null;</span>
+<span class="fc" id="L178">    }</span>
+
+    /**
+     * Creates an error response with just the error code and description. The
+     * request ID will be taken from the MDC.
+     *
+     * @param error
+     *            error code
+     * @param errorDescription
+     *            error description
+     */
+    public ErrorResponse(final String error,
+<span class="fc" id="L190">        final String errorDescription) {</span>
+
+<span class="fc" id="L192">        this.error = error;</span>
+<span class="fc" id="L193">        this.errorDescription = errorDescription;</span>
+<span class="fc" id="L194">        requestId = MDC.get(REQUEST_ID);</span>
+
+<span class="fc" id="L196">        cause = null;</span>
+<span class="fc" id="L197">        errorClass = null;</span>
+<span class="fc" id="L198">        host = MDC.get(MDCKeys.HOST);</span>
+<span class="fc" id="L199">        jwtId = MDC.get(MDCKeys.JWT_ID);</span>
+<span class="fc" id="L200">        stackTrace = null;</span>
+<span class="fc" id="L201">        threadId = Thread.currentThread().getName();</span>
+<span class="fc" id="L202">        requestUri = calculateRequestUri();</span>
+<span class="fc" id="L203">    }</span>
+
+    /**
+     * Creates an error response with just the error code and description. The
+     * request ID will be taken from the MDC.
+     *
+     * @param error
+     *            error code
+     * @param errorDescription
+     *            error description
+     * @param requestId
+     *            ignored
+     * @deprecated the requestId value is ignored and is taken from the MDC.
+     */
+    @Deprecated
+    public ErrorResponse(final String error,
+        final String errorDescription,
+        final String requestId) {
+
+<span class="nc" id="L222">        this(error, errorDescription);</span>
+<span class="nc" id="L223">    }</span>
+
+    /**
+     * Constructs ErrorResponse to chain the cause.
+     *
+     * @param e
+     *            cause
+     */
+<span class="fc" id="L231">    protected ErrorResponse(final Throwable e) {</span>
+
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        if (e.getCause() != null) {</span>
+<span class="fc" id="L234">            cause = new ErrorResponse(e.getCause());</span>
+        } else {
+<span class="fc" id="L236">            cause = null;</span>
+        }
+<span class="fc" id="L238">        stackTrace = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        for (final StackTraceElement ste : e.getStackTrace()) {</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">            if (!isFiltered(ste)) {</span>
+<span class="fc" id="L241">                stackTrace.add(new LocalStackTraceElement(ste));</span>
+            }
+        }
+<span class="fc" id="L244">        error = null;</span>
+<span class="fc" id="L245">        host = null;</span>
+<span class="fc" id="L246">        jwtId = null;</span>
+<span class="fc" id="L247">        errorClass = e.getClass().getName();</span>
+<span class="fc" id="L248">        errorDescription = e.getMessage();</span>
+<span class="fc" id="L249">        threadId = null;</span>
+<span class="fc" id="L250">        requestId = null;</span>
+<span class="fc" id="L251">        requestUri = null;</span>
+<span class="fc" id="L252">    }</span>
+
+    /**
+     * Wraps a {@link Throwable} in an {@link ErrorResponse} with full stack trace
+     * and cause if requested.
+     *
+     * @param e
+     *            exception to wrap
+     * @param headers
+     *            ignored
+     * @param uriInfo
+     *            URI info
+     * @param showStackTrace
+     *            flag to determine whether the stack trace is to be shown.
+     * @param showRequestUri
+     *            ignored
+     * @deprecated use {@link #ErrorResponse(Throwable, UriInfo, boolean)}
+     */
+    @Deprecated
+    public ErrorResponse(final Throwable e,
+        final HttpHeaders headers,
+        final UriInfo uriInfo,
+        final boolean showStackTrace,
+        final boolean showRequestUri) {
+
+<span class="fc" id="L277">        this(e, uriInfo, showStackTrace);</span>
+<span class="fc" id="L278">    }</span>
+
+    /**
+     * Wraps a {@link Throwable} in an {@link ErrorResponse} with full stack trace
+     * and cause if requested.
+     *
+     * @param e
+     *            exception to wrap
+     * @param uriInfo
+     *            URI info
+     * @param showStackTrace
+     *            flag to determine whether the stack trace is to be shown.
+     */
+    public ErrorResponse(final Throwable e,
+        final UriInfo uriInfo,
+<span class="fc" id="L293">        final boolean showStackTrace) {</span>
+
+<span class="fc" id="L295">        error = ErrorCodes.SERVER_ERROR;</span>
+<span class="fc" id="L296">        errorDescription = e.getLocalizedMessage();</span>
+<span class="fc" id="L297">        errorClass = e.getClass().getName();</span>
+<span class="fc" id="L298">        threadId = Thread.currentThread().getName();</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (showStackTrace) {</span>
+<span class="fc" id="L300">            stackTrace = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">            for (final StackTraceElement ste : e.getStackTrace()) {</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">                if (!isFiltered(ste)) {</span>
+<span class="fc" id="L303">                    stackTrace.add(new LocalStackTraceElement(ste));</span>
+                }
+            }
+<span class="fc bfc" id="L306" title="All 2 branches covered.">            if (e.getCause() != null) {</span>
+<span class="fc" id="L307">                cause = new ErrorResponse(e.getCause());</span>
+            } else {
+<span class="fc" id="L309">                cause = null;</span>
+            }
+        } else {
+<span class="fc" id="L312">            stackTrace = null;</span>
+<span class="fc" id="L313">            cause = null;</span>
+        }
+<span class="fc" id="L315">        requestId = MDC.get(REQUEST_ID);</span>
+<span class="fc" id="L316">        host = MDC.get(MDCKeys.HOST);</span>
+<span class="fc" id="L317">        requestUri = calculateRequestUri();</span>
+<span class="fc" id="L318">        jwtId = MDC.get(MDCKeys.JWT_ID);</span>
+
+<span class="fc" id="L320">    }</span>
+
+    /**
+     * Performs a null-check on the request URI data.
+     *
+     * @return request URI
+     */
+    private URI calculateRequestUri() {
+
+<span class="fc" id="L329">        final String requestUriString = MDC.get(MDCKeys.REQUEST_URI);</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        if (requestUriString == null) {</span>
+
+<span class="fc" id="L332">            return null;</span>
+        } else {
+<span class="fc" id="L334">            return URI.create(requestUriString);</span>
+        }
+    }
+
+    public ErrorResponse getCause() {
+
+<span class="fc" id="L340">        return cause;</span>
+    }
+
+    public String getError() {
+
+<span class="fc" id="L345">        return error;</span>
+    }
+
+    public String getErrorClass() {
+
+<span class="fc" id="L350">        return errorClass;</span>
+    }
+
+    public String getErrorDescription() {
+
+<span class="fc" id="L355">        return errorDescription;</span>
+    }
+
+    public String getHost() {
+
+<span class="fc" id="L360">        return host;</span>
+    }
+
+    public String getJwtId() {
+
+<span class="fc" id="L365">        return jwtId;</span>
+    }
+
+    public String getRequestId() {
+
+<span class="fc" id="L370">        return requestId;</span>
+    }
+
+    public URI getRequestUri() {
+
+<span class="fc" id="L375">        return requestUri;</span>
+    }
+
+    public List&lt;LocalStackTraceElement&gt; getStackTrace() {
+
+<span class="fc" id="L380">        return stackTrace;</span>
+    }
+
+    public String getThreadId() {
+
+<span class="fc" id="L385">        return threadId;</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     * Checks if it is an internal call so the stack trace does not get too long.
+     * Internal classes such as &quot;sun.*&quot; are filtered.
+     * &lt;/p&gt;
+     *
+     * @param ste
+     *            stack trace element
+     * @return &lt;code&gt;true&lt;/code&gt; if it is an internal class.
+     */
+    private boolean isFiltered(final StackTraceElement ste) {
+
+<span class="fc" id="L400">        return ste.getClassName().startsWith(&quot;sun.&quot;);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

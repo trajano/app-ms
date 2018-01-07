@@ -1,0 +1,13 @@
+net.trajano.ms.auth.test
+net.trajano.ms.common.test
+net.trajano.ms.engine.jaxrs.sample
+net.trajano.ms.engine.jaxrs.test
+net.trajano.ms.engine.sample
+net.trajano.ms.engine.second
+net.trajano.ms.engine.test
+net.trajano.ms.example.test
+net.trajano.ms.gateway.handlers.test
+net.trajano.ms.gateway.test
+net.trajano.ms.oidc.test
+net.trajano.ms.sample
+net.trajano.ms.vertx.test

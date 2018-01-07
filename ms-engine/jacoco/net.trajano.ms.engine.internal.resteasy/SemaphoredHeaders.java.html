@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SemaphoredHeaders.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.resteasy</a> &gt; <span class="el_source">SemaphoredHeaders.java</span></div><h1>SemaphoredHeaders.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.resteasy;
+
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
+
+import org.jboss.resteasy.core.Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * This will prevent &quot;gets&quot; until a the lock is released.
+ *
+ * @author Archimedes Trajano
+ * @param &lt;V&gt;
+ */
+<span class="fc" id="L17">public class SemaphoredHeaders&lt;V&gt; extends Headers&lt;V&gt; {</span>
+
+<span class="fc" id="L19">    private static final Logger LOG = LoggerFactory.getLogger(SemaphoredHeaders.class);</span>
+
+    /**
+     * serialVersionUID.
+     */
+    private static final long serialVersionUID = 6726444464471886920L;
+
+<span class="fc" id="L26">    private final Semaphore metadataLock = new Semaphore(0);</span>
+
+    public void acquireUninterruptibly() {
+
+<span class="nc" id="L30">        metadataLock.acquireUninterruptibly();</span>
+<span class="nc" id="L31">    }</span>
+
+    @Override
+    public Set&lt;Entry&lt;String, List&lt;V&gt;&gt;&gt; entrySet() {
+
+<span class="fc" id="L36">        LOG.debug(&quot;entrySet, available permits on lock={}&quot;, metadataLock.availablePermits());</span>
+<span class="fc" id="L37">        metadataLock.acquireUninterruptibly();</span>
+        try {
+<span class="fc" id="L39">            return super.entrySet();</span>
+        } finally {
+<span class="pc" id="L41">            metadataLock.release();</span>
+        }
+
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+
+<span class="nc" id="L49">        LOG.debug(&quot;equals, available permits on lock={}&quot;, metadataLock.availablePermits());</span>
+<span class="nc" id="L50">        metadataLock.acquireUninterruptibly();</span>
+        try {
+<span class="nc" id="L52">            return super.equals(o);</span>
+        } finally {
+<span class="nc" id="L54">            metadataLock.release();</span>
+        }
+    }
+
+    @Override
+    public List&lt;V&gt; get(final Object key) {
+
+<span class="fc" id="L61">        LOG.debug(&quot;attempting to get {}, available permits on lock={}&quot;, key, metadataLock.availablePermits());</span>
+<span class="fc" id="L62">        metadataLock.acquireUninterruptibly();</span>
+        try {
+<span class="fc" id="L64">            return super.get(key);</span>
+        } finally {
+<span class="pc" id="L66">            metadataLock.release();</span>
+        }
+
+    }
+
+    @Override
+    public int hashCode() {
+
+<span class="nc" id="L74">        LOG.debug(&quot;hashCode, available permits on lock={}&quot;, metadataLock.availablePermits());</span>
+<span class="nc" id="L75">        metadataLock.acquireUninterruptibly();</span>
+        try {
+<span class="nc" id="L77">            return super.hashCode();</span>
+        } finally {
+<span class="nc" id="L79">            metadataLock.release();</span>
+        }
+
+    }
+
+    public void releaseLock() {
+
+<span class="fc" id="L86">        metadataLock.release();</span>
+<span class="fc" id="L87">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

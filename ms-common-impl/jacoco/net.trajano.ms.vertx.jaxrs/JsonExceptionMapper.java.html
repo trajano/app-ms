@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsonExceptionMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.jaxrs</a> &gt; <span class="el_source">JsonExceptionMapper.java</span></div><h1>JsonExceptionMapper.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.jaxrs;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import net.trajano.ms.core.ErrorResponse;
+
+@Configuration
+@Component
+@Provider
+@Produces({
+    MediaType.APPLICATION_JSON,
+    MediaType.APPLICATION_XML,
+    MediaType.TEXT_XML,
+    MediaType.TEXT_PLAIN
+})
+<span class="fc" id="L39">public class JsonExceptionMapper implements</span>
+    ExceptionMapper&lt;Throwable&gt; {
+
+<span class="fc" id="L42">    private static final Logger LOG = LoggerFactory.getLogger(JsonExceptionMapper.class);</span>
+
+    /**
+     * Supported media types.
+     */
+<span class="fc" id="L47">    private static final Set&lt;MediaType&gt; SUPPORTED_MEDIA_TYPES = new HashSet&lt;&gt;(Arrays.asList(</span>
+        MediaType.APPLICATION_JSON_TYPE,
+        MediaType.APPLICATION_XML_TYPE,
+        MediaType.TEXT_XML_TYPE,
+        MediaType.TEXT_PLAIN_TYPE,
+        MediaType.TEXT_HTML_TYPE));
+
+    @Context
+    private HttpHeaders headers;
+
+    @Value(&quot;${microservice.show_stack_trace:#{null}}&quot;)
+    private Boolean showStackTrace;
+
+    @Context
+    private UriInfo uriInfo;
+
+    /**
+     * Determines the appropriate media type based on what is requested. If wildcard
+     * use JSON.
+     *
+     * @return media type appropriate for request
+     */
+    private MediaType getAppropriateMediaType() {
+
+<span class="fc" id="L71">        final List&lt;MediaType&gt; acceptableMediaTypes = headers.getAcceptableMediaTypes();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for (final MediaType mediaType : acceptableMediaTypes) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            if (mediaType.equals(MediaType.WILDCARD_TYPE)) {</span>
+<span class="fc" id="L74">                return MediaType.APPLICATION_JSON_TYPE;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            } else if (SUPPORTED_MEDIA_TYPES.contains(mediaType)) {</span>
+<span class="fc" id="L76">                return mediaType;</span>
+            }
+<span class="fc" id="L78">        }</span>
+<span class="fc" id="L79">        return MediaType.APPLICATION_JSON_TYPE;</span>
+
+    }
+
+    /**
+     * Log the exception if it is not NotFoundException and only use warn if it is a
+     * client error.
+     *
+     * @param exception
+     */
+    private void log(final Throwable exception) {
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (exception instanceof ClientErrorException) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (!(exception instanceof NotFoundException)) {</span>
+<span class="fc" id="L93">                LOG.warn(&quot;uri={} message={}&quot;, uriInfo.getRequestUri(), exception.getMessage(), exception);</span>
+            }
+        } else {
+<span class="fc" id="L96">            LOG.error(&quot;uri={} message={}&quot;, uriInfo.getRequestUri(), exception.getMessage(), exception);</span>
+        }
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * This sets the context data so the mapper can be unit tested.
+     */
+    public void setContextData(final HttpHeaders headers,
+        final UriInfo uriInfo,
+        final boolean showStackTrace) {
+
+<span class="fc" id="L107">        this.headers = headers;</span>
+<span class="fc" id="L108">        this.uriInfo = uriInfo;</span>
+<span class="fc" id="L109">        this.showStackTrace = showStackTrace;</span>
+
+<span class="fc" id="L111">    }</span>
+
+    /**
+     * If the show request URI or show stack trace are not defined, it will default
+     * to whether the current logger is on debug mode or not.
+     */
+    @PostConstruct
+    public void setDebugFlags() {
+
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (showStackTrace == null) {</span>
+<span class="fc" id="L121">            showStackTrace = LOG.isDebugEnabled();</span>
+<span class="fc" id="L122">            LOG.debug(&quot;stack trace enabled if this is shown&quot;);</span>
+        }
+<span class="fc" id="L124">    }</span>
+
+    @Override
+    public Response toResponse(final Throwable exception) {
+
+<span class="fc" id="L129">        log(exception);</span>
+<span class="fc" id="L130">        int status = Status.INTERNAL_SERVER_ERROR.getStatusCode();</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (exception instanceof WebApplicationException) {</span>
+<span class="fc" id="L132">            final WebApplicationException internalException = (WebApplicationException) exception;</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (internalException.getResponse().hasEntity()) {</span>
+<span class="fc" id="L134">                return internalException.getResponse();</span>
+            } else {
+<span class="fc" id="L136">                status = internalException.getResponse().getStatus();</span>
+            }
+        }
+<span class="fc" id="L139">        final MediaType mediaType = getAppropriateMediaType();</span>
+
+<span class="fc bfc" id="L141" title="All 4 branches covered.">        if (mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || mediaType.isCompatible(MediaType.TEXT_HTML_TYPE)) {</span>
+<span class="fc" id="L142">            return Response.status(status)</span>
+<span class="fc" id="L143">                .entity(exception.getMessage())</span>
+<span class="fc" id="L144">                .type(mediaType)</span>
+<span class="fc" id="L145">                .build();</span>
+        } else {
+<span class="fc" id="L147">            return Response.status(status)</span>
+<span class="fc" id="L148">                .entity(new ErrorResponse(exception, uriInfo, showStackTrace))</span>
+<span class="fc" id="L149">                .type(mediaType)</span>
+<span class="fc" id="L150">                .build();</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OAuthTokenResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.auth.token</a> &gt; <span class="el_source">OAuthTokenResponse.java</span></div><h1>OAuthTokenResponse.java</h1><pre class="source lang-java linenums">package net.trajano.ms.auth.token;
+
+import java.io.Serializable;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+@ApiModel(description = &quot;OAuth 2.0 Token Response&quot;)
+<span class="nc" id="L22">public class OAuthTokenResponse implements</span>
+    Serializable {
+
+    /**
+     * serialVersionUID.
+     */
+    private static final long serialVersionUID = -6845634801856757737L;
+
+    @ApiModelProperty(name = &quot;access_token&quot;,
+        value = &quot;The access token issued by the authorization server.&quot;,
+        required = true)
+    @XmlElement(name = &quot;access_token&quot;,
+        required = true)
+    private String accessToken;
+
+    @ApiModelProperty(name = &quot;expires_in&quot;,
+        value = &quot;The lifetime in seconds of the access token.  For example, the value \&quot;3600\&quot; denotes that the access token will expire in one hour from the time the response was generated.&quot;,
+        allowableValues = &quot;[1,infinity]&quot;,
+        example = &quot;3600&quot;)
+    @XmlElement(name = &quot;expires_in&quot;)
+    private Integer expiresIn;
+
+    @ApiModelProperty(name = &quot;refresh_token&quot;,
+        value = &quot;The refresh token, which can be used to obtain new access tokens using the same authorization grant&quot;)
+    @XmlElement(name = &quot;refresh_token&quot;)
+    private String refreshToken;
+
+    @ApiModelProperty(name = &quot;token_type&quot;,
+        value = &quot;The type of the token issued&quot;,
+        example = &quot;Bearer&quot;,
+        required = true)
+    @XmlElement(name = &quot;token_type&quot;,
+        required = true)
+    private String tokenType;
+
+    public String getAccessToken() {
+
+<span class="nc" id="L59">        return accessToken;</span>
+    }
+
+    public int getExpiresIn() {
+
+<span class="nc" id="L64">        return expiresIn;</span>
+    }
+
+    public String getRefreshToken() {
+
+<span class="nc" id="L69">        return refreshToken;</span>
+    }
+
+    public String getTokenType() {
+
+<span class="nc" id="L74">        return tokenType;</span>
+    }
+
+    public boolean isExpiring() {
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        return expiresIn != null;</span>
+    }
+
+    public void setAccessToken(final String accessToken) {
+
+<span class="nc" id="L84">        this.accessToken = accessToken;</span>
+<span class="nc" id="L85">    }</span>
+
+    public void setExpiresIn(final int expiresIn) {
+
+<span class="nc" id="L89">        this.expiresIn = expiresIn;</span>
+<span class="nc" id="L90">    }</span>
+
+    public void setRefreshToken(final String refreshToken) {
+
+<span class="nc" id="L94">        this.refreshToken = refreshToken;</span>
+<span class="nc" id="L95">    }</span>
+
+    public void setTokenType(final String tokenType) {
+
+<span class="nc" id="L99">        this.tokenType = tokenType;</span>
+<span class="nc" id="L100">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

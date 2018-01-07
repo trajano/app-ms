@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>ClientCheckResource.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample Authorization Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.authz</a> &gt; <span class="el_source">ClientCheckResource.java</span></div><h1>ClientCheckResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.authz;
+
+import java.net.URI;
+
+import javax.annotation.security.PermitAll;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import io.swagger.annotations.Api;
+import net.trajano.ms.auth.token.GrantTypes;
+import net.trajano.ms.auth.util.AuthorizationType;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
+import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.authz.internal.TokenCacheEntry;
+import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.core.ErrorResponses;
+
+/**
+ * Client check resource.
+ *
+ * @author Archimedes Trajano
+ */
+@Api
+@Component
+@Path(&quot;/check&quot;)
+@PermitAll
+<span class="nc" id="L39">public class ClientCheckResource {</span>
+
+<span class="nc" id="L41">    private static final Logger LOG = LoggerFactory.getLogger(ClientCheckResource.class);</span>
+
+    @Autowired
+    private ClientValidator clientValidator;
+
+    @Autowired
+    private TokenCache tokenCache;
+
+    /**
+     * Obtains the redirect URI that can receive the OpenID token as a fragment. It
+     * requires that the client supports the openid grant type.
+     *
+     * @param authorization
+     *            authorization header
+     * @return redirect URI
+     */
+    @GET
+    @Path(&quot;/openid-redirect-uri&quot;)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String redirectUri(@HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="nc" id="L62">        LOG.debug(&quot;redirect URI for authorization={}&quot;, authorization);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (!clientValidator.isValid(GrantTypes.OPENID, authorization)) {</span>
+<span class="nc" id="L64">            throw ErrorResponses.invalidAuthorization();</span>
+        }
+
+<span class="nc" id="L67">        return clientValidator.getRedirectUriFromAuthorization(authorization).toASCIIString();</span>
+
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response validateClient(final ClientCheckRequest req) {
+
+<span class="nc" id="L75">        boolean validClient = false;</span>
+<span class="nc" id="L76">        final AuthorizationType authorizationType = HttpAuthorizationHeaders.getAuthorizationType(req.getAuthorization());</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (authorizationType == AuthorizationType.BASIC) {</span>
+<span class="nc" id="L78">            validClient = clientValidator.isOriginAllowedFromAuthorization(URI.create(req.getOrigin()), req.getAuthorization());</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        } else if (authorizationType == AuthorizationType.BEARER) {</span>
+<span class="nc" id="L81">            final String accessToken = HttpAuthorizationHeaders.parseBeaerAuthorization(req.getAuthorization());</span>
+<span class="nc" id="L82">            final TokenCacheEntry cacheEntry = tokenCache.getCacheEntry(accessToken);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            if (cacheEntry == null) {</span>
+<span class="nc" id="L84">                throw ErrorResponses.invalidRequest(&quot;access_token is not valid&quot;);</span>
+            }
+<span class="nc" id="L86">            final String clientId = cacheEntry.getAudiences().iterator().next();</span>
+<span class="nc" id="L87">            validClient = clientValidator.isOriginAllowed(clientId, req.getOrigin());</span>
+
+        }
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (validClient) {</span>
+<span class="nc" id="L92">            return Response.noContent().build();</span>
+        } else {
+<span class="nc" id="L94">            throw ErrorResponses.invalidRequest(&quot;Invalid Origin for Client&quot;);</span>
+        }
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

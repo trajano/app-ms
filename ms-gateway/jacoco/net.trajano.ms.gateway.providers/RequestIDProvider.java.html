@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestIDProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">API Gateway</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.gateway.providers</a> &gt; <span class="el_source">RequestIDProvider.java</span></div><h1>RequestIDProvider.java</h1><pre class="source lang-java linenums">package net.trajano.ms.gateway.providers;
+
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
+
+import io.vertx.ext.web.RoutingContext;
+
+@Component
+<span class="fc" id="L12">public class RequestIDProvider {</span>
+
+    /**
+     * Only allow letters and numbers, no symbols. It makes it easier to copy and
+     * paste for testing.
+     */
+<span class="fc" id="L18">    private static final char[] ALLOWED_CHARACTERS = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;.toCharArray();</span>
+
+    /**
+     * Short length token just enough to be unique within a daily log file.
+     */
+    private static final int LENGTH = 8;
+
+    /**
+     * This is the header and map key used to represent the request ID.
+     */
+    public static final String REQUEST_ID = &quot;X-Request-ID&quot;;
+
+    /**
+     * Provides a new request ID, adds it to the context along with the response
+     * headers and sets the MDC as well.
+     *
+     * @param context
+     *            routing context
+     * @return random string.
+     */
+    public String newRequestID(final RoutingContext context) {
+
+<span class="fc" id="L40">        final Random random = ThreadLocalRandom.current();</span>
+<span class="fc" id="L41">        final char[] buf = new char[LENGTH];</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        for (int i = 0; i &lt; LENGTH; ++i) {</span>
+<span class="fc" id="L43">            buf[i] = ALLOWED_CHARACTERS[random.nextInt(ALLOWED_CHARACTERS.length)];</span>
+        }
+<span class="fc" id="L45">        final String requestID = new String(buf);</span>
+<span class="fc" id="L46">        MDC.put(REQUEST_ID, requestID);</span>
+<span class="fc" id="L47">        context.data().put(REQUEST_ID, requestID);</span>
+<span class="fc" id="L48">        context.response().putHeader(REQUEST_ID, requestID);</span>
+<span class="fc" id="L49">        return requestID;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

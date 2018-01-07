@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JcaCryptoOps.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx.beans</a> &gt; <span class="el_source">JcaCryptoOps.java</span></div><h1>JcaCryptoOps.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx.beans;
+
+import javax.ws.rs.InternalServerErrorException;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.jose4j.lang.JoseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import net.trajano.ms.core.CryptoOps;
+
+@Component
+<span class="fc" id="L20">public class JcaCryptoOps implements</span>
+    CryptoOps {
+
+    @Autowired
+    private CachedDataProvider cachedDataProvider;
+
+    @Autowired
+    private TokenGenerator tokenGenerator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String newToken() {
+
+<span class="fc" id="L35">        return tokenGenerator.newToken();</span>
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String sign(final JwtClaims claims) {
+
+        try {
+<span class="fc" id="L46">            final RsaJsonWebKey aSigningKey = cachedDataProvider.getASigningKey();</span>
+<span class="fc" id="L47">            final JsonWebSignature jws = new JsonWebSignature();</span>
+<span class="fc" id="L48">            jws.setPayload(claims.toJson());</span>
+<span class="fc" id="L49">            jws.setKeyIdHeaderValue(aSigningKey.getKeyId());</span>
+<span class="fc" id="L50">            jws.setKey(aSigningKey.getPrivateKey());</span>
+<span class="fc" id="L51">            jws.setAlgorithmHeaderValue(aSigningKey.getAlgorithm());</span>
+<span class="fc" id="L52">            jws.sign();</span>
+<span class="fc" id="L53">            return jws.getCompactSerialization();</span>
+<span class="nc" id="L54">        } catch (final JoseException e) {</span>
+<span class="nc" id="L55">            throw new InternalServerErrorException(e);</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JwtClaims toClaimsSet(final String jwt,
+        final String audience,
+        final HttpsJwks httpsJwks) {
+
+<span class="fc" id="L67">        final JwtConsumerBuilder builder = new JwtConsumerBuilder()</span>
+<span class="fc" id="L68">            .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(httpsJwks));</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (audience == null) {</span>
+<span class="fc" id="L70">            builder.setSkipDefaultAudienceValidation();</span>
+        } else {
+<span class="fc" id="L72">            builder.setExpectedAudience(audience);</span>
+        }
+
+<span class="fc" id="L75">        final JwtConsumer jwtConsumer = builder</span>
+<span class="fc" id="L76">            .build();</span>
+
+        try {
+<span class="fc" id="L79">            return jwtConsumer.processToClaims(jwt);</span>
+<span class="fc" id="L80">        } catch (final InvalidJwtException e) {</span>
+<span class="fc" id="L81">            throw new InternalServerErrorException(e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

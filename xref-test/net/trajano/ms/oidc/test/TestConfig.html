@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>TestConfig xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../testapidocs/net/trajano/ms/oidc/test/TestConfig.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> net.trajano.ms.oidc.test;
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Matchers.anyString;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Matchers.eq;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.mock;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.when;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> java.net.URI;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> org.springframework.context.annotation.Bean;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> org.springframework.context.annotation.Configuration;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> net.trajano.ms.auth.token.GrantTypes;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> net.trajano.ms.authz.spi.ClientValidator;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> net.trajano.ms.oidc.OpenIdConfiguration;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> net.trajano.ms.oidc.spi.IssuerConfig;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> net.trajano.ms.oidc.spi.ServiceConfiguration;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  @Configuration
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../net/trajano/ms/oidc/test/TestConfig.html">TestConfig</a> {
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>      @Bean
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>      <strong class="jxr_keyword">public</strong> ClientValidator clientValidator() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>          <strong class="jxr_keyword">final</strong> ClientValidator mock = mock(ClientValidator.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>          when(mock.isValid(eq(GrantTypes.OPENID), anyString())).thenReturn(<strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>          <strong class="jxr_keyword">return</strong> mock;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>      }
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      @Bean
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>      <strong class="jxr_keyword">public</strong> ServiceConfiguration serviceConfiguration() {
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>          <strong class="jxr_keyword">final</strong> ServiceConfiguration mock = mock(ServiceConfiguration.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>          <strong class="jxr_keyword">final</strong> OpenIdConfiguration openIdConfiguration = <strong class="jxr_keyword">new</strong> OpenIdConfiguration();
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>          openIdConfiguration.setAuthorizationEndpoint(URI.create(<span class="jxr_string">"http://example.trajano.net"</span>));
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          <strong class="jxr_keyword">final</strong> IssuerConfig issuerConfig = <strong class="jxr_keyword">new</strong> IssuerConfig();
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>          issuerConfig.setOpenIdConfiguration(openIdConfiguration);
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>          issuerConfig.setScope(<span class="jxr_string">"openid"</span>);
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>          issuerConfig.setClientId(<span class="jxr_string">"clientid"</span>);
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>          issuerConfig.setClientSecret(<span class="jxr_string">"clientsecret"</span>);
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>          when(mock.getIssuerConfig(<span class="jxr_string">"issuer"</span>)).thenReturn(issuerConfig);
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>          when(mock.getRedirectUri()).thenReturn(URI.create(<span class="jxr_string">"http://example.trajano.net"</span>));
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>          <strong class="jxr_keyword">return</strong> mock;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      }
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2012&#x2013;2018 <a href="https://trajano.net/">Trajano</a>. All rights reserved.</div>
+</body>
+</html>

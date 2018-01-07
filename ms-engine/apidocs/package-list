@@ -1,0 +1,6 @@
+net.trajano.ms.engine
+net.trajano.ms.engine.internal
+net.trajano.ms.engine.internal.resteasy
+net.trajano.ms.engine.internal.spring
+net.trajano.ms.engine.internal.swagger
+net.trajano.ms.engine.jaxrs

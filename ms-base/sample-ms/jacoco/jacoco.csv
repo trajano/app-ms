@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Sample Microservice,net.trajano.ms.example.beans,UselessCounter,14,0,0,0,3,0,2,0,2,0
+Sample Microservice,net.trajano.ms.example.beans,CacheProvider,0,17,0,0,0,2,0,2,0,2
+Sample Microservice,net.trajano.ms.example.beans,Counter,14,0,0,0,3,0,2,0,2,0
+Sample Microservice,net.trajano.ms.example,SampleMS,4,3,0,0,2,1,1,1,1,1
+Sample Microservice,net.trajano.ms.example,SecureHelloResource,77,0,2,0,15,0,5,0,4,0
+Sample Microservice,net.trajano.ms.example,HelloResource,270,3,8,0,53,1,17,1,13,1
+Sample Microservice,net.trajano.ms.example.domain,MyType,17,0,0,0,7,0,5,0,5,0

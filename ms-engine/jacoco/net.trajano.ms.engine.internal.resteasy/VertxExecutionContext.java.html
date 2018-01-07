@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxExecutionContext.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.resteasy</a> &gt; <span class="el_source">VertxExecutionContext.java</span></div><h1>VertxExecutionContext.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.resteasy;
+
+import java.util.concurrent.TimeUnit;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
+import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.ext.web.RoutingContext;
+
+public class VertxExecutionContext implements
+    ResteasyAsynchronousContext {
+
+<span class="fc" id="L17">    private static final Logger LOG = LoggerFactory.getLogger(VertxExecutionContext.class);</span>
+
+    private VertxAsynchronousResponse asynchronousResponse;
+
+    /**
+     * RestEasy provider factory.
+     */
+    private final ResteasyProviderFactory providerFactory;
+
+    private final HttpRequest request;
+
+    private final RoutingContext routingContext;
+
+    public VertxExecutionContext(final RoutingContext routingContext,
+        final ResteasyProviderFactory providerFactory,
+<span class="fc" id="L32">        final HttpRequest request) {</span>
+
+<span class="fc" id="L34">        this.request = request;</span>
+<span class="fc" id="L35">        this.providerFactory = providerFactory;</span>
+<span class="fc" id="L36">        this.routingContext = routingContext;</span>
+<span class="fc" id="L37">    }</span>
+
+    @Override
+    public ResteasyAsynchronousResponse getAsyncResponse() {
+
+<span class="nc" id="L42">        return asynchronousResponse;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * This is implemented as a check to whether an asynchronous response was
+     * initialized by either {@link #suspend()}, {@link #suspend(long)} or
+     * {@link #suspend(long, TimeUnit)}.
+     */
+    @Override
+    public boolean isSuspended() {
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        return asynchronousResponse != null;</span>
+    }
+
+    @Override
+    public ResteasyAsynchronousResponse suspend() {
+
+<span class="nc" id="L61">        asynchronousResponse = new VertxAsynchronousResponse(providerFactory, request, routingContext);</span>
+<span class="nc" id="L62">        LOG.debug(&quot;asynchronousResponse={} created&quot;, asynchronousResponse);</span>
+<span class="nc" id="L63">        return asynchronousResponse;</span>
+    }
+
+    @Override
+    public ResteasyAsynchronousResponse suspend(final long millis) {
+
+<span class="nc" id="L69">        return suspend(millis, TimeUnit.MILLISECONDS);</span>
+    }
+
+    @Override
+    public ResteasyAsynchronousResponse suspend(final long time,
+        final TimeUnit unit) {
+
+<span class="nc" id="L76">        asynchronousResponse = new VertxAsynchronousResponse(providerFactory, request, routingContext);</span>
+<span class="nc" id="L77">        LOG.debug(&quot;asynchronousResponse={} created&quot;, asynchronousResponse);</span>
+<span class="nc" id="L78">        asynchronousResponse.setTimeout(time, unit);</span>
+<span class="nc" id="L79">        return asynchronousResponse;</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

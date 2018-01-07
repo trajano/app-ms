@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxHttpRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Microservice Engine</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.engine.internal.resteasy</a> &gt; <span class="el_source">VertxHttpRequest.java</span></div><h1>VertxHttpRequest.java</h1><pre class="source lang-java linenums">package net.trajano.ms.engine.internal.resteasy;
+
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Enumeration;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.jboss.resteasy.plugins.server.BaseHttpRequest;
+import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.NullInputStream;
+import net.trajano.ms.engine.internal.VertxBlockingInputStream;
+import net.trajano.ms.engine.internal.VertxRoutingContextHttpHeaders;
+
+/**
+ * For the most part the request is prebuilt and immutable. That way there is no
+ * need for most of the setters.
+ *
+ * @author Archimedes Trajano
+ */
+public class VertxHttpRequest extends BaseHttpRequest {
+
+<span class="fc" id="L31">    private static final Logger LOG = LoggerFactory.getLogger(VertxHttpRequest.class);</span>
+
+    /**
+     * Asynchronous context.
+     */
+    private final ResteasyAsynchronousContext asynchronousContext;
+
+    /**
+     * Vert.X routing context
+     */
+    private final RoutingContext context;
+
+    private boolean forwarded;
+
+    private final HttpHeaders httpHeaders;
+
+    private final InputStream is;
+
+    private final HttpServerRequest vertxRequest;
+
+    public VertxHttpRequest(final RoutingContext context,
+        final ResteasyUriInfo uriInfo,
+        final ResteasyProviderFactory providerFactory) {
+
+<span class="fc" id="L55">        super(uriInfo);</span>
+
+<span class="fc" id="L57">        this.context = context;</span>
+<span class="fc" id="L58">        vertxRequest = context.request();</span>
+
+<span class="fc" id="L60">        httpHeaders = new VertxRoutingContextHttpHeaders(context);</span>
+
+<span class="fc" id="L62">        LOG.debug(&quot;vertxRequest.isEnded={}&quot;, vertxRequest.isEnded());</span>
+
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (!vertxRequest.isEnded()) {</span>
+<span class="nc" id="L65">            is = new VertxBlockingInputStream(vertxRequest);</span>
+        } else {
+<span class="fc" id="L67">            is = NullInputStream.nullInputStream();</span>
+        }
+
+<span class="fc" id="L70">        asynchronousContext = new VertxExecutionContext(context, providerFactory, this);</span>
+<span class="fc" id="L71">    }</span>
+
+    @Override
+    public void forward(final String path) {
+
+<span class="nc" id="L76">        throw new UnsupportedOperationException();</span>
+    }
+
+    @Override
+    public ResteasyAsynchronousContext getAsyncContext() {
+
+<span class="fc" id="L82">        return asynchronousContext;</span>
+    }
+
+    @Override
+    public Object getAttribute(final String attribute) {
+
+<span class="fc" id="L88">        return context.get(attribute);</span>
+    }
+
+    @Override
+    public Enumeration&lt;String&gt; getAttributeNames() {
+
+<span class="fc" id="L94">        return Collections.enumeration(context.data().keySet());</span>
+    }
+
+    @Override
+    public HttpHeaders getHttpHeaders() {
+
+<span class="fc" id="L100">        return httpHeaders;</span>
+    }
+
+    @Override
+    public String getHttpMethod() {
+
+<span class="fc" id="L106">        return vertxRequest.method().name();</span>
+    }
+
+    @Override
+    public InputStream getInputStream() {
+
+<span class="nc" id="L112">        return is;</span>
+    }
+
+    @Override
+    public MultivaluedMap&lt;String, String&gt; getMutableHeaders() {
+
+<span class="nc" id="L118">        throw new UnsupportedOperationException(&quot;Mutable headers are not supported&quot;);</span>
+    }
+
+    @Override
+    public void removeAttribute(final String name) {
+
+<span class="nc" id="L124">        context.remove(name);</span>
+
+<span class="nc" id="L126">    }</span>
+
+    @Override
+    public void setAttribute(final String name,
+        final Object value) {
+
+<span class="fc" id="L132">        context.put(name, value);</span>
+
+<span class="fc" id="L134">    }</span>
+
+    @Override
+    public void setHttpMethod(final String method) {
+
+<span class="nc" id="L139">        throw new UnsupportedOperationException();</span>
+    }
+
+    @Override
+    public void setInputStream(final InputStream inputStream) {
+
+<span class="nc" id="L145">        throw new UnsupportedOperationException();</span>
+    }
+
+    @Override
+    public boolean wasForwarded() {
+
+<span class="fc" id="L151">        return forwarded;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

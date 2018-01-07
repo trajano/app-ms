@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>OpenIdConfiguration.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample OIDC Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-oidc</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.oidc</a> &gt; <span class="el_source">OpenIdConfiguration.java</span></div><h1>OpenIdConfiguration.java</h1><pre class="source lang-java linenums">package net.trajano.ms.oidc;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.util.List;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.jose4j.lang.JoseException;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
+<span class="fc" id="L24">public class OpenIdConfiguration {</span>
+
+    @XmlElement(name = &quot;authorization_endpoint&quot;)
+    private URI authorizationEndpoint;
+
+    @XmlTransient
+    private HttpsJwks httpsJwks;
+
+    @XmlElement(name = &quot;issuer&quot;)
+    private String issuer;
+
+    @XmlElement(name = &quot;jwks_uri&quot;)
+    private URI jwksUri;
+
+    @XmlElement(name = &quot;response_types_supported&quot;,
+        type = String.class)
+    private List&lt;String&gt; responseTypesSupported;
+
+    @XmlElement(name = &quot;revocation_endpoint&quot;)
+    private URI revocationEndpoint;
+
+    @XmlElement(name = &quot;token_endpoint&quot;)
+    private URI tokenEndpoint;
+
+    @XmlElement(name = &quot;userinfo_endpoint&quot;)
+    private URI userinfoEndpoint;
+
+    public URI getAuthorizationEndpoint() {
+
+<span class="fc" id="L53">        return authorizationEndpoint;</span>
+    }
+
+    public HttpsJwks getHttpsJwks() {
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (httpsJwks == null) {</span>
+<span class="nc" id="L59">            httpsJwks = new HttpsJwks(jwksUri.toASCIIString());</span>
+        }
+<span class="nc" id="L61">        return httpsJwks;</span>
+    }
+
+    public String getIssuer() {
+
+<span class="nc" id="L66">        return issuer;</span>
+    }
+
+    public JsonWebKeySet getJwks() {
+
+        try {
+<span class="nc" id="L72">            return new JsonWebKeySet(getHttpsJwks().getJsonWebKeys());</span>
+<span class="nc" id="L73">        } catch (final JoseException e) {</span>
+<span class="nc" id="L74">            throw new InternalServerErrorException(e);</span>
+<span class="nc" id="L75">        } catch (final IOException e) {</span>
+<span class="nc" id="L76">            throw new UncheckedIOException(e);</span>
+        }
+
+    }
+
+    public URI getJwksUri() {
+
+<span class="nc" id="L83">        return jwksUri;</span>
+    }
+
+    public List&lt;String&gt; getResponseTypesSupported() {
+
+<span class="nc" id="L88">        return responseTypesSupported;</span>
+    }
+
+    public URI getRevocationEndpoint() {
+
+<span class="nc" id="L93">        return revocationEndpoint;</span>
+    }
+
+    public URI getTokenEndpoint() {
+
+<span class="nc" id="L98">        return tokenEndpoint;</span>
+    }
+
+    public URI getUserinfoEndpoint() {
+
+<span class="nc" id="L103">        return userinfoEndpoint;</span>
+    }
+
+    public void setAuthorizationEndpoint(final URI authorizationEndpoint) {
+
+<span class="fc" id="L108">        this.authorizationEndpoint = authorizationEndpoint;</span>
+<span class="fc" id="L109">    }</span>
+
+    public void setIssuer(final String issuer) {
+
+<span class="nc" id="L113">        this.issuer = issuer;</span>
+<span class="nc" id="L114">    }</span>
+
+    public void setJwksUri(final URI jwksUri) {
+
+<span class="nc" id="L118">        this.jwksUri = jwksUri;</span>
+<span class="nc" id="L119">    }</span>
+
+    public void setResponseTypesSupported(final List&lt;String&gt; responseTypesSupported) {
+
+<span class="nc" id="L123">        this.responseTypesSupported = responseTypesSupported;</span>
+<span class="nc" id="L124">    }</span>
+
+    public void setRevocationEndpoint(final URI revocationEndpoint) {
+
+<span class="nc" id="L128">        this.revocationEndpoint = revocationEndpoint;</span>
+<span class="nc" id="L129">    }</span>
+
+    public void setTokenEndpoint(final URI tokenEndpoint) {
+
+<span class="nc" id="L133">        this.tokenEndpoint = tokenEndpoint;</span>
+<span class="nc" id="L134">    }</span>
+
+    public void setUserinfoEndpoint(final URI userinfoEndpoint) {
+
+<span class="nc" id="L138">        this.userinfoEndpoint = userinfoEndpoint;</span>
+<span class="nc" id="L139">    }</span>
+
+    /*
+     * &quot;subject_types_supported&quot;: [ &quot;public&quot; ],
+     * &quot;id_token_signing_alg_values_supported&quot;: [ &quot;RS256&quot; ], &quot;scopes_supported&quot;: [
+     * &quot;openid&quot;, &quot;email&quot;, &quot;profile&quot; ], &quot;token_endpoint_auth_methods_supported&quot;: [
+     * &quot;client_secret_post&quot;, &quot;client_secret_basic&quot; ], &quot;claims_supported&quot;: [ &quot;aud&quot;,
+     * &quot;email&quot;, &quot;email_verified&quot;, &quot;exp&quot;, &quot;family_name&quot;, &quot;given_name&quot;, &quot;iat&quot;, &quot;iss&quot;,
+     * &quot;locale&quot;, &quot;name&quot;, &quot;picture&quot;, &quot;sub&quot; ], &quot;code_challenge_methods_supported&quot;: [
+     * &quot;plain&quot;, &quot;S256&quot; ] }
+     */
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

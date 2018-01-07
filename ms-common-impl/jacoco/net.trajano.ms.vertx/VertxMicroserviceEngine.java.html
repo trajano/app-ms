@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VertxMicroserviceEngine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Common Microservice Implementation</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.vertx</a> &gt; <span class="el_source">VertxMicroserviceEngine.java</span></div><h1>VertxMicroserviceEngine.java</h1><pre class="source lang-java linenums">package net.trajano.ms.vertx;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Deque;
+import java.util.LinkedList;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ws.rs.core.Response.Status;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
+
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.Microservice;
+import net.trajano.ms.engine.ManifestHandler;
+import net.trajano.ms.engine.SpringJaxRsHandler;
+import net.trajano.ms.engine.SwaggerHandler;
+import net.trajano.ms.engine.jaxrs.JaxRsRouter;
+import net.trajano.ms.spi.MicroserviceEngine;
+import net.trajano.ms.vertx.beans.CachedDataProvider;
+import net.trajano.ms.vertx.beans.GsonJacksonJsonOps;
+import net.trajano.ms.vertx.beans.GsonProvider;
+import net.trajano.ms.vertx.beans.JcaCryptoOps;
+import net.trajano.ms.vertx.beans.JwksRouteHandler;
+import net.trajano.ms.vertx.jaxrs.CommonMsJaxRs;
+
+@Component
+<span class="fc" id="L41">public class VertxMicroserviceEngine implements</span>
+    MicroserviceEngine {
+
+<span class="fc" id="L44">    private static final Logger LOG = LoggerFactory.getLogger(VertxMicroserviceEngine.class);</span>
+
+    @Autowired
+    private AnnotationConfigApplicationContext applicationContext;
+
+<span class="fc" id="L49">    private final Deque&lt;AutoCloseable&gt; handlerStack = new LinkedList&lt;&gt;();</span>
+
+    @Autowired
+    private HttpServerOptions httpServerOptions;
+
+    @Autowired
+    private JaxRsRouter jaxRsRouter;
+
+    private String theHostname;
+
+<span class="fc" id="L59">    private int thePort = -1;</span>
+
+    private Vertx vertx;
+
+    @Autowired
+    private VertxOptions vertxOptions;
+
+    /**
+     * Sets the system properties and sets up the logger. {@inheritDoc}
+     */
+    @Override
+    public Object[] bootstrap() {
+
+<span class="nc" id="L72">        System.setProperty(&quot;vertx.logger-delegate-factory-class-name&quot;, &quot;io.vertx.core.logging.SLF4JLogDelegateFactory&quot;);</span>
+
+<span class="nc" id="L74">        final File logbackFile = new File(&quot;logback.xml&quot;);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (logbackFile.exists()) {</span>
+<span class="nc" id="L76">            System.setProperty(&quot;logging.config&quot;, logbackFile.getAbsolutePath());</span>
+        }
+
+<span class="nc" id="L79">        return new Object[] {</span>
+            VertxConfig.class,
+            VertxMicroserviceEngine.class
+        };
+    }
+
+    @Override
+    public String hostname() {
+
+<span class="fc" id="L88">        return theHostname;</span>
+    }
+
+    @Override
+    public int port() {
+
+<span class="fc" id="L94">        return thePort;</span>
+    }
+
+    @PostConstruct
+    public void start() {
+
+<span class="fc" id="L100">        LOG.debug(&quot;Application={}&quot;, Microservice.getApplicationClass());</span>
+
+<span class="fc" id="L102">        vertx = Vertx.vertx(vertxOptions);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (Microservice.getApplicationClass() == null) {</span>
+<span class="fc" id="L104">            LOG.warn(&quot;No application class specified, assuming running as a unit test&quot;);</span>
+<span class="fc" id="L105">            return;</span>
+        }
+<span class="fc" id="L107">        final Router router = Router.router(vertx);</span>
+
+<span class="fc" id="L109">        handlerStack.push(SwaggerHandler.registerToRouter(router, Microservice.getApplicationClass()));</span>
+<span class="fc" id="L110">        handlerStack.push(ManifestHandler.registerToRouter(router));</span>
+
+<span class="pc" id="L112">        final Handler&lt;RoutingContext&gt; notFoundHandler = ctx -&gt; ctx.response().setStatusCode(404).setStatusMessage(Status.NOT_FOUND.getReasonPhrase()).end(Status.NOT_FOUND.getReasonPhrase());</span>
+<span class="fc" id="L113">        router.get(&quot;/favicon.ico&quot;).handler(notFoundHandler);</span>
+
+        // Register engine implementation classes
+<span class="fc" id="L116">        applicationContext.register(GsonJacksonJsonOps.class,</span>
+            GsonProvider.class,
+            JcaCryptoOps.class,
+            CachedDataProvider.class,
+            JwksRouteHandler.class,
+            CommonMsJaxRs.class);
+<span class="fc" id="L122">        final SpringJaxRsHandler springJaxRsHandler = new SpringJaxRsHandler(applicationContext, Microservice.getApplicationClass());</span>
+
+<span class="fc" id="L124">        jaxRsRouter.register(Microservice.getApplicationClass(), router, springJaxRsHandler, springJaxRsHandler);</span>
+
+<span class="fc" id="L126">        handlerStack.push(springJaxRsHandler);</span>
+
+<span class="fc" id="L128">        final Handler&lt;RoutingContext&gt; jwksRouteHandler = applicationContext.getBean(JwksRouteHandler.class);</span>
+
+        // Prioritize JWKS higher than default router.
+<span class="fc" id="L131">        router.route(&quot;/.well-known/jwks&quot;).order(-1).handler(jwksRouteHandler);</span>
+
+<span class="fc" id="L133">        final HttpServer http = vertx.createHttpServer(httpServerOptions);</span>
+
+<span class="fc" id="L135">        http.requestHandler(router::accept).listen(res -&gt; {</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if (res.failed()) {</span>
+<span class="nc" id="L137">                LOG.error(&quot;Listening on port {} failed&quot;, httpServerOptions.getPort(), res.cause());</span>
+<span class="nc" id="L138">                SpringApplication.exit(applicationContext, () -&gt; -1);</span>
+            } else {
+<span class="fc" id="L140">                LOG.info(&quot;Listening on port {}&quot;, http.actualPort());</span>
+<span class="fc" id="L141">                thePort = http.actualPort();</span>
+            }
+<span class="fc" id="L143">        });</span>
+        try {
+<span class="fc" id="L145">            theHostname = InetAddress.getLocalHost().getHostName();</span>
+<span class="nc" id="L146">        } catch (final UnknownHostException e) {</span>
+<span class="nc" id="L147">            throw new ExceptionInInitializerError(e);</span>
+<span class="fc" id="L148">        }</span>
+<span class="fc" id="L149">    }</span>
+
+    @PreDestroy
+    public void stop() throws Exception {
+
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        while (handlerStack.peek() != null) {</span>
+<span class="fc" id="L155">            handlerStack.pop().close();</span>
+        }
+<span class="fc" id="L157">        vertx.close();</span>
+<span class="fc" id="L158">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

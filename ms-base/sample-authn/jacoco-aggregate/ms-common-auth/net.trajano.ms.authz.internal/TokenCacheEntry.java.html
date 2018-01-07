@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>TokenCacheEntry.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample Authentication Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.authz.internal</a> &gt; <span class="el_source">TokenCacheEntry.java</span></div><h1>TokenCacheEntry.java</h1><pre class="source lang-java linenums">package net.trajano.ms.authz.internal;
+
+import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Date;
+
+/**
+ * Entries stored inside the cache. The JWT is stored instead of a JwtClaims to
+ * allow encrypted JWTs to be used. Only some meta data needs to be exposed.
+ */
+public class TokenCacheEntry implements
+    Serializable {
+
+    private static final long serialVersionUID = -1643672416756418254L;
+
+    private final String accessToken;
+
+    /**
+     * Audiences.
+     */
+    private final Collection&lt;String&gt; audiences;
+
+    /**
+     * Created on. {@link Date} is used because of
+     * https://sonarcloud.io/organizations/default/rules#rule_key=squid%3AS3437
+     */
+    private final Date createdOn;
+
+    /**
+     * Expires on. A given JWT should have a total life time it can exist value,
+     * this is what this value denotes. {@link Date} is used because of
+     * https://sonarcloud.io/organizations/default/rules#rule_key=squid%3AS3437
+     */
+    private final Date expiresOn;
+
+    private final String jwt;
+
+    private final String refreshToken;
+
+    public TokenCacheEntry(final String accessToken,
+        final String refreshToken,
+        final String jwt,
+        final Collection&lt;String&gt; audiences) {
+
+<span class="nc" id="L47">        this(accessToken, refreshToken, jwt, audiences, null);</span>
+<span class="nc" id="L48">    }</span>
+
+    public TokenCacheEntry(final String accessToken,
+        final String refreshToken,
+        final String jwt,
+        final Collection&lt;String&gt; audiences,
+<span class="nc" id="L54">        final Instant expiresOn) {</span>
+
+<span class="nc" id="L56">        this.accessToken = accessToken;</span>
+<span class="nc" id="L57">        this.refreshToken = refreshToken;</span>
+<span class="nc" id="L58">        this.jwt = jwt;</span>
+<span class="nc" id="L59">        this.audiences = audiences;</span>
+<span class="nc" id="L60">        this.expiresOn = Date.from(expiresOn);</span>
+<span class="nc" id="L61">        createdOn = Date.from(Instant.now());</span>
+<span class="nc" id="L62">    }</span>
+
+    public String getAccessToken() {
+
+<span class="nc" id="L66">        return accessToken;</span>
+    }
+
+    public Collection&lt;String&gt; getAudiences() {
+
+<span class="nc" id="L71">        return audiences;</span>
+    }
+
+    public Instant getCreatedOn() {
+
+<span class="nc" id="L76">        return createdOn.toInstant();</span>
+    }
+
+    /**
+     * If {@link #getExpiresOn()} is null, then this will return null. Otherwise it
+     * will return the number of seconds before expiration.
+     *
+     * @return
+     */
+    public Integer getExpiresInSeconds() {
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (expiresOn == null) {</span>
+<span class="nc" id="L88">            return null;</span>
+        }
+<span class="nc" id="L90">        return (int) Duration.between(Instant.now(), expiresOn.toInstant()).getSeconds();</span>
+    }
+
+    public Instant getExpiresOn() {
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (expiresOn == null) {</span>
+<span class="nc" id="L96">            return null;</span>
+        }
+<span class="nc" id="L98">        return expiresOn.toInstant();</span>
+    }
+
+    public String getJwt() {
+
+<span class="nc" id="L103">        return jwt;</span>
+    }
+
+    public String getRefreshToken() {
+
+<span class="nc" id="L108">        return refreshToken;</span>
+    }
+
+    /**
+     * If {@link #getExpiresOn()} is null, then this will return false.
+     *
+     * @return expired
+     */
+    public boolean isExpired() {
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (expiresOn == null) {</span>
+<span class="nc" id="L119">            return false;</span>
+        }
+<span class="nc" id="L121">        return Instant.now().isAfter(expiresOn.toInstant());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

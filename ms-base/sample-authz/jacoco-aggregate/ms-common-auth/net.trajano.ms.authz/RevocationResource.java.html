@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>RevocationResource.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">Sample Authorization Microservice</a> &gt; <a href="../index.html" class="el_bundle">ms-common-auth</a> &gt; <a href="index.source.html" class="el_package">net.trajano.ms.authz</a> &gt; <span class="el_source">RevocationResource.java</span></div><h1>RevocationResource.java</h1><pre class="source lang-java linenums">package net.trajano.ms.authz;
+
+import javax.annotation.security.PermitAll;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonObject;
+
+import io.swagger.annotations.Api;
+import net.trajano.ms.auth.util.HttpAuthorizationHeaders;
+import net.trajano.ms.authz.internal.TokenCache;
+import net.trajano.ms.authz.spi.ClientValidator;
+import net.trajano.ms.core.ErrorCodes;
+import net.trajano.ms.core.ErrorResponses;
+
+/**
+ * Revocation endpoint resource.
+ *
+ * @author Archimedes Trajano
+ */
+@Api
+@Configuration
+@Component
+@Path(&quot;/revoke&quot;)
+@PermitAll
+<span class="nc" id="L39">public class RevocationResource {</span>
+
+<span class="nc" id="L41">    private static final Logger LOG = LoggerFactory.getLogger(RevocationResource.class);</span>
+
+    @Autowired
+    private ClientValidator clientValidator;
+
+    /**
+     * Maximum life of a JWT token. Past that period, it is expected to no longer be
+     * used.
+     */
+    @Value(&quot;${token.jwtMaximumLifetime:86400}&quot;)
+    private int jwtMaximumLifetimeInSeconds;
+
+    @Value(&quot;${realmName:client_credentials}&quot;)
+    private String realmName;
+
+    @Autowired
+    private TokenCache tokenCache;
+
+    /**
+     * Performs client credential validation then invokes the revocation process
+     * from the token cache.
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject revoke(
+        @FormParam(&quot;token&quot;) final String token,
+        @FormParam(&quot;token_type_hint&quot;) final String tokenTypeHint,
+        @HeaderParam(HttpHeaders.AUTHORIZATION) final String authorization) {
+
+<span class="nc" id="L71">        final String[] clientCredentials = HttpAuthorizationHeaders.parseBasicAuthorization(authorization);</span>
+
+<span class="nc" id="L73">        final String clientId = clientCredentials[0];</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (!clientValidator.isValid(&quot;revocation&quot;, clientId, clientCredentials[1])) {</span>
+<span class="nc" id="L75">            throw ErrorResponses.unauthorized(ErrorCodes.UNAUTHORIZED_CLIENT, &quot;Unauthorized client&quot;, String.format(&quot;Basic realm=\&quot;%s\&quot;, encoding=\&quot;UTF-8\&quot;&quot;, realmName));</span>
+        }
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (token == null) {</span>
+<span class="nc" id="L79">            throw ErrorResponses.invalidRequest(&quot;Missing token&quot;);</span>
+        }
+<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (tokenTypeHint != null &amp;&amp; !&quot;refresh_token&quot;.equals(tokenTypeHint)) {</span>
+<span class="nc" id="L82">            throw ErrorResponses.badRequest(ErrorCodes.UNSUPPORTED_TOKEN_TYPE, &quot;Token type is not supported&quot;);</span>
+        }
+
+<span class="nc" id="L85">        tokenCache.revokeRefreshToken(token, clientId);</span>
+<span class="nc" id="L86">        LOG.debug(&quot;revoked token={}&quot;, token);</span>
+
+<span class="nc" id="L88">        final JsonObject okReturn = new JsonObject();</span>
+<span class="nc" id="L89">        okReturn.addProperty(&quot;ok&quot;, 1);</span>
+<span class="nc" id="L90">        return okReturn;</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
