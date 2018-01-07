@@ -44,12 +44,37 @@ public class SemaphoredHeaders<V> extends Headers<V> {
     }
 
     @Override
+    public boolean equals(final Object o) {
+
+        LOG.debug("equals, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        try {
+            return super.equals(o);
+        } finally {
+            metadataLock.release();
+        }
+    }
+
+    @Override
     public List<V> get(final Object key) {
 
         LOG.debug("attempting to get {}, available permits on lock={}", key, metadataLock.availablePermits());
         metadataLock.acquireUninterruptibly();
         try {
             return super.get(key);
+        } finally {
+            metadataLock.release();
+        }
+
+    }
+
+    @Override
+    public int hashCode() {
+
+        LOG.debug("hashCode, available permits on lock={}", metadataLock.availablePermits());
+        metadataLock.acquireUninterruptibly();
+        try {
+            return super.hashCode();
         } finally {
             metadataLock.release();
         }
