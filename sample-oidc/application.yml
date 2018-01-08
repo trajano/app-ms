@@ -28,7 +28,7 @@ http:
 
 issuer: http://oidc-ms
 oidc:
-  redirect_uri: https://localhost:3001/oidc/cb
+  redirect_uri: http://localhost:3001/oidc/cb
   config_file: openidconnect-config.json
 
 authorizationEndpoint: http://authorization-ms
