@@ -147,6 +147,7 @@
           <artifactId>maven-release-plugin</artifactId>
           <configuration>
             <goals>deploy</goals>
+            <completionGoals>clean compile</completionGoals>
           </configuration>
         </plugin>
         <plugin>
