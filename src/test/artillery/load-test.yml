@@ -1,5 +1,6 @@
 config:
   target: "http://localhost:8910"
+  timeout: 10
   phases:
   - duration: 120
     arrivalRate: 50
