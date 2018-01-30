@@ -11,6 +11,14 @@ import io.vertx.core.http.HttpServerOptions;
 @Configuration
 public class ConfigurationProvider {
 
+    /**
+     * Idle timeout, in seconds. zero means don't timeout. This determines if a
+     * connection will timeout and be closed if no data is received within the
+     * timeout.
+     */
+    @Value("${http.client.idle_timeout:0}")
+    private int httpClientIdleTimeout;
+
     @Value("${http.client.max_pool_size:50}")
     private int httpClientMaxPoolSize;
 
@@ -33,6 +41,7 @@ public class ConfigurationProvider {
     public HttpClientOptions httpClientOptions() {
 
         return new HttpClientOptions()
+            .setIdleTimeout(httpClientIdleTimeout)
             .setMaxPoolSize(httpClientMaxPoolSize);
     }
 
