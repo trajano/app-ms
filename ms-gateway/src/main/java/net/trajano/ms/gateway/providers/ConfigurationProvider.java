@@ -14,9 +14,9 @@ public class ConfigurationProvider {
     /**
      * Idle timeout, in seconds. zero means don't timeout. This determines if a
      * connection will timeout and be closed if no data is received within the
-     * timeout.
+     * timeout. This defaults to 60 seconds.
      */
-    @Value("${http.client.idle_timeout:0}")
+    @Value("${http.client.idle_timeout:60}")
     private int httpClientIdleTimeout;
 
     @Value("${http.client.max_pool_size:50}")
@@ -42,6 +42,7 @@ public class ConfigurationProvider {
 
         return new HttpClientOptions()
             .setIdleTimeout(httpClientIdleTimeout)
+            .setPipelining(true)
             .setMaxPoolSize(httpClientMaxPoolSize);
     }
 

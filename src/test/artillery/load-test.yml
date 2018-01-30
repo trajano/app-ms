@@ -8,6 +8,9 @@ config:
     origin: "http://localhost:8888"
   environments:
     docker:
+      phases:
+      - duration: 60
+        arrivalRate: 10
       target: "http://localhost:3001"
       variables:
         origin: "http://localhost:3000"
@@ -69,9 +72,15 @@ scenarios:
         Authorization: "Bearer {{ access_token }}"
         Origin: "{{ origin }}"
   - get:
-      url: "/v1/hello/openid"
+      url: "/v1/hello/null"
       headers:
         Accept: application/json
         Authorization: "Bearer {{ access_token }}"
         Origin: "{{ origin }}"
+#  - get:
+#      url: "/v1/hello/openid"
+#      headers:
+#        Accept: application/json
+#        Authorization: "Bearer {{ access_token }}"
+#        Origin: "{{ origin }}"
   

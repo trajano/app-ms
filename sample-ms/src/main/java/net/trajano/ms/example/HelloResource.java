@@ -168,6 +168,18 @@ public class HelloResource {
         }
     }
 
+    @SuppressWarnings("null")
+    @ApiOperation(value = "throw null pointer exception")
+    @GET
+    @Path("/null")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject nullOp() {
+
+        final JsonObject ret = null;
+        ret.add("Hello", new JsonPrimitive("world"));
+        return ret;
+    }
+
     @ApiOperation(value = "Cancelling after 1 seconds",
         tags = "internal")
     @GET

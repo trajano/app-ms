@@ -27,6 +27,14 @@ import net.trajano.ms.engine.jaxrs.JaxRsRouter;
 })
 public class VertxConfig {
 
+    /**
+     * Idle timeout, in seconds. zero means don't timeout. This determines if a
+     * connection will timeout and be closed if no data is received within the
+     * timeout. This defaults to 60 seconds.
+     */
+    @Value("${http.client.idle_timeout:60}")
+    private int httpClientIdleTimeout;
+
     @Value("${http.client.proxy.host:#{null}}")
     private String httpClientProxyHost;
 
@@ -74,6 +82,7 @@ public class VertxConfig {
     public HttpClientOptions httpClientOptions() {
 
         final HttpClientOptions options = new HttpClientOptions()
+            .setIdleTimeout(httpClientIdleTimeout)
             .setPipelining(true);
         if (httpClientProxyHost != null) {
             final ProxyOptions proxyOptions = new ProxyOptions()
