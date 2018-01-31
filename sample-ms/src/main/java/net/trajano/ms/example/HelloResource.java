@@ -153,6 +153,17 @@ public class HelloResource {
         return ret;
     }
 
+    @ApiOperation(value = "data from GSON")
+    @POST
+    @Path("/jp")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject jsonObjectPost(final JsonObject jsonObject) {
+
+        jsonObject.add("Hello", new JsonPrimitive("world"));
+        return jsonObject;
+    }
+
     @ApiOperation(value = "displays openid config of google")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
