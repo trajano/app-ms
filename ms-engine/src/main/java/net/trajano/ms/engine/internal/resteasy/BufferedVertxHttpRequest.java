@@ -14,18 +14,14 @@ import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import net.trajano.ms.engine.internal.NullInputStream;
+import net.trajano.ms.engine.internal.VertxBufferInputStream;
 import net.trajano.ms.engine.internal.VertxRoutingContextHttpHeaders;
 
-/**
- * For the most part the request is prebuilt and immutable. That way there is no
- * need for most of the setters.
- *
- * @author Archimedes Trajano
- */
-public class VertxHttpRequest extends BaseHttpRequest {
+public class BufferedVertxHttpRequest extends BaseHttpRequest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxHttpRequest.class);
 
@@ -43,9 +39,11 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
     private final HttpHeaders httpHeaders;
 
+    private Buffer requestBuffer;
+
     private final HttpServerRequest vertxRequest;
 
-    public VertxHttpRequest(final RoutingContext context,
+    public BufferedVertxHttpRequest(final RoutingContext context,
         final ResteasyUriInfo uriInfo,
         final ResteasyProviderFactory providerFactory) {
 
@@ -101,7 +99,10 @@ public class VertxHttpRequest extends BaseHttpRequest {
     public InputStream getInputStream() {
 
         if (!vertxRequest.isEnded()) {
-            return null;
+            if (requestBuffer == null) {
+                throw new IllegalStateException("getInputStream before setInputStream");
+            }
+            return new VertxBufferInputStream(requestBuffer);
         } else {
             return NullInputStream.nullInputStream();
         }
@@ -118,6 +119,11 @@ public class VertxHttpRequest extends BaseHttpRequest {
 
         context.remove(name);
 
+    }
+
+    public void requestBuffer(final Buffer _requestBuffer) {
+
+        requestBuffer = _requestBuffer;
     }
 
     @Override

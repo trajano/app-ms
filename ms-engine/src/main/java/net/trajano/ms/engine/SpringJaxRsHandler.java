@@ -41,6 +41,7 @@ import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
+import net.trajano.ms.engine.internal.resteasy.BufferedVertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxClientEngine;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpRequest;
 import net.trajano.ms.engine.internal.resteasy.VertxHttpResponse;
@@ -199,11 +200,10 @@ public class SpringJaxRsHandler implements
 
         System.out.println(">" + context.request().method());
         System.out.println(">" + context.request().headers().entries());
-        final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, providerFactory);
 
-        context.request().setExpectMultipart(isMultipartExpected(request));
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
             if (context.request().method() == HttpMethod.GET || context.request().method() == HttpMethod.HEAD) {
+                final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, providerFactory);
                 ThreadLocalResteasyProviderFactory.push(providerFactory);
                 ResteasyProviderFactory.pushContext(RoutingContext.class, context);
                 ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
@@ -220,34 +220,28 @@ public class SpringJaxRsHandler implements
                     ThreadLocalResteasyProviderFactory.pop();
                 }
             } else {
-                context.vertx().executeBlocking(
-                    future -> {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("{} {}", context.request().method(), serverRequest.absoluteURI());
-                        }
-                        ThreadLocalResteasyProviderFactory.push(providerFactory);
-                        ResteasyProviderFactory.pushContext(RoutingContext.class, context);
-                        ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
-                        ResteasyProviderFactory.pushContext(Client.class, client);
-                        ResteasyProviderFactory.pushContext(HttpHeaders.class, request.getHttpHeaders());
+                final BufferedVertxHttpRequest request = new BufferedVertxHttpRequest(context, uriInfo, providerFactory);
+                context.request().setExpectMultipart(isMultipartExpected(request));
+                context.request().bodyHandler(requestBuffer -> {
+                    ThreadLocalResteasyProviderFactory.push(providerFactory);
+                    ResteasyProviderFactory.pushContext(RoutingContext.class, context);
+                    ResteasyProviderFactory.pushContext(Vertx.class, context.vertx());
+                    ResteasyProviderFactory.pushContext(Client.class, client);
+                    ResteasyProviderFactory.pushContext(HttpHeaders.class, request.getHttpHeaders());
 
-                        try {
-                            dispatcher.invoke(request, response);
-                            context.response().end();
-                            future.complete();
-                        } finally {
-                            ResteasyProviderFactory.clearContextData();
-                            ThreadLocalResteasyProviderFactory.pop();
-                        }
-                    }, false,
-                    res -> {
-                        if (res.failed()) {
-                            context.fail(res.cause());
-                        }
+                    try {
+                        request.requestBuffer(requestBuffer);
+                        System.out.println(requestBuffer);
+                        dispatcher.invoke(request, response);
+                    } finally {
                         if (!context.response().ended()) {
                             context.response().end();
                         }
-                    });
+                        ResteasyProviderFactory.clearContextData();
+                        ThreadLocalResteasyProviderFactory.pop();
+                    }
+
+                });
             }
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
