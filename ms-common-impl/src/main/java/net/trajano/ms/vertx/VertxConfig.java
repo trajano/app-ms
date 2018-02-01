@@ -62,7 +62,7 @@ public class VertxConfig {
     @Value("${vertx.warningExceptionTime:1}")
     private long vertxWarningExceptionTime;
 
-    @Value("${vertx.workerPoolSize:50}")
+    @Value("${vertx.workerPoolSize:5000}")
     private int vertxWorkerPoolSize;
 
     /**
