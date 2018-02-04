@@ -3,6 +3,9 @@ http:
 
 issuer: http://localhost:8282
 
+client_validator:
+  require_origin_check: false
+
 ---
 
 spring.profiles: docker-compose

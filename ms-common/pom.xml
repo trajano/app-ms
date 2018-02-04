@@ -152,7 +152,7 @@
             <inherited>false</inherited>
             <configuration>
               <rules>
-                <dependencyConvergence />
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>

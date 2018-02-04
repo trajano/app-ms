@@ -32,6 +32,12 @@ public class JsonClientValidator implements
     @Inject
     private JsonOps jsonOps;
 
+    /**
+     * Flag to check if Origin should be checked.
+     */
+    @Value("${client_validator.require_origin_check:true}")
+    private boolean requireOriginCheck;
+
     private ClientInfo getClientInfo(final String clientId) {
 
         return clients.getClients().stream()
@@ -71,14 +77,22 @@ public class JsonClientValidator implements
     public boolean isOriginAllowed(final String clientId,
         final URI origin) {
 
-        return getClientInfo(clientId).isOriginAllowed(origin);
+        if (requireOriginCheck) {
+            return getClientInfo(clientId).isOriginAllowed(origin);
+        } else {
+            return true;
+        }
     }
 
     @Override
     public boolean isOriginAllowed(final URI origin) {
 
-        return clients.getClients().stream()
-            .anyMatch(info -> info.getOrigin().equals(origin));
+        if (requireOriginCheck) {
+            return clients.getClients().stream()
+                .anyMatch(info -> info.getOrigin().equals(origin));
+        } else {
+            return true;
+        }
     }
 
     @Override
