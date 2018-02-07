@@ -7,8 +7,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 
-import net.trajano.ms.gateway.internal.Errors;
-import net.trajano.ms.gateway.internal.MediaTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +24,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.CorsHandler;
 import net.trajano.ms.gateway.internal.Conversions;
+import net.trajano.ms.gateway.internal.Errors;
+import net.trajano.ms.gateway.internal.MediaTypes;
 import net.trajano.ms.gateway.internal.PathContext;
 import net.trajano.ms.gateway.providers.GatewayClientAuthorization;
 
@@ -69,6 +69,12 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
 
     @Autowired
     private HttpClient httpClient;
+
+    /**
+     * Flag to check if Origin should be checked.
+     */
+    @Value("${client_validator.require_origin_check:true}")
+    private boolean requireOriginCheck;
 
     @Override
     public void handle(final RoutingContext context) {
@@ -149,17 +155,31 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
 
         router.route().handler(this);
 
-        router.route().handler(CorsHandler.create(".+")
-            .maxAgeSeconds(600)
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.DELETE)
-            .allowedMethod(HttpMethod.OPTIONS)
-            .allowedHeader("Content-Type")
-            .allowedHeader("Accept")
-            .allowedHeader("Accept-Language")
-            .allowedHeader("Authorization"));
+        if (requireOriginCheck) {
+            router.route().handler(CorsHandler.create(".+")
+                .maxAgeSeconds(600)
+                .allowedMethod(HttpMethod.GET)
+                .allowedMethod(HttpMethod.POST)
+                .allowedMethod(HttpMethod.PUT)
+                .allowedMethod(HttpMethod.DELETE)
+                .allowedMethod(HttpMethod.OPTIONS)
+                .allowedHeader("Content-Type")
+                .allowedHeader("Accept")
+                .allowedHeader("Accept-Language")
+                .allowedHeader("Authorization"));
+        } else {
+            router.route().handler(CorsHandler.create("*")
+                .maxAgeSeconds(600)
+                .allowedMethod(HttpMethod.GET)
+                .allowedMethod(HttpMethod.POST)
+                .allowedMethod(HttpMethod.PUT)
+                .allowedMethod(HttpMethod.DELETE)
+                .allowedMethod(HttpMethod.OPTIONS)
+                .allowedHeader("Content-Type")
+                .allowedHeader("Accept")
+                .allowedHeader("Accept-Language")
+                .allowedHeader("Authorization"));
+        }
 
     }
 
