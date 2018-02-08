@@ -92,13 +92,18 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
 
         final URI originUri;
         try {
-            final URL tempOrigin;
-            if (origin == null && referrer != null) {
-                tempOrigin = new URL(referrer);
+            // Implements a workaround for cordova sending "file://" which is not supported by java.net.URI.
+            if ("file://".equals(origin)) {
+                originUri = URI.create("file:///");
             } else {
-                tempOrigin = new URL(origin);
+                final URL tempOrigin;
+                if (origin == null && referrer != null) {
+                    tempOrigin = new URL(referrer);
+                } else {
+                    tempOrigin = new URL(origin);
+                }
+                originUri = getPartsForOriginHeader(tempOrigin);
             }
-            originUri = getPartsForOriginHeader(tempOrigin);
         } catch (final MalformedURLException e) {
             context.response().setStatusCode(400)
                 .putHeader(HttpHeaders.CONTENT_TYPE, MediaTypes.APPLICATION_JSON)
