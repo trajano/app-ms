@@ -28,12 +28,7 @@ public class RequestIDHandler extends SelfRegisteringRoutingContextHandler {
     public void handle(final RoutingContext context) {
 
         final String requestID = requestIDProvider.newRequestID(context);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("requestID={}", requestID);
-            context.request().headers().forEach(h -> {
-                LOG.debug("header {}={}", h.getKey(), h.getValue());
-            });
-        }
+        LOG.debug("requestID={}", requestID);
         context.next();
     }
 

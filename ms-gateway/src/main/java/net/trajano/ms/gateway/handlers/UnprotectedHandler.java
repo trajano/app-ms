@@ -52,9 +52,7 @@ public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
             return;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Handling {} with method={} from={} to={} protected={} ended={}", context, context.request().method(), pathContext.getFrom(), pathContext.getTo(), pathContext.isProtected(), context.request().isEnded());
-        }
+        LOG.debug("Handling {} with from={} to={} protected={} ended={}", context, pathContext.getFrom(), pathContext.getTo(), pathContext.isProtected(), context.request().isEnded());
 
         final HttpServerRequest contextRequest = context.request();
 
@@ -68,10 +66,7 @@ public class UnprotectedHandler extends SelfRegisteringRoutingContextHandler {
                 clientResponse.headers().forEach(e -> contextRequest.response().putHeader(e.getKey(), e.getValue()));
                 clientResponse.endHandler(v -> contextRequest.response().end());
                 Pump.pump(clientResponse, contextRequest.response()).start();
-            }).exceptionHandler(e -> {
-                LOG.error("Failure handling response", e);
-                context.fail(e);
-            })
+            }).exceptionHandler(context::fail)
             .setChunked(true);
 
         StreamSupport.stream(contextRequest.headers().spliterator(), false)

@@ -21,7 +21,7 @@ jwks:
 
 http:
   defaultBodyLimit: 2048
-client_validator.require_origin_check: false
+
 allowedOrigins: "*"
 
 routes:
