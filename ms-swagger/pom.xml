@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.trajano.ms.app</groupId>
     <artifactId>ms-base</artifactId>
-    <version>1.1.12</version>
+    <version>1.1.13-SNAPSHOT</version>
     <relativePath>../ms-base</relativePath>
   </parent>
   <artifactId>ms-swagger</artifactId>
