@@ -4,6 +4,10 @@ services:
     image: trajano/quasar-ms
     networks:
     - gateway-web
+  proxy:
+    image: trajano/proxy
+    networks:
+    - gateway-web
   gateway-ms:
     image: trajano/gateway-ms
     networks:

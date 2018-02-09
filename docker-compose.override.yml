@@ -4,6 +4,10 @@ services:
     build: ./quasar-ms
     ports:
     - "3000:80"
+  proxy:
+    build: ./src/docker/proxy
+    ports:
+    - "3002:80"
   gateway-ms:
     build: ./ms-gateway
     environment:

@@ -173,6 +173,19 @@ public class AuthenticatedClientValidator extends SelfRegisteringRoutingContextH
                 .allowedHeader("Accept-Language")
                 .allowedHeader("Authorization"));
         } else {
+            router.options().handler(ctx -> {
+                LOG.debug("Sending explicit CORS value");
+                ctx.request().endHandler(aVoid -> {
+                    ctx.response()
+                        .setStatusCode(204)
+                        .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "content-type, accept, accept-language, authorization")
+                        .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                        .putHeader(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "600")
+                        .putHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS")
+                        .end();
+                });
+
+            });
             router.route().handler(CorsHandler.create("*")
                 .maxAgeSeconds(600)
                 .allowedMethod(HttpMethod.GET)
