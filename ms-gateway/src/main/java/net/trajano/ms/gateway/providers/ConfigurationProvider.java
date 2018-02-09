@@ -46,11 +46,16 @@ public class ConfigurationProvider {
             .setMaxPoolSize(httpClientMaxPoolSize);
     }
 
+    /**
+     * HTTP Server options.
+     *
+     * @return options.
+     */
     @Bean
     public HttpServerOptions httpServerOptions() {
 
         return new HttpServerOptions()
-            .setCompressionSupported(true)
+            .setCompressionSupported(false)
             .setPort(httpPort);
     }
 
