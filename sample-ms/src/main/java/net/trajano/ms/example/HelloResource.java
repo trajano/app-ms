@@ -2,6 +2,8 @@ package net.trajano.ms.example;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -201,6 +204,29 @@ public class HelloResource {
         asyncResponse.setTimeout(1, TimeUnit.SECONDS);
         Thread.sleep(2000);
         asyncResponse.resume(Response.ok("hello").build());
+    }
+
+    @ApiOperation(value = "Stream Lorem Pixel")
+    @GET
+    @Path("/stream")
+    @Produces("image/jpeg")
+    public Response streamLorem() throws Exception {
+
+        final StreamingOutput stream = os -> {
+
+            final URL loremPixel = new URL("http://lorempixel.com/400/200/");
+            final URLConnection yc = loremPixel.openConnection();
+
+            try (final InputStream in = yc.getInputStream()) {
+                final byte[] buffer = new byte[2048];
+                for (int n = in.read(buffer); n >= 0; n = in.read(buffer)) {
+                    os.write(buffer, 0, n);
+                }
+            }
+
+        };
+        return Response.ok(stream).build();
+
     }
 
     @ApiOperation(value = "displays hello world after 2 seconds")
