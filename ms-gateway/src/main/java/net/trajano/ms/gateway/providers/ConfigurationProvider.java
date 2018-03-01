@@ -28,6 +28,12 @@ public class ConfigurationProvider {
     @Value("${http.client.proxy.password:#{null}}")
     private String httpClientProxyPassword;
 
+    /**
+     * HTTP compression supported.
+     */
+    @Value("${http.compression_supported:#{true}}")
+    private boolean httpCompressionSupported;
+
     @Value("${http.port:8910}")
     private int httpPort;
 
@@ -47,7 +53,8 @@ public class ConfigurationProvider {
     }
 
     /**
-     * HTTP Server options.
+     * HTTP Server options. Enables compression support and specifies the port based
+     * on the configuration.
      *
      * @return options.
      */
@@ -55,7 +62,7 @@ public class ConfigurationProvider {
     public HttpServerOptions httpServerOptions() {
 
         return new HttpServerOptions()
-            .setCompressionSupported(false)
+            .setCompressionSupported(httpCompressionSupported)
             .setPort(httpPort);
     }
 
