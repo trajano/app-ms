@@ -32,28 +32,19 @@ install:
 before_script:
 - mvn -q clean
 script:
-- mvn -q package sonar:sonar -Dmaven.test.redirectTestOutputToFile=true
+- mvn -T2.0C -q package -Dmaven.test.skip=true
+- mvn -T2.0C -q site -Dmaven.test.redirectTestOutputToFile=true
+- mvn -T2.0C -q sonar:sonar
 - docker-compose build
 deploy:
 - provider: script
   skip_cleanup: true
-  script: mvn -q -e -DskipTests=true deploy
+  script: mvn -T2.0C -q -e deploy -DskipTests=true
   on:
     branch: master
 - provider: script
   skip_cleanup: true
-  script: mvn -q -e site -Dmaven.test.redirectTestOutputToFile=true
-  on:
-    branch: master
-- provider: script
-  skip_cleanup: true
-  script: mvn -q -e site:stage -DstagingDirectory=$HOME/staging/index.html
-  on:
-    branch: master
-- provider: pages
-  skip_cleanup: true
-  github_token: $SONAR_GITHUB_TOKEN
-  local_dir: $HOME/staging/app-ms
+  script: mvn -T2.0C -e site:deploy
   on:
     branch: master
 - provider: script
