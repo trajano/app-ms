@@ -37,7 +37,7 @@ public class BootstrapTest {
     public void bootstrapTest() throws Exception {
 
         final MicroserviceEngine microserviceEngine = Mockito.mock(MicroserviceEngine.class);
-        Mockito.when(microserviceEngine.bootstrap()).thenReturn(new Object[] {
+        Mockito.when(microserviceEngine.bootstrap()).thenReturn(new Class<?>[] {
             MyApp.class
         });
         new TestMicroservice().setEngines(microserviceEngine);
@@ -49,7 +49,7 @@ public class BootstrapTest {
     public void doubleRunTest() throws Exception {
 
         final MicroserviceEngine microserviceEngine = Mockito.mock(MicroserviceEngine.class);
-        Mockito.when(microserviceEngine.bootstrap()).thenReturn(new Object[] {
+        Mockito.when(microserviceEngine.bootstrap()).thenReturn(new Class<?>[] {
             MyApp.class
         });
         new TestMicroservice().setApplicationAndEngines(MyApp.class, microserviceEngine);

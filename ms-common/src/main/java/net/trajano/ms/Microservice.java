@@ -79,8 +79,8 @@ public class Microservice {
         }
         Microservice.applicationClass = applicationClass;
 
-        final Object[] bootstrapObjects = microserviceEngine.bootstrap();
-        final Object[] sources = new Object[extraSources.length + bootstrapObjects.length];
+        final Class<?>[] bootstrapObjects = microserviceEngine.bootstrap();
+        final Class<?>[] sources = new Class<?>[extraSources.length + bootstrapObjects.length];
 
         System.arraycopy(extraSources, 0, sources, 0, extraSources.length);
         System.arraycopy(bootstrapObjects, 0, sources, extraSources.length, bootstrapObjects.length);
