@@ -32,9 +32,8 @@ install:
 before_script:
 - mvn -q clean
 script:
-- mvn -q package -Dmaven.test.skip=true
-#- mvn -q site -Dmaven.test.redirectTestOutputToFile=true
-- mvn -q sonar:sonar
+- mvn -T2.0C -q package -Dmaven.test.redirectTestOutputToFile=true
+- mvn -T2.0C -q sonar:sonar
 - docker-compose build
 deploy:
 - provider: script
@@ -42,11 +41,11 @@ deploy:
   script: mvn -q -e deploy -DskipTests=true
   on:
     branch: master
-#- provider: script
-#  skip_cleanup: true
-#  script: mvn -e site:deploy
-#  on:
-#    branch: master
+- provider: script
+  skip_cleanup: true
+  script: mvn -e site-deploy -Dmaven.test.redirectTestOutputToFile=true
+  on:
+    branch: master
 - provider: script
   skip_cleanup: true
   script: printf 'scm.tag=%1s\nscm.url=scm:git:https://git@github.com/%2s.git' "${TRAVIS_TAG}"
