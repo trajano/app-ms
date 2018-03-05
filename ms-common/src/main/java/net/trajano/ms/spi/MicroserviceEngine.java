@@ -4,11 +4,11 @@ public interface MicroserviceEngine {
 
     /**
      * Performs the initialization of the microservice engine and returns an array
-     * of objects that would be used to bootstrap Spring.
+     * of classes that would be used to bootstrap Spring.
      *
-     * @return starting context objects.
+     * @return starting context classes.
      */
-    Object[] bootstrap();
+    Class<?>[] bootstrap();
 
     /**
      * Gets the host name of where the engine is running. This may be
