@@ -210,7 +210,7 @@ public class HelloResource {
     @GET
     @Path("/stream")
     @Produces("image/jpeg")
-    public Response streamLorem() throws Exception {
+    public Response streamLorem() {
 
         final StreamingOutput stream = os -> {
 
