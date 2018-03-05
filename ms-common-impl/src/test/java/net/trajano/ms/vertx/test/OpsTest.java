@@ -5,7 +5,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.core.UriInfo;
 
 import org.jose4j.jwk.HttpsJwks;
 import org.jose4j.jwt.JwtClaims;
@@ -84,6 +88,25 @@ public class OpsTest {
             final JwtClaims readClaims = cryptoOps.toClaimsSet(jwt, jwks);
             assertEquals(claims.toJson(), readClaims.toJson());
         }
+    }
+
+    /**
+     * Tests the exception conversion using JsonOps.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testExceptionJson() throws Exception {
+
+        final ErrorResponse response = new ErrorResponse(new IOException("ahem"), mock(UriInfo.class), true);
+        final StringWriter writer = new StringWriter();
+        jsonOps.writeTo(response, writer);
+
+        final ErrorResponse unmarshaled = jsonOps.fromJson(writer.toString(), ErrorResponse.class);
+        assertEquals(response.getError(), unmarshaled.getError());
+        assertEquals("ahem", unmarshaled.getErrorDescription());
+        assertEquals(response.getErrorDescription(), unmarshaled.getErrorDescription());
+
     }
 
     @Test
