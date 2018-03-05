@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
@@ -60,6 +61,8 @@ public class VertxHttpRequest extends BaseHttpRequest {
         httpHeaders = new VertxRoutingContextHttpHeaders(context);
 
         LOG.debug("vertxRequest.isEnded={}", vertxRequest.isEnded());
+
+        context.request().setExpectMultipart(httpHeaders.getMediaType().isCompatible(MediaType.MULTIPART_FORM_DATA_TYPE));
 
         if (!vertxRequest.isEnded()) {
             is = new VertxBlockingInputStream(vertxRequest);
