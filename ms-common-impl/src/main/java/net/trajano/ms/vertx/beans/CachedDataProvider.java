@@ -38,6 +38,9 @@ public class CachedDataProvider implements
      */
     public static final int MAX_NUMBER_OF_KEYS = 5;
 
+    /**
+     * Miniumum number of keys to keep in the cache.
+     */
     public static final int MIN_NUMBER_OF_KEYS = 2;
 
     @Autowired(required = false)
@@ -56,9 +59,15 @@ public class CachedDataProvider implements
     @Autowired
     private TokenGenerator tokenGenerator;
 
+    /**
+     * Creates a JWT Consumer that performs no verification.
+     *
+     * @return JWT Consumer
+     */
     public JwtConsumer buildConsumer() {
 
         return buildConsumer(null, null);
+
     }
 
     public JwtConsumer buildConsumer(final HttpsJwks jwks,
@@ -158,7 +167,7 @@ public class CachedDataProvider implements
     /**
      * Builds the keys from the cache.
      *
-     * @return
+     * @return JWKS representation of the keys.
      */
     public JsonWebKeySet getKeySet() {
 
