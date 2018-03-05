@@ -32,19 +32,19 @@ install:
 before_script:
 - mvn -q clean
 script:
-- mvn -T2.0C -q package -Dmaven.test.skip=true
-- mvn -T2.0C -q site -Dmaven.test.redirectTestOutputToFile=true
-- mvn -T2.0C -q sonar:sonar
+- mvn -q package -Dmaven.test.skip=true
+- mvn -q site -Dmaven.test.redirectTestOutputToFile=true
+- mvn -q sonar:sonar
 - docker-compose build
 deploy:
 - provider: script
   skip_cleanup: true
-  script: mvn -T2.0C -q -e deploy -DskipTests=true
+  script: mvn -q -e deploy -DskipTests=true
   on:
     branch: master
 - provider: script
   skip_cleanup: true
-  script: mvn -T2.0C -e site:deploy
+  script: mvn -e site:deploy
   on:
     branch: master
 - provider: script
