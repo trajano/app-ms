@@ -270,7 +270,7 @@ public class VertxAsynchronousResponse implements
 
         try {
             if (!writeLock.tryAcquire()) {
-                LOG.error("Semaphore locked", timeoutTimerID);
+                LOG.error("Semaphore locked for timer={}", timeoutTimerID);
                 writeLock.acquire();
             }
 
