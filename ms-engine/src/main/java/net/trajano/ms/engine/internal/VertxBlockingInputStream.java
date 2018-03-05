@@ -115,7 +115,8 @@ public class VertxBlockingInputStream extends InputStream {
         } else if (currentBuffer == END_BUFFER) {
             return -1;
         } else {
-            final byte b = currentBuffer.getByte(pos++);
+            // Convert to unsigned byte
+            final int b = currentBuffer.getByte(pos++) & 0xFF;
             --availableBytes;
             ++bytesRead;
             if (pos == currentBuffer.length()) {
