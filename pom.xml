@@ -147,6 +147,10 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-release-plugin</artifactId>
           <configuration>
             <goals>deploy</goals>
