@@ -206,7 +206,7 @@ public class HelloResource {
         asyncResponse.resume(Response.ok("hello").build());
     }
 
-    @ApiOperation(value = "Stream Lorem Pixel")
+    @ApiOperation(value = "Stream favico")
     @GET
     @Path("/stream")
     @Produces("image/jpeg")
@@ -214,8 +214,8 @@ public class HelloResource {
 
         final StreamingOutput stream = os -> {
 
-            final URL loremPixel = new URL("http://lorempixel.com/400/200/");
-            final URLConnection yc = loremPixel.openConnection();
+            final URL src = new URL("https://trajano.net/favicon.ico");
+            final URLConnection yc = src.openConnection();
 
             try (final InputStream in = yc.getInputStream()) {
                 final byte[] buffer = new byte[2048];
