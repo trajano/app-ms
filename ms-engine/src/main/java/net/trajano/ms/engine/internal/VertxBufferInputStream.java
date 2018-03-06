@@ -18,13 +18,18 @@ public class VertxBufferInputStream extends InputStream {
 
     }
 
+    /**
+     * Reads the next character from the Vert.x buffer. {@inheritDoc}
+     */
     @Override
     public int read() throws IOException {
 
         if (pos == buffer.length()) {
             return -1;
         }
-        return buffer.getByte(pos++);
+
+        // Convert to unsigned byte
+        return buffer.getByte(pos++) & 0xFF;
     }
 
     @Override
