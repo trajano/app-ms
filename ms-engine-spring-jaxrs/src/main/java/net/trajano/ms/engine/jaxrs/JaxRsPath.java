@@ -122,6 +122,27 @@ public class JaxRsPath implements
     }
 
     /**
+     * Compare two arrays with the following rules. The longer the length, the
+     * higher it's sequence. If equal length them each entry is compared.
+     */
+    private <T extends Comparable<T>> int compareArrays(final T[] a1,
+        final T[] a2) {
+
+        if (a1.length != a2.length) {
+            return a1.length - a2.length;
+        }
+
+        for (int i = 0; i < a1.length; ++i) {
+            if (!a1[i].equals(a2[i])) {
+                return a1[i].compareTo(a2[i]);
+            }
+        }
+
+        return 0;
+
+    }
+
+    /**
      * Compares two JaxRsPath objects such that it is ordered by most specific and
      * lowest level first. It sorts it in reverse by path. A path with produces is
      * order before one than one that does not. {@inheritDoc}
@@ -140,13 +161,18 @@ public class JaxRsPath implements
             return c;
         }
 
-        if (isNoProduces() && !o.isNoProduces()) {
-            return 1;
-        } else if (!isNoProduces() && o.isNoProduces()) {
-            return -1;
-        } else {
-            return 0;
+        final int producesComparison = compareArrays(produces, o.produces);
+        if (producesComparison != 0) {
+            return producesComparison;
         }
+
+        final int consumesComparison = compareArrays(consumes, o.consumes);
+        if (consumesComparison != 0) {
+            return consumesComparison;
+        }
+
+        return method.compareTo(o.method);
+
     }
 
     @Override
@@ -229,11 +255,6 @@ public class JaxRsPath implements
     private boolean isGet() {
 
         return method == HttpMethod.GET;
-    }
-
-    private boolean isNoProduces() {
-
-        return produces.length == 0;
     }
 
     @Override

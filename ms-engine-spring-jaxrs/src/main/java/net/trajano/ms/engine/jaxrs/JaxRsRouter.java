@@ -93,7 +93,11 @@ public class JaxRsRouter {
                     final String[] consumes = Optional.ofNullable(m.getAnnotation(Consumes.class)).map(Consumes::value).orElse(new String[0]);
                     final String[] produces = Optional.ofNullable(m.getAnnotation(Produces.class)).map(Produces::value).orElse(new String[0]);
 
-                    paths.add(new JaxRsPath(UriBuilder.fromPath(rootPath).path(classPath).path(path).toTemplate(), consumes, produces, getHttpMethod(m)));
+                    final JaxRsPath newPath = new JaxRsPath(UriBuilder.fromPath(rootPath).path(classPath).path(path).toTemplate(), consumes, produces, getHttpMethod(m));
+                    if (paths.contains(newPath)) {
+                        throw new IllegalStateException("Duplicate insert " + newPath + " existing ");
+                    }
+                    paths.add(newPath);
 
                 });
         });
