@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Semaphore;
 
 /**
  * <p></p>An input stream that wraps a Vert.X Read Buffer.  This does not do anything that performs blocks.</p>
@@ -23,7 +24,10 @@ public class VertxInputStream extends InputStream {
      * Read Stream being wrapped.
      */
     private final ReadStream<Buffer> readStream;
-    private int availableBytes = 0;
+    /**
+     * Semaphore to lock.  Permits is equivalent to available bytes.
+     */
+    private final Semaphore streamSemaphore = new Semaphore(0);
     private long bytesRead = 0;
     /**
      * Flag to indicate that the InputStream is closed.
@@ -59,7 +63,7 @@ public class VertxInputStream extends InputStream {
     @Override
     public int available() throws IOException {
 
-        return availableBytes;
+        return streamSemaphore.availablePermits();
     }
 
     @Override
@@ -102,13 +106,10 @@ public class VertxInputStream extends InputStream {
      */
     public void populate(final Buffer buffer) {
 
-        System.out.println("populating from "  + bytesRead);
-
         readStream.pause();
         currentBuffer = buffer;
         pos = 0;
-        availableBytes = buffer.length();
-
+        streamSemaphore.release(buffer.length());
     }
 
     @Override
@@ -122,18 +123,21 @@ public class VertxInputStream extends InputStream {
             throw new IOException("Stream is closed");
         }
 
-        if (ended && availableBytes == 0) {
+        try {
+            if (!streamSemaphore.tryAcquire()) {
+                System.out.println("semaphore exhausted " + bytesRead);
+                readStream.resume();
+                streamSemaphore.acquire();
+            }
+        } catch (InterruptedException e) {
+            error(e);
+            Thread.currentThread().interrupt();
+        }
+        if (ended) {
             return -1;
         }
-
         // Convert to unsigned byte
         final int b = currentBuffer.getByte(pos++) & 0xFF;
-        --availableBytes;
-        if (availableBytes == 0) {
-            System.out.println("resuming from "  + bytesRead);
-            readStream.resume();
-            System.out.println("resume done pos = "  + pos);
-        }
         ++bytesRead;
 
         return b;
