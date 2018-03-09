@@ -9,6 +9,7 @@ import javax.ws.rs.core.Application;
 
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 
 import net.trajano.ms.spi.MicroserviceEngine;
 
@@ -86,7 +87,7 @@ public class Microservice {
         System.arraycopy(bootstrapObjects, 0, sources, extraSources.length, bootstrapObjects.length);
 
         final SpringApplication springApplication = new SpringApplication(sources);
-        springApplication.setWebEnvironment(false);
+        springApplication.setWebApplicationType(WebApplicationType.NONE);
         springApplication
             .setBannerMode(Mode.OFF);
         springApplication.run(args);
