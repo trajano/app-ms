@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
@@ -103,6 +104,10 @@ public class BeanValidator implements
 
     }
 
+    /**
+     * {@inheritDoc}. {@link Context} annotated parameters are skipped unless the
+     * {@link Valid} annotation is present.
+     */
     @Override
     public void validateAllParameters(final HttpRequest request,
         final Object object,
@@ -116,8 +121,12 @@ public class BeanValidator implements
         boolean hasViolation = false;
         for (int i = 0; i < method.getParameterCount(); ++i) {
 
-            final Object value = parameterValues[i];
             final Parameter parameter = method.getParameters()[i];
+            if (parameter.isAnnotationPresent(Context.class) && !parameter.isAnnotationPresent(Valid.class)) {
+                continue;
+            }
+
+            final Object value = parameterValues[i];
 
             final String name = getParameterName(parameter);
 
