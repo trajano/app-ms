@@ -28,6 +28,9 @@ public class VertxInputStream extends InputStream {
      * Semaphore to lock.  Permits is equivalent to available bytes.
      */
     private final Semaphore streamSemaphore = new Semaphore(0);
+    /**
+     * Bytes read counter.
+     */
     private long bytesRead = 0;
     /**
      * Flag to indicate that the InputStream is closed.
@@ -40,11 +43,11 @@ public class VertxInputStream extends InputStream {
     /**
      * Current buffer.
      */
-    private Buffer currentBuffer;
+    private volatile Buffer currentBuffer;
     /**
      * Current position in buffer.
      */
-    private int pos;
+    private volatile int pos;
     /**
      * Exception holder.  If this is not null, it will be thrown on the next read.
      */
@@ -53,6 +56,7 @@ public class VertxInputStream extends InputStream {
     public VertxInputStream(final ReadStream<Buffer> readStream) {
 
         this.readStream = readStream;
+        readStream.pause();
         readStream
             .handler(this::populate)
             .exceptionHandler(this::error)
@@ -63,7 +67,7 @@ public class VertxInputStream extends InputStream {
     @Override
     public int available() throws IOException {
 
-        return streamSemaphore.availablePermits();
+        return currentBuffer == null ? 0 : currentBuffer.length() - pos;
     }
 
     @Override
@@ -106,10 +110,15 @@ public class VertxInputStream extends InputStream {
      */
     public void populate(final Buffer buffer) {
 
-        readStream.pause();
-        currentBuffer = buffer;
-        pos = 0;
-        streamSemaphore.release(buffer.length());
+        System.out.println("populating");
+        if (currentBuffer != null && pos < currentBuffer.length()) {
+            readStream.pause();
+        } else {
+            System.out.println("resumed");
+            currentBuffer = buffer;
+            pos = 0;
+            streamSemaphore.release();
+        }
     }
 
     @Override
@@ -123,17 +132,17 @@ public class VertxInputStream extends InputStream {
             throw new IOException("Stream is closed");
         }
 
-        try {
-            if (!streamSemaphore.tryAcquire()) {
-                System.out.println("semaphore exhausted " + bytesRead);
-                readStream.resume();
-                streamSemaphore.acquire();
-            }
-        } catch (InterruptedException e) {
-            error(e);
-            Thread.currentThread().interrupt();
+        if (ended && available() == 0) {
+            return -1;
         }
-        if (ended) {
+
+        if (available() == 0 && !streamSemaphore.tryAcquire()) {
+            readStream.resume();
+            System.out.println("resumed");
+            streamSemaphore.acquireUninterruptibly();
+            System.out.println("acquired " + pos + " " + available());
+        }
+        if (ended && available() == 0) {
             return -1;
         }
         // Convert to unsigned byte
