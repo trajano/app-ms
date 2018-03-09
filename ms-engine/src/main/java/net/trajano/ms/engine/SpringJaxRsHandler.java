@@ -149,7 +149,6 @@ public class SpringJaxRsHandler implements
 
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
-        applicationContext.refresh();
         if (baseApplicationContext != null) {
             baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
                 (name,
@@ -160,6 +159,7 @@ public class SpringJaxRsHandler implements
                     }
                 });
         }
+        applicationContext.refresh();
         applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
             obj) -> pathAnnotatedClasses.add(ClassUtils.getUserClass(obj)));
 

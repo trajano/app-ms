@@ -33,6 +33,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -43,6 +44,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import net.trajano.ms.core.JsonOps;
+import net.trajano.ms.example.beans.ContactCard;
 import net.trajano.ms.example.domain.MyType;
 
 @SwaggerDefinition(
@@ -91,6 +93,16 @@ public class HelloResource {
 
         final JsonElement entity = jsonOps.toJsonElement("{\"error\":\"client bad\"}");
         throw new BadRequestException("who's bad", Response.status(Status.BAD_REQUEST).entity(entity).build());
+    }
+
+    @ApiOperation(value = "Echos a validated JSON")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validated
+    public ContactCard beanValidation(final ContactCard card) {
+
+        return card;
     }
 
     @ApiOperation(value = "throws a Runtime Exception")

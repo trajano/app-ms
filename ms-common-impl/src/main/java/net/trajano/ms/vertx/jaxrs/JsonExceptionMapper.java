@@ -1,30 +1,20 @@
 package net.trajano.ms.vertx.jaxrs;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+import net.trajano.ms.Microservice;
 import net.trajano.ms.core.ErrorResponse;
 
 @Configuration
@@ -36,49 +26,9 @@ import net.trajano.ms.core.ErrorResponse;
     MediaType.TEXT_XML,
     MediaType.TEXT_PLAIN
 })
-public class JsonExceptionMapper implements
-    ExceptionMapper<Throwable> {
+public class JsonExceptionMapper extends AbstractJsonExceptionMapper<Throwable> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JsonExceptionMapper.class);
-
-    /**
-     * Supported media types.
-     */
-    private static final Set<MediaType> SUPPORTED_MEDIA_TYPES = new HashSet<>(Arrays.asList(
-        MediaType.APPLICATION_JSON_TYPE,
-        MediaType.APPLICATION_XML_TYPE,
-        MediaType.TEXT_XML_TYPE,
-        MediaType.TEXT_PLAIN_TYPE,
-        MediaType.TEXT_HTML_TYPE));
-
-    @Context
-    private HttpHeaders headers;
-
-    @Value("${microservice.show_stack_trace:#{null}}")
-    private Boolean showStackTrace;
-
-    @Context
-    private UriInfo uriInfo;
-
-    /**
-     * Determines the appropriate media type based on what is requested. If wildcard
-     * use JSON.
-     *
-     * @return media type appropriate for request
-     */
-    private MediaType getAppropriateMediaType() {
-
-        final List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
-        for (final MediaType mediaType : acceptableMediaTypes) {
-            if (mediaType.equals(MediaType.WILDCARD_TYPE)) {
-                return MediaType.APPLICATION_JSON_TYPE;
-            } else if (SUPPORTED_MEDIA_TYPES.contains(mediaType)) {
-                return mediaType;
-            }
-        }
-        return MediaType.APPLICATION_JSON_TYPE;
-
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(Microservice.class);
 
     /**
      * Log the exception if it is not NotFoundException and only use warn if it is a
@@ -94,32 +44,6 @@ public class JsonExceptionMapper implements
             }
         } else {
             LOG.error("uri={} message={}", uriInfo.getRequestUri(), exception.getMessage(), exception);
-        }
-    }
-
-    /**
-     * This sets the context data so the mapper can be unit tested.
-     */
-    public void setContextData(final HttpHeaders headers,
-        final UriInfo uriInfo,
-        final boolean showStackTrace) {
-
-        this.headers = headers;
-        this.uriInfo = uriInfo;
-        this.showStackTrace = showStackTrace;
-
-    }
-
-    /**
-     * If the show request URI or show stack trace are not defined, it will default
-     * to whether the current logger is on debug mode or not.
-     */
-    @PostConstruct
-    public void setDebugFlags() {
-
-        if (showStackTrace == null) {
-            showStackTrace = LOG.isDebugEnabled();
-            LOG.debug("stack trace enabled if this is shown");
         }
     }
 
