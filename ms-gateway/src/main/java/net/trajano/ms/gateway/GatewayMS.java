@@ -7,6 +7,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -28,7 +29,7 @@ public class GatewayMS {
 
         final SpringApplication application = new SpringApplication(GatewayMS.class);
         application.setBannerMode(Mode.OFF);
-        application.setWebEnvironment(false);
+        application.setWebApplicationType(WebApplicationType.NONE);
         application.run(args);
 
     }
