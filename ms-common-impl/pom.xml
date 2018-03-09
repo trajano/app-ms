@@ -86,6 +86,18 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.eclipse</groupId>
+      <artifactId>yasson</artifactId>
+      <version>1.0.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.1.2</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <groupId>net.trajano.commons</groupId>
       <artifactId>commons-testing</artifactId>
       <version>2.1.0</version>
