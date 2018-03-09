@@ -8,6 +8,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import net.trajano.ms.engine.internal.VertxInputStream;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
 import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -65,7 +66,7 @@ public class VertxHttpRequest extends BaseHttpRequest {
         context.request().setExpectMultipart(httpHeaders.getMediaType().isCompatible(MediaType.MULTIPART_FORM_DATA_TYPE));
 
         if (!vertxRequest.isEnded()) {
-            is = new VertxBlockingInputStream(vertxRequest);
+            is = new VertxInputStream(vertxRequest);
         } else {
             is = NullInputStream.nullInputStream();
         }
