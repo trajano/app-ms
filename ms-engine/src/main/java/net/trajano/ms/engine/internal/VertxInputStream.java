@@ -1,57 +1,69 @@
 package net.trajano.ms.engine.internal;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.streams.ReadStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Semaphore;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
+
 /**
- * <p></p>An input stream that wraps a Vert.X Read Buffer.  This does not do anything that performs blocks.</p>
- * <p>This pauses() the stream once the buffer is read and resumes the stream when the buffer is fully read.</p>
+ * <p>
+ * </p>
+ * An input stream that wraps a Vert.X Read Buffer. This does not do anything
+ * that performs blocks.
+ * </p>
+ * <p>
+ * This pauses() the stream once the buffer is read and resumes the stream when
+ * the buffer is fully read.
+ * </p>
  */
 public class VertxInputStream extends InputStream {
 
-    private static final Buffer END_BUFFER = Symbol.newSymbol(Buffer.class);
-
-    private static final Buffer END_BUFFER_WITH_ERROR = Symbol.newSymbol(Buffer.class);
-
     private static final Logger LOG = LoggerFactory.getLogger(VertxInputStream.class);
-    /**
-     * Read Stream being wrapped.
-     */
-    private final ReadStream<Buffer> readStream;
-    /**
-     * Semaphore to lock.  Permits is equivalent to available bytes.
-     */
-    private final Semaphore streamSemaphore = new Semaphore(0);
+
     /**
      * Bytes read counter.
      */
     private long bytesRead = 0;
+
     /**
      * Flag to indicate that the InputStream is closed.
      */
     private boolean closed = false;
-    /**
-     * Flag to indicate that the ReadStream is ended.
-     */
-    private boolean ended = false;
+
     /**
      * Current buffer.
      */
     private volatile Buffer currentBuffer;
+
+    /**
+     * Flag to indicate that the ReadStream is ended.
+     */
+    private boolean ended = false;
+
+    /**
+     * Exception holder. If this is not null, it will be thrown on the next read.
+     */
+    private IOException exceptionToThrow = null;
+
     /**
      * Current position in buffer.
      */
     private volatile int pos;
+
     /**
-     * Exception holder.  If this is not null, it will be thrown on the next read.
+     * Read Stream being wrapped.
      */
-    private IOException exceptionToThrow = null;
+    private final ReadStream<Buffer> readStream;
+
+    /**
+     * Semaphore to lock. Permits is equivalent to available bytes.
+     */
+    private final Semaphore streamSemaphore = new Semaphore(0);
 
     public VertxInputStream(final ReadStream<Buffer> readStream) {
 
@@ -82,6 +94,7 @@ public class VertxInputStream extends InputStream {
      */
     public void end() {
 
+        System.out.println("ended");
         ended = true;
 
     }
@@ -106,15 +119,18 @@ public class VertxInputStream extends InputStream {
     /**
      * Sets the buffer with a new one from the stream then pauses.
      *
-     * @param buffer buffer from stream.
+     * @param buffer
+     *            buffer from stream.
      */
     public void populate(final Buffer buffer) {
 
-        System.out.println("populating");
-        if (currentBuffer != null && pos < currentBuffer.length()) {
+        System.out.println("populating..." + currentBuffer != null);
+        if (currentBuffer != null) {
             readStream.pause();
         } else {
-            System.out.println("resumed");
+            if (streamSemaphore.availablePermits() > 1) {
+                throw new RuntimeException("p=" + streamSemaphore.availablePermits());
+            }
             currentBuffer = buffer;
             pos = 0;
             streamSemaphore.release();
@@ -131,16 +147,13 @@ public class VertxInputStream extends InputStream {
         if (closed) {
             throw new IOException("Stream is closed");
         }
-
-        if (ended && available() == 0) {
-            return -1;
-        }
-
-        if (available() == 0 && !streamSemaphore.tryAcquire()) {
+        if (available() == 0) {
+            if (ended) {
+                return -1;
+            }
+            currentBuffer = null;
             readStream.resume();
-            System.out.println("resumed");
             streamSemaphore.acquireUninterruptibly();
-            System.out.println("acquired " + pos + " " + available());
         }
         if (ended && available() == 0) {
             return -1;
@@ -154,7 +167,7 @@ public class VertxInputStream extends InputStream {
     }
 
     @Override
-    public synchronized void reset() throws IOException {
+    public void reset() throws IOException {
 
         throw new IOException("reset not supported");
     }
