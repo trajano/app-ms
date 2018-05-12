@@ -71,7 +71,7 @@ public class TokenResource {
      * Maximum life of a JWT token. Past that period, it is expected to no longer be
      * used.
      */
-    @Value("${token.jwtMaximumLifetime:86400}")
+    @Value("${token.jwt_maximum_lifetime:86400}")
     private int jwtMaximumLifetimeInSeconds;
 
     @Value("${realmName:client_credentials}")
