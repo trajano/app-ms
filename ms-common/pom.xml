@@ -9,7 +9,7 @@
   <artifactId>ms-common</artifactId>
   <name>Microservice Common</name>
   <properties>
-    <resteasy.version>3.1.4.Final</resteasy.version>
+    <resteasy.version>3.5.1.Final</resteasy.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -152,7 +152,7 @@
             <inherited>false</inherited>
             <configuration>
               <rules>
-                <dependencyConvergence />
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>
