@@ -162,6 +162,14 @@ public class BeanValidator implements
 
         LOG.debug("validateReturnValue  {} {} {}", request, object, returnValue);
 
+        if (returnValue == null) {
+            if (method.isAnnotationPresent(NotNull.class)) {
+                throw ErrorResponses.internalServerError("unexpected null result");
+            } else {
+                return;
+            }
+        }
+
         final Set<ConstraintViolation<Object>> errors = validator.validate(returnValue);
 
         if (!errors.isEmpty()) {
