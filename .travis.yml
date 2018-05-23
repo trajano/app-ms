@@ -49,6 +49,6 @@ deploy:
 - provider: script
   skip_cleanup: true
   script: printf 'scm.tag=%1s\nscm.url=scm:git:https://git@github.com/%2s.git' "${TRAVIS_TAG}"
-    "${TRAVIS_REPO_SLUG}" > release.properties && mvn release:perform
+    "${TRAVIS_REPO_SLUG}" > release.properties && mvn release:perform -Djava.net.preferIPv4Stack=true
   on:
     tags: true
