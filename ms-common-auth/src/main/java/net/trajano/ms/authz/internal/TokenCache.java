@@ -27,7 +27,10 @@ public class TokenCache {
      */
     private static final Logger LOG = LoggerFactory.getLogger(TokenCache.class);
 
-    @Value("${token.accessTokenExpiration:300}")
+    /**
+     * Access token expiration in seconds.
+     */
+    @Value("${token.access_token_expiration:300}")
     private int accessTokenExpirationInSeconds;
 
     private Cache accessTokenToEntry;

@@ -19,8 +19,20 @@ public class ConfigurationProvider {
     @Value("${http.client.idle_timeout:60}")
     private int httpClientIdleTimeout;
 
+    /**
+     * Set whether keep alive is enabled on the client
+     */
+    @Value("${http.client.keep_alive:#{true}}")
+    private boolean httpClientKeepAlive;
+
     @Value("${http.client.max_pool_size:50}")
     private int httpClientMaxPoolSize;
+
+    /**
+     * Set whether pipe-lining is enabled on the client.
+     */
+    @Value("${http.client.pipelining:#{true}}")
+    private boolean httpClientPipelining;
 
     @Value("${http.client.proxy.host:#{null}}")
     private String httpClientProxyHost;
@@ -48,7 +60,8 @@ public class ConfigurationProvider {
 
         return new HttpClientOptions()
             .setIdleTimeout(httpClientIdleTimeout)
-            .setPipelining(true)
+            .setPipelining(httpClientPipelining)
+            .setKeepAlive(httpClientKeepAlive)
             .setMaxPoolSize(httpClientMaxPoolSize);
     }
 
