@@ -32,7 +32,7 @@ install:
 before_script:
 - mvn -q clean
 script:
-- travis_wait 30 mvn -T2.0C -q package -Dmaven.test.redirectTestOutputToFile=true
+- travis_wait 30 mvn -T2.0C -q package -Dmaven.test.redirectTestOutputToFile=true -Djava.net.preferIPv4Stack=true
 - mvn -T2.0C -q sonar:sonar
 - docker-compose build
 deploy:
