@@ -9,7 +9,7 @@
   <artifactId>ms-common</artifactId>
   <name>Microservice Common</name>
   <properties>
-    <resteasy.version>3.5.1.Final</resteasy.version>
+    <resteasy.version>4.0.0.Beta3</resteasy.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -39,7 +39,6 @@
     <dependency>
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
-      <version>1.2</version>
     </dependency>
     <dependency>
       <groupId>javax.enterprise</groupId>
@@ -47,9 +46,13 @@
       <version>1.2</version>
     </dependency>
     <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>javax.ws.rs</groupId>
       <artifactId>javax.ws.rs-api</artifactId>
-      <version>2.0.1</version>
+      <version>2.1</version>
     </dependency>
     <dependency>
       <groupId>org.bitbucket.b_c</groupId>
@@ -122,11 +125,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
@@ -152,7 +150,7 @@
             <inherited>false</inherited>
             <configuration>
               <rules>
-                <dependencyConvergence />
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>

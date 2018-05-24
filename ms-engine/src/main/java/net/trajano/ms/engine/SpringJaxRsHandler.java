@@ -149,7 +149,6 @@ public class SpringJaxRsHandler implements
 
         applicationContext.addBeanFactoryPostProcessor(springBeanProcessor);
         applicationContext.addApplicationListener(springBeanProcessor);
-        applicationContext.refresh();
         if (baseApplicationContext != null) {
             baseApplicationContext.getBeansWithAnnotation(Provider.class).forEach(
                 (name,
@@ -160,6 +159,7 @@ public class SpringJaxRsHandler implements
                     }
                 });
         }
+        applicationContext.refresh();
         applicationContext.getBeansWithAnnotation(Path.class).forEach((name,
             obj) -> pathAnnotatedClasses.add(ClassUtils.getUserClass(obj)));
 
@@ -197,7 +197,6 @@ public class SpringJaxRsHandler implements
         final ResteasyUriInfo uriInfo = new ResteasyUriInfo(serverRequest.absoluteURI(), serverRequest.query(), baseUri.toASCIIString());
 
         final VertxHttpRequest request = new VertxHttpRequest(context, uriInfo, providerFactory);
-
         context.request().setExpectMultipart(isMultipartExpected(request));
         try (final VertxHttpResponse response = new VertxHttpResponse(context)) {
             context.vertx().executeBlocking(

@@ -61,7 +61,7 @@
     <linkcheck.skip>true</linkcheck.skip>
     <repo.id>app-ms</repo.id>
     <slf4j.version>1.7.16</slf4j.version>
-    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
+    <spring.boot.version>2.0.2.RELEASE</spring.boot.version>
     <vertx.version>3.5.1</vertx.version>
   </properties>
   <dependencyManagement>
@@ -134,7 +134,7 @@
       <dependency>
         <groupId>org.bitbucket.b_c</groupId>
         <artifactId>jose4j</artifactId>
-        <version>0.6.1</version>
+        <version>0.6.3</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>

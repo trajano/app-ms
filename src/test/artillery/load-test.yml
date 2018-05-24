@@ -10,8 +10,8 @@ config:
     docker:
       phases:
       - duration: 60
-        arrivalRate: 10
-      target: "http://localhost:3001"
+        arrivalRate: 20
+      target: "http://192.168.1.113:3001"
       variables:
         origin: "http://localhost:3000"
     prod:

@@ -1,8 +1,8 @@
 package net.trajano.ms.engine.test;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -18,7 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import io.netty.util.AsciiString;
@@ -80,7 +80,7 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.setStatusCode(Matchers.any(Integer.class))).then(invocation -> {
+        when(response.setStatusCode(ArgumentMatchers.any(Integer.class))).then(invocation -> {
 
             try {
                 return response;
@@ -152,7 +152,7 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.setStatusCode(Matchers.any(Integer.class))).then(invocation -> {
+        when(response.setStatusCode(ArgumentMatchers.any(Integer.class))).then(invocation -> {
 
             try {
                 return response;
@@ -189,7 +189,7 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.write(Matchers.any(Buffer.class))).thenReturn(response);
+        when(response.write(ArgumentMatchers.any(Buffer.class))).thenReturn(response);
 
         doAnswer(i -> {
             async.complete();
@@ -224,7 +224,7 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.setStatusCode(Matchers.any(Integer.class))).then(invocation -> {
+        when(response.setStatusCode(ArgumentMatchers.any(Integer.class))).then(invocation -> {
 
             try {
                 return response;
@@ -261,7 +261,7 @@ public class SpringJaxRsHandlerTest {
         when(response.headers()).thenReturn(new VertxHttpHeaders());
 
         final Async async = testContext.async();
-        when(response.write(Matchers.any(Buffer.class))).then(invocation -> {
+        when(response.write(ArgumentMatchers.any(Buffer.class))).then(invocation -> {
 
             try {
                 return response;
