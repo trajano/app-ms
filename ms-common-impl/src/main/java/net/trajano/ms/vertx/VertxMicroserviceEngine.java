@@ -67,7 +67,7 @@ public class VertxMicroserviceEngine implements
      * Sets the system properties and sets up the logger. {@inheritDoc}
      */
     @Override
-    public Object[] bootstrap() {
+    public Class<?>[] bootstrap() {
 
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
 
@@ -76,7 +76,7 @@ public class VertxMicroserviceEngine implements
             System.setProperty("logging.config", logbackFile.getAbsolutePath());
         }
 
-        return new Object[] {
+        return new Class<?>[] {
             VertxConfig.class,
             VertxMicroserviceEngine.class
         };
